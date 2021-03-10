@@ -2,9 +2,8 @@
 
 > 用于检查中文 markdown 编写格式规范的命令行工具，基于 AST 开发，且方便集成 ci；同时提供 API 方法调用。Cli tool to lint your markdown file for Chinese.
 
-TODO: reset it!
-[![npm](https://img.shields.io/npm/v/lint-md-cli.svg)](https://www.npmjs.com/package/lint-md-cli)
-[![npm](https://img.shields.io/npm/dm/lint-md-cli.svg)](https://www.npmjs.com/package/lint-md-cli)
+[![npm](https://img.shields.io/npm/v/@lint-md/cli.svg)](https://www.npmjs.com/package/@lint-md/cli)
+[![npm](https://img.shields.io/npm/dm/lint-md-cli.svg)](https://www.npmjs.com/package/@lint-md/cli)
 
 ## 安装
 
