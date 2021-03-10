@@ -1,5 +1,5 @@
 {
-  "name": "lint-md-cli",
+  "name": "@lint-md/cli",
   "version": "0.1.2",
   "description": "Cli tool to lint your markdown file for Chinese.",
   "bin": {

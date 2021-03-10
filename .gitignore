@@ -1,2 +1,9 @@
 bin
 node_modules
+
+# jetbrains configurations
+.idea
+
+# lock file
+package-lock.json
+*.lock
