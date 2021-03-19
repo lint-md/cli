@@ -1,19 +1,19 @@
-const _ = require('lodash');
-const chalk = require('chalk');
-const loadMdFiles = require('../helper/file');
-const lint = require('./lint');
-const string = require('../helper/string');
-const { getDescription } = require('lint-md');
+import * as _ from 'lodash';
+import chalk from 'chalk';
 
-const log = console.log;
+import { loadMdFiles } from '../helper/load-md-files';
+import { getDescription } from 'lint-md';
+import { lint } from './lint';
+import { rightPad } from '../helper/string';
+import { log } from '../helper/common';
+import { CliConfig } from '../types';
 
-/**
- * Lint 组件
- * @type {module.Lint}
- */
-module.exports = class Lint {
+export class Lint {
+  private readonly files: string[];
+  private readonly config: CliConfig;
+  private readonly errorFiles: string[];
 
-  constructor(files, config) {
+  constructor(files: string[], config: CliConfig) {
     this.files = files;
     this.config = config;
 
@@ -68,11 +68,11 @@ module.exports = class Lint {
 
     log(chalk.grey(
       '  ',
-      string.rightPad(pos, 16),
+      rightPad(pos, 16),
       '    ',
-      string.rightPad(`${type}`, 24),
+      rightPad(`${type}`, 24),
       '    ',
-      chalk[level === 'error' ? 'red' : 'yellow'](`${getDescription(type).message} ${text}`),
+      chalk[level === 'error' ? 'red' : 'yellow'](`${getDescription(type).message} ${text}`)
     ));
   }
 
@@ -86,7 +86,7 @@ module.exports = class Lint {
     log(
       chalk.green(`Lint total ${fileCount} files,`),
       chalk.yellow(`${warning} warnings`),
-      chalk.red(`${error} errors`),
+      chalk.red(`${error} errors`)
     );
   }
 
@@ -105,7 +105,7 @@ module.exports = class Lint {
 
     return {
       error: errorCnt,
-      warning: warningCnt,
+      warning: warningCnt
     };
   };
 };

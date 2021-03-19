@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 
-require('babel-polyfill');
-
-const program = require('commander');
-
-const Lint = require('./Lint');
-const Fix = require('./Fix');
-const configure = require('./helper/configure');
+import * as program from 'commander';
+import { Lint } from './Lint';
+import { Fix } from './Fix';
+import { version } from '../package.json';
+import { configure } from './helper/configure';
+import { CliOptions } from './types';
 
 program
-  .version(__VERSION__, '-v, --version')
+  .version(version, '-v, --version')
   .usage('<lint-md> <files...> [options]')
   .description('lint your markdown files')
   .option('-c, --config [configure-file]', 'use the configure file, default .lintmdrc')
   .option('-f, --fix', 'fix the errors automatically')
   .arguments('<files...>')
-  .action((files, cmd) => {
+  .action((files: string[], cmd: CliOptions) => {
     const config = configure(cmd.config);
     const fix = cmd.fix;
 
