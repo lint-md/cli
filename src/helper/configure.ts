@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { CliConfig } from '../types';
 import { log } from './common';
 

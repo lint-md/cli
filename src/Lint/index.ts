@@ -1,17 +1,17 @@
 import * as _ from 'lodash';
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 
 import { loadMdFiles } from '../helper/load-md-files';
-import { getDescription } from 'lint-md';
+import { getDescription, LintMdError } from 'lint-md';
 import { lint } from './lint';
 import { rightPad } from '../helper/string';
 import { log } from '../helper/common';
-import { CliConfig } from '../types';
+import { CliConfig, CliErrorCount, CliLintResult } from '../types';
 
 export class Lint {
   private readonly files: string[];
   private readonly config: CliConfig;
-  private readonly errorFiles: string[];
+  private readonly errorFiles: CliLintResult[];
 
   constructor(files: string[], config: CliConfig) {
     this.files = files;
@@ -24,20 +24,18 @@ export class Lint {
   async start() {
     const mdFiles = await loadMdFiles(this.files, this.config);
 
-    // 错误，格式为：{ path, file, errors: { start: { line, column }, end: { line, column } level, text, type } }
-    const errorFiles = [];
 
     for (const file of mdFiles) {
       const errorFile = await lint(file, this.config);
 
-      errorFiles.push(errorFile);
+      this.errorFiles.push(errorFile);
 
       this.printErrorFile(errorFile);
     }
 
-    this.printOverview(errorFiles);
+    this.printOverview();
 
-    const { error, warning } = this.errorCount(errorFiles);
+    const { error } = this.errorCount();
     // 是否出错
     process.exit(error === 0 ? 0 : 1);
   }
@@ -47,7 +45,7 @@ export class Lint {
    * @param errorFile
    * @return {Promise<any>}
    */
-  printErrorFile(errorFile) {
+  printErrorFile(errorFile: CliLintResult) {
     const { path, file, errors } = errorFile;
 
     if (errors.length) log(`${path}/${file}`);
@@ -59,9 +57,10 @@ export class Lint {
 
   /**
    * 打印一个错误
-   * @param error
+   *
+   * @param error {LintMdError} lint-md API 的错误描述信息
    */
-  printError(error) {
+  printError(error: LintMdError) {
     const { start, end, level, text, type } = error;
     const pos = `${start.line}:${start.column}-${end.line}:${end.column}`;
 
@@ -79,9 +78,9 @@ export class Lint {
   /**
    * 打印概览
    */
-  printOverview(errorFiles) {
-    const fileCount = errorFiles.length;
-    const { error, warning } = this.errorCount(errorFiles);
+  printOverview() {
+    const fileCount = this.errorFiles.length;
+    const { error, warning } = this.errorCount();
 
     log(
       chalk.green(`Lint total ${fileCount} files,`),
@@ -91,15 +90,16 @@ export class Lint {
   }
 
   /**
-   * 计数
-   * @return {{error: *, warning: *}}
+   * 获取错误结果
+   *
+   * @return {CliErrorCount} 一个对象，存放了 error 和 warning 各自数目
    */
-  errorCount(errorFiles) {
-    const warningCnt = errorFiles.reduce((r, current) => {
+  errorCount(): CliErrorCount {
+    const warningCnt = this.errorFiles.reduce((r, current) => {
       return r + current.errors.filter(error => error.level === 'warning').length;
     }, 0);
 
-    const errorCnt = errorFiles.reduce((r, current) => {
+    const errorCnt = this.errorFiles.reduce((r, current) => {
       return r + current.errors.filter(error => error.level === 'error').length;
     }, 0);
 
@@ -108,4 +108,4 @@ export class Lint {
       warning: warningCnt
     };
   };
-};
+}
