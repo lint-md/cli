@@ -1,9 +1,17 @@
-bin
+# IDE configurations
+.idea
+.vscode
+
+# Dependency directories
 node_modules
 
-# jetbrains configurations
-.idea
+# coverage files
+coverage
 
-# lock file
+# lock files
 package-lock.json
-*.lock
+yarn.lock
+
+# build files
+esm
+lib
