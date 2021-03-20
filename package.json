@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "commander": "^7.1.0",
+    "commander": "^7.0.0",
     "glob": "^7.1.6",
     "lint-md": "^0.2.0",
     "lodash": "^4.17.21"
