@@ -13,31 +13,22 @@ export class Lint {
   private readonly config: CliConfig;
   private readonly errorFiles: CliLintResult[];
 
-  constructor(files: string[], config: CliConfig) {
+  constructor(files: string[], config?: CliConfig) {
     this.files = files;
     this.config = config;
-
-    // 开始处理
-    this.start();
+    this.errorFiles = [];
   }
 
   async start() {
     const mdFiles = await loadMdFiles(this.files, this.config);
 
-
     for (const file of mdFiles) {
       const errorFile = await lint(file, this.config);
 
       this.errorFiles.push(errorFile);
-
-      this.printErrorFile(errorFile);
     }
 
-    this.printOverview();
-
-    const { error } = this.errorCount();
-    // 是否出错
-    process.exit(error === 0 ? 0 : 1);
+    return this;
   }
 
   /**
@@ -53,6 +44,16 @@ export class Lint {
     _.forEach(errors, this.printError);
 
     if (errors.length) log();
+  }
+
+  /**
+   * 打印 lint 结果
+   */
+  showResult() {
+    for (let errorFile of this.errorFiles) {
+      this.printErrorFile(errorFile);
+    }
+    return this;
   }
 
   /**
@@ -73,6 +74,7 @@ export class Lint {
       '    ',
       chalk[level === 'error' ? 'red' : 'yellow'](`${getDescription(type).message} ${text}`)
     ));
+    return this;
   }
 
   /**
@@ -80,13 +82,14 @@ export class Lint {
    */
   printOverview() {
     const fileCount = this.errorFiles.length;
-    const { error, warning } = this.errorCount();
+    const { error, warning } = this.countError();
 
     log(
       chalk.green(`Lint total ${fileCount} files,`),
       chalk.yellow(`${warning} warnings`),
       chalk.red(`${error} errors`)
     );
+    return this;
   }
 
   /**
@@ -94,7 +97,7 @@ export class Lint {
    *
    * @return {CliErrorCount} 一个对象，存放了 error 和 warning 各自数目
    */
-  errorCount(): CliErrorCount {
+  countError(): CliErrorCount {
     const warningCnt = this.errorFiles.reduce((r, current) => {
       return r + current.errors.filter(error => error.level === 'warning').length;
     }, 0);

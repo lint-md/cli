@@ -1,5 +1,5 @@
 import * as path from 'path';
-import glob from 'glob';
+import * as glob from 'glob';
 import { CliConfig } from '../types';
 import { isDirectory, isFile } from './common';
 
@@ -10,8 +10,8 @@ import { isDirectory, isFile } from './common';
  * @param config {CliConfig} 用户传入的配置
  * @returns {Promise<string[]>} 读取到的文件数组
  */
-export const loadMdFiles = (src: string[], config: CliConfig): Promise<string[]> => {
-  const { excludeFiles } = config;
+export const loadMdFiles = (src: string[], config?: CliConfig): Promise<string[]> => {
+  const excludeFiles = config ? config.excludeFiles : [];
 
   return new Promise((resolve) => {
     setTimeout(() => {

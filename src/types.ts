@@ -2,7 +2,7 @@ import { LintMdError, LintMdRulesConfig } from 'lint-md';
 
 // cli 配置
 export interface CliConfig {
-  excludeFiles: string[]
+  excludeFiles?: string[]
   rules: LintMdRulesConfig
 }
 

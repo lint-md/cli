@@ -8,10 +8,9 @@ export class Fix {
   private readonly files: string[];
   private readonly config: CliConfig;
 
-  constructor(files: string[], config: CliConfig) {
+  constructor(files: string[], config?: CliConfig) {
     this.files = files;
     this.config = config;
-    this.start();
   }
 
   async start() {
@@ -25,9 +24,6 @@ export class Fix {
         this.printFile(file);
       }
     }
-
-    // 退出
-    process.exit(0);
   }
 
   printFile(file) {
