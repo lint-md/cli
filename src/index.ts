@@ -3,9 +3,10 @@
 import * as program from 'commander';
 import { Lint } from './Lint';
 import { Fix } from './Fix';
-import { version } from '../package.json';
 import { configure } from './helper/configure';
 import { CliOptions } from './types';
+
+const version = require('../package.json');
 
 program
   .version(version, '-v, --version')
