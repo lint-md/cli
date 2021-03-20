@@ -9,7 +9,7 @@ import { CliLintResult, CliConfig } from '../types';
  * @param filePath 文件路径
  * @param config lint 配置
  * @return {Promise<CliLintResult>} lint 结果
- */1
+ */
 export const lint = (filePath: string, config?: CliConfig): Promise<CliLintResult> => {
   const rules = config ? config.rules : {};
 
