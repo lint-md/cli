@@ -11,7 +11,7 @@ import { CliConfig } from '../types';
  * @returns {Promise<boolean>} 是否是一个有效的 fix (文件发生了变动)
  */
 export const fix = (filePath: string, config: CliConfig) => {
-  const { rules } = config;
+  const rules = config ? config.rules : {};
   return new Promise((resolve) => {
     const file = path.resolve(filePath);
     const markdown = fs.readFileSync(file, { encoding: 'utf8' });

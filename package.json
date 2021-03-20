@@ -5,14 +5,15 @@
   "main": "lib/index.js",
   "module": "esm/index.js",
   "bin": {
-    "lint-md": "lib/index.js"
+    "lint-md": "lib/lint-md.js"
   },
   "scripts": {
     "test": "jest --no-cache",
     "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
     "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
     "build": "run-p lib:*",
-    "clean": "rimraf lib esm"
+    "clean": "rimraf lib esm",
+    "watch": "tsc -w"
   },
   "files": [
     "esm",
@@ -33,6 +34,9 @@
       "src/**/*.{js,jsx,ts,tsx}",
       "!**/node_modules/**",
       "!**/vendor/**"
+    ],
+    "testMatch": [
+      "**/__tests__/**/?(*.)(spec|test).ts?(x)"
     ]
   },
   "dependencies": {
