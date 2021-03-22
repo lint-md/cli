@@ -1,4 +1,4 @@
-exports.rightPad = (s, len, c = ' ') => {
+export const rightPad = (s: string, len: number, c = ' ') => {
   let i = -1;
   const length = len - s.length;
 
@@ -6,6 +6,5 @@ exports.rightPad = (s, len, c = ' ') => {
   while (++i < length) {
     str += c;
   }
-
   return str;
 };
