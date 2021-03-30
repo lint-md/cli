@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { lint as runLint } from 'lint-md';
+import { lint as runLint } from '@lint-md/core';
 import { CliLintResult, CliConfig } from '../types';
 
 /**
