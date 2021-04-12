@@ -1,4 +1,4 @@
-import { LintMdError, LintMdRulesConfig } from 'lint-md';
+import { LintMdError, LintMdRulesConfig } from '@lint-md/core';
 
 // cli 配置
 export interface CliConfig {

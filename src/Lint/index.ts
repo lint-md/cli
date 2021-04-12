@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as chalk from 'chalk';
 
 import { loadMdFiles } from '../helper/load-md-files';
-import { getDescription, LintMdError } from 'lint-md';
+import { getDescription, LintMdError } from '@lint-md/core';
 import { lint } from './lint';
 import { rightPad } from '../helper/string';
 import { log } from '../helper/common';
