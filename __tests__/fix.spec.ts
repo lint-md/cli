@@ -21,7 +21,8 @@ describe('fix test', () => {
 
 - wrong
 
-`, { 'encoding': 'utf8' }
+`,
+      { encoding: 'utf8' }
     );
   });
 
@@ -32,8 +33,8 @@ describe('fix test', () => {
     const testMdPath = path.resolve(examplePath, 'no-empty-blockquote.md');
     const fixer = new Fix([testMdPath], {
       rules: {
-        'no-empty-blockquote': 0
-      }
+        'no-empty-blockquote': 0,
+      },
     });
     await fixer.start();
     // 不会 执行 fs.writeFileSync

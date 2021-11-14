@@ -13,10 +13,13 @@ const getConfig = (file: string): CliConfig => {
     config = {} as any;
   }
 
-  return _.merge({
-    excludeFiles: ['**/node_modules/**', '**/.git/**'],
-    rules: {}
-  }, config);
+  return _.merge(
+    {
+      excludeFiles: ['**/node_modules/**', '**/.git/**'],
+      rules: {},
+    },
+    config
+  );
 };
 
 export const configure = (configFile: string) => {

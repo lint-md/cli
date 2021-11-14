@@ -65,15 +65,18 @@ export class Lint {
     const { start, end, level, text, type } = error;
     const pos = `${start.line}:${start.column}-${end.line}:${end.column}`;
 
-
-    log(chalk.grey(
-      '  ',
-      rightPad(pos, 16),
-      '    ',
-      rightPad(`${type}`, 24),
-      '    ',
-      chalk[level === 'error' ? 'red' : 'yellow'](`${getDescription(type).message} ${text}`)
-    ));
+    log(
+      chalk.grey(
+        '  ',
+        rightPad(pos, 16),
+        '    ',
+        rightPad(`${type}`, 24),
+        '    ',
+        chalk[level === 'error' ? 'red' : 'yellow'](
+          `${getDescription(type).message} ${text}`
+        )
+      )
+    );
     return this;
   }
 
@@ -99,16 +102,20 @@ export class Lint {
    */
   countError(): CliErrorCount {
     const warningCnt = this.errorFiles.reduce((r, current) => {
-      return r + current.errors.filter(error => error.level === 'warning').length;
+      return (
+        r + current.errors.filter((error) => error.level === 'warning').length
+      );
     }, 0);
 
     const errorCnt = this.errorFiles.reduce((r, current) => {
-      return r + current.errors.filter(error => error.level === 'error').length;
+      return (
+        r + current.errors.filter((error) => error.level === 'error').length
+      );
     }, 0);
 
     return {
       error: errorCnt,
-      warning: warningCnt
+      warning: warningCnt,
     };
-  };
+  }
 }

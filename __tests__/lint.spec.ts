@@ -6,40 +6,34 @@ import * as common from '../src/helper/common';
 import * as chalk from 'chalk';
 
 describe('cli linter test', () => {
-  test('test lint', async () => {
+  test('lint', async () => {
     const linter = new Lint([examplePath]);
-    (await linter.start())
-      .showResult()
-      .printOverview();
+    (await linter.start()).showResult().printOverview();
     expect(linter.countError()).toStrictEqual({
-      'error': 25,
-      'warning': 0
+      error: 25,
+      warning: 0,
     });
   });
 
-  test('test lint that exclude files', async () => {
+  test('lint that exclude files', async () => {
     const linter = new Lint([examplePath], {
       excludeFiles: ['**/no-*'],
-      rules: {}
+      rules: {},
     });
-    (await linter.start())
-      .showResult()
-      .printOverview();
+    (await linter.start()).showResult().printOverview();
     expect(linter.countError()).toStrictEqual({
-      'error': 7,
-      'warning': 0
+      error: 7,
+      warning: 0,
     });
   });
 
-  test('test lint by provided config file', async () => {
+  test('lint by provided config file', async () => {
     const config = configure('./examples/.lintmdrc');
     const linter = new Lint([examplePath], config);
-    (await linter.start())
-      .showResult()
-      .printOverview();
+    (await linter.start()).showResult().printOverview();
     expect(linter.countError()).toStrictEqual({
-      'error': 24,
-      'warning': 1
+      error: 24,
+      warning: 1,
     });
   });
 
@@ -50,11 +44,15 @@ describe('cli linter test', () => {
     const realProcess = process;
     global.process = {
       ...realProcess,
-      exit: exitMock as never
+      exit: exitMock as never,
     };
 
     // 这个配置不存在
     configure('./examples/NOT_EXIST.json');
-    expect(mySpy).toBeCalledWith(chalk.red('lint-md: Configure file \'./examples/NOT_EXIST.json\' is not exist.'));
+    expect(mySpy).toBeCalledWith(
+      chalk.red(
+        "lint-md: Configure file './examples/NOT_EXIST.json' is not exist."
+      )
+    );
   });
 });
