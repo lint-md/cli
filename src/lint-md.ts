@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import * as program from 'commander';
-import { Lint } from './Lint';
-import { Fix } from './Fix';
+import { Lint } from './lint';
+import { Fix } from './fix';
 import { configure } from './helper/configure';
 import { CliOptions } from './types';
 
