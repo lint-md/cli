@@ -11,6 +11,7 @@
     "test": "jest --no-cache",
     "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
     "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
+    "lint": "eslint --ext .ts,.tsx ./ --fix",
     "build": "run-p lib:*",
     "clean": "rimraf lib esm",
     "watch": "tsc -w"
@@ -40,17 +41,20 @@
     ]
   },
   "dependencies": {
+    "@lint-md/core": "^0.2.1",
     "chalk": "^4.1.0",
     "commander": "^7.0.0",
     "glob": "^7.1.6",
-    "@lint-md/core": "^0.2.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@attachments/eslint-plugin": "^0.1.21",
     "@types/jest": "^26.0.21",
     "@types/lodash": "^4.14.168",
+    "eslint": "7.31.0",
     "jest": "^26.6.3",
     "npm-run-all": "^4.1.5",
+    "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.4",
     "typescript": "^4.2.3"

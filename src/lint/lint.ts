@@ -10,7 +10,10 @@ import { CliLintResult, CliConfig } from '../types';
  * @param config lint 配置
  * @return {Promise<CliLintResult>} lint 结果
  */
-export const lint = (filePath: string, config?: CliConfig): Promise<CliLintResult> => {
+export const lint = (
+  filePath: string,
+  config?: CliConfig
+): Promise<CliLintResult> => {
   const rules = config ? config.rules : {};
 
   return new Promise((resolve) => {
@@ -23,7 +26,7 @@ export const lint = (filePath: string, config?: CliConfig): Promise<CliLintResul
       path: path.dirname(file),
       file: path.basename(file),
       // 去重
-      errors
+      errors,
     });
   });
 };
