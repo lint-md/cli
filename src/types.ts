@@ -10,6 +10,7 @@ export interface CliConfig {
 export interface CliOptions {
   fix?: boolean;
   config?: string;
+  suppressWarnings: boolean;
 }
 
 // cli lint 结果选项

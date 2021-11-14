@@ -5,6 +5,7 @@ import { Lint } from './lint';
 import { Fix } from './fix';
 import { configure } from './helper/configure';
 import { CliOptions } from './types';
+import * as process from 'process';
 
 const { version } = require('../package.json');
 
@@ -17,12 +18,16 @@ program
     'use the configure file, default .lintmdrc'
   )
   .option('-f, --fix', 'fix the errors automatically')
-  .option('-f, --fix', 'fix the errors automatically')
+  .option(
+    '-s, --suppress-warnings',
+    'suppress all warnings, that means warnings will not blocked ci'
+  )
   .arguments('[files...]')
   .action(async (files: string[], cmd: CliOptions) => {
     if (!files.length) {
       return;
     }
+
     const config = configure(cmd.config);
     const fix = cmd.fix;
     if (fix) {
@@ -30,9 +35,15 @@ program
     } else {
       const linter = new Lint(files, config);
       await linter.start();
-      const data = linter.countError();
-      console.log(data);
       linter.showResult().printOverview();
+
+      const { error, warning } = linter.countError();
+      // 如果用户配置了 suppress warnings, 则不阻塞 ci
+      const isWarningBlock = warning > 0 && !cmd.suppressWarnings;
+
+      if (error > 0 || isWarningBlock) {
+        process.exit(1);
+      }
     }
   });
 
