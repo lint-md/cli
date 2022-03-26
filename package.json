@@ -1,6 +1,6 @@
 {
   "name": "@lint-md/cli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Cli tool to lint your markdown file for Chinese.",
   "main": "lib/index.js",
   "module": "esm/index.js",
@@ -9,8 +9,8 @@
   },
   "scripts": {
     "test": "jest --no-cache",
-    "lib:cjs": "tsc -p tsconfig.json --target ES5 --module commonjs --outDir lib",
-    "lib:esm": "tsc -p tsconfig.json --target ES5 --module ESNext --outDir esm",
+    "lib:cjs": "tsc -p tsconfig.json --target ES6 --module commonjs --outDir lib",
+    "lib:esm": "tsc -p tsconfig.json --target ES6 --module ESNext --outDir esm",
     "lint": "eslint --ext .ts,.tsx ./ --fix",
     "build": "run-p lib:*",
     "clean": "rimraf lib esm",
