@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { lint as runLint } from '@lint-md/core';
-import { CliLintResult, CliConfig } from '../types';
+import type { CliConfig, CliLintResult } from '../types';
 
 /**
  * 使用 ast 和插件进行 lint

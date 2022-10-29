@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { fix as runFix } from '@lint-md/core';
-import { CliConfig } from '../types';
+import type { CliConfig } from '../types';
 
 /**
  * 使用 ast 和规则进行 fix
@@ -22,7 +22,8 @@ export const fix = (filePath: string, config: CliConfig) => {
     if (newMarkdown !== markdown) {
       fs.writeFileSync(file, newMarkdown, { encoding: 'utf8' });
       resolve(true);
-    } else {
+    }
+    else {
       resolve(false);
     }
   });

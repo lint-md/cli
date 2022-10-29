@@ -1,12 +1,13 @@
 import * as _ from 'lodash';
 import * as chalk from 'chalk';
 
+import type { LintMdError } from '@lint-md/core';
+import { getDescription } from '@lint-md/core';
 import { loadMdFiles } from '../helper/load-md-files';
-import { getDescription, LintMdError } from '@lint-md/core';
-import { lint } from './lint';
 import { rightPad } from '../helper/string';
 import { log } from '../helper/common';
-import { CliConfig, CliErrorCount, CliLintResult } from '../types';
+import type { CliConfig, CliErrorCount, CliLintResult } from '../types';
+import { lint } from './lint';
 
 export class Lint {
   private readonly files: string[];
@@ -39,18 +40,20 @@ export class Lint {
   printErrorFile(errorFile: CliLintResult) {
     const { path, file, errors } = errorFile;
 
-    if (errors.length) log(`${path}/${file}`);
+    if (errors.length)
+      log(`${path}/${file}`);
 
     _.forEach(errors, this.printError);
 
-    if (errors.length) log();
+    if (errors.length)
+      log();
   }
 
   /**
    * 打印 lint 结果
    */
   showResult() {
-    for (let errorFile of this.errorFiles) {
+    for (const errorFile of this.errorFiles) {
       this.printErrorFile(errorFile);
     }
     return this;
@@ -103,13 +106,13 @@ export class Lint {
   countError(): CliErrorCount {
     const warningCnt = this.errorFiles.reduce((r, current) => {
       return (
-        r + current.errors.filter((error) => error.level === 'warning').length
+        r + current.errors.filter(error => error.level === 'warning').length
       );
     }, 0);
 
     const errorCnt = this.errorFiles.reduce((r, current) => {
       return (
-        r + current.errors.filter((error) => error.level === 'error').length
+        r + current.errors.filter(error => error.level === 'error').length
       );
     }, 0);
 

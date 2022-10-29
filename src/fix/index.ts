@@ -1,8 +1,8 @@
 import * as chalk from 'chalk';
 import { loadMdFiles } from '../helper/load-md-files';
-import { fix } from './fix';
-import { CliConfig } from '../types';
+import type { CliConfig } from '../types';
 import { log } from '../helper/common';
+import { fix } from './fix';
 
 export class Fix {
   private readonly files: string[];

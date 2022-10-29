@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
+import * as process from 'process';
 import * as program from 'commander';
 import { Lint } from './lint';
 import { Fix } from './fix';
 import { configure } from './helper/configure';
-import { CliOptions } from './types';
-import * as process from 'process';
+import type { CliOptions } from './types';
 
 const { version } = require('../package.json');
 
@@ -32,7 +32,8 @@ program
     const fix = cmd.fix;
     if (fix) {
       await new Fix(files, config).start();
-    } else {
+    }
+    else {
       const linter = new Lint(files, config);
       await linter.start();
       linter.showResult().printOverview();

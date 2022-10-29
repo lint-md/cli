@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as glob from 'glob';
-import { CliConfig } from '../types';
+import type { CliConfig } from '../types';
 import { isDirectory, isFile } from './common';
 
 /**
@@ -30,7 +30,8 @@ export const loadMdFiles = (
         const p = path.resolve(srcArr[i]);
         if (isDirectory(p)) {
           f = glob.sync(`${p}/**/*.{md,markdown}`, { ignore: excludeFiles });
-        } else if (isFile(p)) {
+        }
+        else if (isFile(p)) {
           f = glob.sync(`${p}`, { ignore: excludeFiles });
         }
 

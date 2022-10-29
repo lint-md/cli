@@ -1,14 +1,15 @@
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as chalk from 'chalk';
-import { CliConfig } from '../types';
+import type { CliConfig } from '../types';
 import { log } from './common';
 
 const getConfig = (file: string): CliConfig => {
   let config: CliConfig;
   try {
     config = JSON.parse(fs.readFileSync(file, { encoding: 'utf8' }));
-  } catch (e) {
+  }
+  catch (e) {
     // 不存在配置文件、配置文件不是 json，配置为空！
     config = {} as any;
   }
