@@ -1,26 +1,18 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
-import * as path from 'path';
-import { program } from 'commander';
-// @ts-expect-error
-import { Piscina } from 'piscina';
-import type { lintMarkdown } from '@lint-md/core';
-import { getConfig } from './utils/configure';
-import type { CLIOptions } from './types';
-import { loadMdFiles } from './utils/load-md-files';
-import type { LintWorkerOptions } from './utils/lint-worker';
+import * as program from 'commander';
+import { Lint } from './lint';
+import { Fix } from './fix';
+import { configure } from './helper/configure';
+import type { CliOptions } from './types';
 
 const { version } = require('../package.json');
 
-console.log('dev11');
+console.log('dev');
 
 program
-  .version(
-    version,
-    '-v, --version',
-    'output the version number（查看当前版本）'
-  )
+  .version(version, '-v, --version', 'output the version number（查看当前版本）')
   .usage('<lint-md> [files...]')
   .description('lint your markdown files')
   .option(
@@ -33,32 +25,29 @@ program
     'suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）'
   )
   .arguments('[files...]')
-  .action(async (files: string[], options: CLIOptions) => {
-    const { fix, config, parallel = 1 } = options;
+  .action(async (files: string[], cmd: CliOptions) => {
     if (!files.length) {
       return;
     }
 
-    const { rules, excludeFiles } = getConfig(config);
+    const config = configure(cmd.config);
+    const fix = cmd.fix;
+    if (fix) {
+      await new Fix(files, config).start();
+    }
+    else {
+      const linter = new Lint(files, config);
+      await linter.start();
+      linter.showResult().printOverview();
 
-    const mdFiles = await loadMdFiles(files, excludeFiles);
+      const { error, warning } = linter.countError();
+      // 如果用户配置了 suppress warnings, 则不阻塞 ci
+      const isWarningBlock = warning > 0 && !cmd.suppressWarnings;
 
-    const runner = new Piscina({
-      filename: path.resolve(__dirname, 'utils', 'lint-worker'),
-      maxThreads: parallel
-    });
-
-    const finalResult = await Promise.all(mdFiles.map((filePath) => {
-      const lintWorkerOptions: LintWorkerOptions = {
-        filePath,
-        isFixMode: fix,
-        rules,
-      };
-
-      return runner.run(lintWorkerOptions);
-    }));
-
-    console.log(finalResult);
+      if (error > 0 || isWarningBlock) {
+        process.exit(1);
+      }
+    }
   });
 
 program.parse(process.argv);
