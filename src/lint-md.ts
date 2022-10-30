@@ -9,18 +9,20 @@ import type { CliOptions } from './types';
 
 const { version } = require('../package.json');
 
+console.log('dev');
+
 program
-  .version(version, '-v, --version')
+  .version(version, '-v, --version', 'output the version number（查看当前版本）')
   .usage('<lint-md> [files...]')
   .description('lint your markdown files')
   .option(
     '-c, --config [configure-file]',
-    'use the configure file, default .lintmdrc'
+    'use the configure file, default .lintmdrc（使用配置文件，默认为 .lintmdrc）'
   )
-  .option('-f, --fix', 'fix the errors automatically')
+  .option('-f, --fix', 'fix the errors automatically（开启修复模式）')
   .option(
     '-s, --suppress-warnings',
-    'suppress all warnings, that means warnings will not blocked ci'
+    'suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）'
   )
   .arguments('[files...]')
   .action(async (files: string[], cmd: CliOptions) => {
