@@ -1,9 +1,7 @@
-import type { LintMdError, LintMdRulesConfig } from '@lint-md/core';
-
 /** CLI 配置 */
 export interface CLIConfig {
   excludeFiles?: string[]
-  rules: LintMdRulesConfig
+  rules: any
 }
 
 /** 用户传入的 CLI 选项 */
@@ -18,7 +16,6 @@ export interface CLIOptions {
 export interface CLILintResult {
   path: string
   file: string
-  errors: LintMdError[]
 }
 
 /** CLI lint 错误统计信息 */

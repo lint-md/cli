@@ -41,7 +41,7 @@
     ]
   },
   "dependencies": {
-    "@attachments/eslint-config": "^0.3.3",
+    "@attachments/eslint-config": "^0.3.4",
     "@lint-md/core": "2.0.0-beta.9",
     "chalk": "^4",
     "commander": "^9.4.1",
