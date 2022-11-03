@@ -3,18 +3,18 @@ import * as chalk from 'chalk';
 
 import type { LintMdError } from '@lint-md/core';
 import { getDescription } from '@lint-md/core';
-import { loadMdFiles } from '../helper/load-md-files';
-import { rightPad } from '../helper/string';
-import { log } from '../helper/common';
-import type { CliConfig, CliErrorCount, CliLintResult } from '../types';
+import { loadMdFiles } from '../utils/load-md-files';
+import { rightPad } from '../utils/string';
+import { log } from '../utils/common';
+import type { CLIConfig, CLILintResult, CliErrorCount } from '../types';
 import { lint } from './lint';
 
 export class Lint {
   private readonly files: string[];
-  private readonly config: CliConfig;
-  private readonly errorFiles: CliLintResult[];
+  private readonly config: CLIConfig;
+  private readonly errorFiles: CLILintResult[];
 
-  constructor(files: string[], config?: CliConfig) {
+  constructor(files: string[], config?: CLIConfig) {
     this.files = files;
     this.config = config;
     this.errorFiles = [];
@@ -37,7 +37,7 @@ export class Lint {
    * @param errorFile
    * @return {Promise<any>}
    */
-  printErrorFile(errorFile: CliLintResult) {
+  printErrorFile(errorFile: CLILintResult) {
     const { path, file, errors } = errorFile;
 
     if (errors.length)

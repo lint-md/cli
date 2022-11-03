@@ -1,8 +1,8 @@
 import { Lint } from '../src';
 import { examplePath } from './test-utils';
-import { configure } from '../src/helper/configure';
+import { configure } from '../src/utils/configure';
 import * as process from 'process';
-import * as common from '../src/helper/common';
+import * as common from '../src/utils/common';
 import * as chalk from 'chalk';
 
 describe('cli linter test', () => {
