@@ -1,6 +1,6 @@
 {
   "name": "@lint-md/cli",
-  "version": "0.1.8",
+  "version": "2.0.0-beta.1",
   "description": "Cli tool to lint your markdown file for Chinese.",
   "main": "lib/index.js",
   "module": "esm/index.js",
