@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
-import { loadMdFiles } from '../utils/load-md-files';
+import { loadMdFiles } from '../helper/load-md-files';
 import type { CLIConfig } from '../types';
-import { log } from '../utils/common';
+import { log } from '../helper/common';
 import { fix } from './fix';
 
 export class Fix {
