@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
-import * as program from 'commander';
+import { program } from 'commander';
 import { Lint } from './lint';
 import { Fix } from './fix';
-import { configure } from './helper/configure';
-import type { CliOptions } from './types';
+import { configure, getConfig } from './helper/configure';
+import type { CLIOptions } from './types';
+import { loadMdFiles } from './helper/load-md-files';
 
 const { version } = require('../package.json');
 
-console.log('dev');
+console.log('dev11');
 
 program
-  .version(version, '-v, --version', 'output the version number（查看当前版本）')
+  .version(
+    version,
+    '-v, --version',
+    'output the version number（查看当前版本）'
+  )
   .usage('<lint-md> [files...]')
   .description('lint your markdown files')
   .option(
@@ -25,29 +30,34 @@ program
     'suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）'
   )
   .arguments('[files...]')
-  .action(async (files: string[], cmd: CliOptions) => {
+  .action(async (files: string[], options: CLIOptions) => {
+    const { fix, config, suppressWarnings } = options;
     if (!files.length) {
       return;
     }
 
-    const config = configure(cmd.config);
-    const fix = cmd.fix;
-    if (fix) {
-      await new Fix(files, config).start();
-    }
-    else {
-      const linter = new Lint(files, config);
-      await linter.start();
-      linter.showResult().printOverview();
-
-      const { error, warning } = linter.countError();
-      // 如果用户配置了 suppress warnings, 则不阻塞 ci
-      const isWarningBlock = warning > 0 && !cmd.suppressWarnings;
-
-      if (error > 0 || isWarningBlock) {
-        process.exit(1);
-      }
-    }
+    const finalConfig = getConfig(config);
+    const mdFiles = await loadMdFiles(files, finalConfig);
+    console.log(mdFiles);
+    // console.log(mdFiles);
+    //
+    // const fix = options.fix;
+    // if (fix) {
+    //   await new Fix(files, config).start();
+    // }
+    // else {
+    //   const linter = new Lint(files, config);
+    //   await linter.start();
+    //   linter.showResult().printOverview();
+    //
+    //   const { error, warning } = linter.countError();
+    //   // 如果用户配置了 suppress warnings, 则不阻塞 ci
+    //   const isWarningBlock = warning > 0 && !options.suppressWarnings;
+    //
+    //   if (error > 0 || isWarningBlock) {
+    //     process.exit(1);
+    //   }
+    // }
   });
 
 program.parse(process.argv);

@@ -15,7 +15,7 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "baseUrl": "./",
-    "outDir": "lib",
+    "outDir": "lib"
   },
   "include": [
     "src/**/*"

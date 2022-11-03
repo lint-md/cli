@@ -1,14 +1,14 @@
 import * as chalk from 'chalk';
 import { loadMdFiles } from '../helper/load-md-files';
-import type { CliConfig } from '../types';
+import type { CLIConfig } from '../types';
 import { log } from '../helper/common';
 import { fix } from './fix';
 
 export class Fix {
   private readonly files: string[];
-  private readonly config: CliConfig;
+  private readonly config: CLIConfig;
 
-  constructor(files: string[], config?: CliConfig) {
+  constructor(files: string[], config?: CLIConfig) {
     this.files = files;
     this.config = config;
   }

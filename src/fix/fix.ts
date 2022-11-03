@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { fix as runFix } from '@lint-md/core';
-import type { CliConfig } from '../types';
+import type { CLIConfig } from '../types';
 
 /**
  * 使用 ast 和规则进行 fix
@@ -10,7 +10,7 @@ import type { CliConfig } from '../types';
  * @param config 配置
  * @returns {Promise<boolean>} 是否是一个有效的 fix (文件发生了变动)
  */
-export const fix = (filePath: string, config: CliConfig) => {
+export const fix = (filePath: string, config: CLIConfig) => {
   const rules = config ? config.rules : {};
   return new Promise((resolve) => {
     const file = path.resolve(filePath);
