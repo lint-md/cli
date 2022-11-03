@@ -3,10 +3,10 @@ import * as chalk from 'chalk';
 
 import type { LintMdError } from '@lint-md/core';
 import { getDescription } from '@lint-md/core';
-import { loadMdFiles } from '../helper/load-md-files';
-import { rightPad } from '../helper/string';
-import { log } from '../helper/common';
-import type { CLIConfig, CliErrorCount, CLILintResult } from '../types';
+import { loadMdFiles } from '../utils/load-md-files';
+import { rightPad } from '../utils/string';
+import { log } from '../utils/common';
+import type { CLIConfig, CLILintResult, CliErrorCount } from '../types';
 import { lint } from './lint';
 
 export class Lint {
