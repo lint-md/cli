@@ -31,14 +31,14 @@ program
   )
   .arguments('[files...]')
   .action(async (files: string[], options: CLIOptions) => {
-    const { fix, config, suppressWarnings } = options;
+    const { fix, config, suppressWarnings, parallel } = options;
     if (!files.length) {
       return;
     }
 
     const finalConfig = getConfig(config);
     const mdFiles = await loadMdFiles(files, finalConfig);
-    console.log(mdFiles);
+
     // console.log(mdFiles);
     //
     // const fix = options.fix;
