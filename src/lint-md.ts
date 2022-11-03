@@ -5,7 +5,6 @@ import * as path from 'path';
 import { program } from 'commander';
 // @ts-expect-error
 import { Piscina } from 'piscina';
-import type { lintMarkdown } from '@lint-md/core';
 import { getConfig } from './utils/configure';
 import type { CLIOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
@@ -13,7 +12,7 @@ import type { LintWorkerOptions } from './utils/lint-worker';
 
 const { version } = require('../package.json');
 
-console.log('dev11');
+console.log(`dev -- version: ${version}`);
 
 program
   .version(
