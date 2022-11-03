@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
+import * as path from 'path';
 import { program } from 'commander';
-import { Lint } from './lint';
-import { Fix } from './fix';
-import { configure, getConfig } from './helper/configure';
+// @ts-expect-error
+import { Piscina } from 'piscina';
+import type { lintMarkdown } from '@lint-md/core';
+import { getConfig } from './utils/configure';
 import type { CLIOptions } from './types';
-import { loadMdFiles } from './helper/load-md-files';
+import { loadMdFiles } from './utils/load-md-files';
+import type { LintWorkerOptions } from './utils/lint-worker';
 
 const { version } = require('../package.json');
 
@@ -31,33 +34,31 @@ program
   )
   .arguments('[files...]')
   .action(async (files: string[], options: CLIOptions) => {
-    const { fix, config, suppressWarnings, parallel } = options;
+    const { fix, config, parallel = 1 } = options;
     if (!files.length) {
       return;
     }
 
-    const finalConfig = getConfig(config);
-    const mdFiles = await loadMdFiles(files, finalConfig);
+    const { rules, excludeFiles } = getConfig(config);
 
-    // console.log(mdFiles);
-    //
-    // const fix = options.fix;
-    // if (fix) {
-    //   await new Fix(files, config).start();
-    // }
-    // else {
-    //   const linter = new Lint(files, config);
-    //   await linter.start();
-    //   linter.showResult().printOverview();
-    //
-    //   const { error, warning } = linter.countError();
-    //   // 如果用户配置了 suppress warnings, 则不阻塞 ci
-    //   const isWarningBlock = warning > 0 && !options.suppressWarnings;
-    //
-    //   if (error > 0 || isWarningBlock) {
-    //     process.exit(1);
-    //   }
-    // }
+    const mdFiles = await loadMdFiles(files, excludeFiles);
+
+    const runner = new Piscina({
+      filename: path.resolve(__dirname, 'utils', 'lint-worker'),
+      maxThreads: parallel
+    });
+
+    const finalResult = await Promise.all(mdFiles.map((filePath) => {
+      const lintWorkerOptions: LintWorkerOptions = {
+        filePath,
+        isFixMode: fix,
+        rules,
+      };
+
+      return runner.run(lintWorkerOptions);
+    }));
+
+    console.log(finalResult);
   });
 
 program.parse(process.argv);
