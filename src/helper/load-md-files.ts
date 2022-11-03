@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as glob from 'glob';
 import { uniq } from 'lodash';
 import type { CLIConfig } from '../types';
@@ -27,12 +26,14 @@ export const loadMdFiles = async (globList: string[], config?: CLIConfig) => {
   const excludeFiles = config ? config.excludeFiles : [];
 
   const filePaths = await Promise.all(
-    globList.map((fileList) => {
+    // 先把 globList 去重，防止执行多余的 glob 查询
+    uniq(globList).map((fileList) => {
       return promisifyGlob(`${fileList}/**/*.{md,markdown}`, {
         ignore: excludeFiles,
       });
     })
   );
 
+  // 最后对获取的路径结果进行一次去重，防止重复的文件
   return uniq(filePaths.flat());
 };

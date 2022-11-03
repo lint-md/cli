@@ -46,7 +46,8 @@
     "chalk": "^4",
     "commander": "^9.4.1",
     "glob": "^8.0.3",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "piscina": "^3.2.0"
   },
   "devDependencies": {
     "@types/glob": "^8.0.0",
