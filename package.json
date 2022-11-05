@@ -14,7 +14,8 @@
     "lint": "eslint --ext .ts,.tsx ./ --fix",
     "build": "rm -rf esm lib && run-p lib:*",
     "clean": "rimraf lib esm",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "test-run": "lint-md examples/chinese/ --threads=8 --dev"
   },
   "files": [
     "esm",

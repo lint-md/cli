@@ -3,18 +3,17 @@
 import * as process from 'process';
 import * as path from 'path';
 import { cpus } from 'os';
+import type { lintMarkdown } from '@lint-md/core';
 import * as fs from 'fs-extra';
 import { program } from 'commander';
 // @ts-expect-error
 import { Piscina } from 'piscina';
+import { averagedGroup } from './utils/averaged-group';
 import { getLintConfig } from './utils/configure';
-import type { CLIOptions } from './types';
+import type { CLIOptions, LintWorkerOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
-import type { LintWorkerOptions } from './utils/lint-worker';
 
 const { version } = require('../package.json');
-
-console.log(`dev -- version: ${version}, ${new Date().toString()}`);
 
 program
   .version(
@@ -29,9 +28,10 @@ program
     'use the configure file, default .lintmdrc（使用配置文件，默认为 .lintmdrc）'
   )
   .option('-f, --fix', 'fix the errors automatically（开启修复模式）')
+  .option('-d, --dev', 'open dev mode（开启开发者模式）')
   .option(
-    '-p, --parallel [parallel-count]',
-    'The number of threads. The default is based on the number of available CPUs.（执行校验的线程数，默认会根据你的 CPU 核心数进行确认）'
+    '-t, --threads [thread-count]',
+    'The number of threads. The default is based on the number of available CPUs.（执行 Lint / Fix 的线程数，默认为 1）'
   )
   .option(
     '-s, --suppress-warnings',
@@ -39,24 +39,30 @@ program
   )
   .arguments('[files...]')
   .action(async (files: string[], options: CLIOptions) => {
-    const startTime = new Date().getTime();
-
-    const cpuSize = cpus().length;
-
-    const { fix, config, parallel } = options;
     if (!files.length) {
       return;
+    }
+
+    const { fix, config, threads = '1', dev } = options;
+
+    const startTime = new Date().getTime();
+    const cpuSize = cpus().length;
+    const isFixMode = Boolean(fix);
+    const isDev = Boolean(dev);
+
+    if (isDev) {
+      // eslint-disable-next-line no-console
+      console.log(`dev -- version: ${version}, ${new Date().toString()}`);
     }
 
     const { rules, excludeFiles } = getLintConfig(config);
 
     const mdFiles = await loadMdFiles(files, excludeFiles);
 
-    const threadsCount = parallel ? Number(parallel) : cpuSize;
+    const threadsCount = threads ? Number(threads) : cpuSize;
 
     const runner = new Piscina({
       filename: path.resolve(__dirname, 'utils', 'lint-worker'),
-      minThreads: threadsCount,
       maxThreads: threadsCount,
     });
 
@@ -64,31 +70,58 @@ program
       mdFiles.map((path) => {
         const call = async () => {
           const res = await fs.readFile(path);
-          return res.toString();
+          return {
+            path,
+            content: res.toString(),
+          };
         };
         return call();
       })
     );
 
+    // 将 md 文件内容进行分组，供各个线程分配执行
+    const markdownContentGroup = averagedGroup(fileContentList, 10, (item) => {
+      return item.content.length;
+    });
+
     try {
-      const finalResult = await Promise.all(
-        fileContentList.map((content) => {
-          const lintWorkerOptions: LintWorkerOptions = {
-            content,
-            isFixMode: Boolean(fix),
-            rules,
+      const res = await Promise.all(
+        markdownContentGroup.map((groupItem) => {
+          const asyncCall = async () => {
+            const batchLintResult: ReturnType<typeof lintMarkdown>[] = await runner.run({
+              contentList: groupItem.items.map((value) => {
+                return value.content;
+              }),
+              isFixMode,
+              rules,
+              isDev,
+            } as LintWorkerOptions);
+
+            return batchLintResult.map((lintResult, index) => {
+              return {
+                ...lintResult,
+                path: groupItem.items[index].path,
+              };
+            });
           };
 
-          return runner.run(lintWorkerOptions);
+          return asyncCall();
         })
       );
+
+      const finalResult = res.flat();
+      console.log(finalResult);
     }
     catch (e) {
+      // eslint-disable-next-line no-console
       console.log(e);
     }
 
-    const endTime = new Date().getTime();
-    console.log(`Time cost: ${endTime - startTime}ms`);
+    if (isDev) {
+      const endTime = new Date().getTime();
+      // eslint-disable-next-line no-console
+      console.log(`\nTime cost: ${endTime - startTime}ms`);
+    }
   });
 
 program.parse(process.argv);
