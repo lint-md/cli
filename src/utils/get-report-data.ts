@@ -28,7 +28,39 @@ interface Result {
   filePath: string
 }
 
-export const getReportData = (results: Result[]) => {
+export const getReportData = (problemResult: any[]) => {
+  const results: Result[] = problemResult.map((res) => {
+    const { path, lintResult } = res;
+
+    const errorCount = lintResult.filter(item => item.severity === 2).length;
+    const warningCount = lintResult.filter(
+      item => item.severity === 1
+    ).length;
+
+    if (errorCount + warningCount === 0) {
+      return null;
+    }
+
+    return {
+      errorCount,
+      filePath: path,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
+      messages: lintResult.map((lintItem) => {
+        const { loc, message, severity, name } = lintItem;
+        return {
+          column: loc.start.column,
+          fatal: false,
+          line: loc.start.line,
+          message,
+          ruleId: name,
+          severity,
+        };
+      }),
+      warningCount,
+    };
+  }).filter(Boolean);
+
   let output = '\n';
   let errorCount = 0;
   let warningCount = 0;

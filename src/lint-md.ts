@@ -9,6 +9,7 @@ import { program } from 'commander';
 // @ts-expect-error
 import { Piscina } from 'piscina';
 import { averagedGroup } from './utils/averaged-group';
+import { batchLint } from './utils/batch-lint';
 import { getLintConfig } from './utils/configure';
 import type { CLIOptions, LintWorkerOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
@@ -56,104 +57,32 @@ program
     }
 
     const { rules, excludeFiles } = getLintConfig(config);
+    const threadsCount = threads ? Number(threads) : cpuSize;
 
     const mdFiles = await loadMdFiles(files, excludeFiles);
 
-    const threadsCount = threads ? Number(threads) : cpuSize;
-
-    const runner = new Piscina({
-      filename: path.resolve(__dirname, 'utils', 'lint-worker'),
-      maxThreads: threadsCount,
-    });
-
-    const fileContentList = await Promise.all(
-      mdFiles.map((path) => {
-        const call = async () => {
-          const res = await fs.readFile(path);
-          return {
-            path,
-            content: res.toString(),
-          };
-        };
-        return call();
-      })
-    );
-
-    // 将 md 文件内容进行分组，供各个线程分配执行
-    const markdownContentGroup = averagedGroup(fileContentList, 10, (item) => {
-      return item.content.length;
-    });
-
     try {
-      const res = await Promise.all(
-        markdownContentGroup.map((groupItem) => {
-          const asyncCall = async () => {
-            const batchLintResult: ReturnType<typeof lintMarkdown>[]
-              = await runner.run({
-                contentList: groupItem.items.map((value) => {
-                  return value.content;
-                }),
-                isFixMode,
-                rules,
-                isDev,
-              } as LintWorkerOptions);
-
-            return batchLintResult.map((lintResult, index) => {
-              return {
-                ...lintResult,
-                path: groupItem.items[index].path,
-              };
-            });
-          };
-
-          return asyncCall();
-        })
+      const lintResult = await batchLint(
+        threadsCount,
+        mdFiles,
+        isDev,
+        isFixMode,
+        rules
       );
+      if (!isFixMode) {
+        const { consoleMessage, errorCount } = getReportData(lintResult);
 
-      const problemResult = res.flat().filter((item) => {
-        return item.lintResult.length > 0;
-      });
+        console.log(consoleMessage);
 
-      const problemMetaData = problemResult.map((res) => {
-        const { path, lintResult } = res;
-
-        const errorCount = lintResult.filter(
-          item => item.severity === 2
-        ).length;
-        const warningCount = lintResult.filter(
-          item => item.severity === 1
-        ).length;
-
-        if (errorCount + warningCount === 0) {
-          return null;
+        if (errorCount > 0 || (!suppressWarnings && errorCount === 0)) {
+          process.exit(1);
         }
-
-        return {
-          errorCount,
-          filePath: path,
-          fixableErrorCount: 0,
-          fixableWarningCount: 0,
-          messages: lintResult.map((lintItem) => {
-            const { loc, message, severity, name } = lintItem;
-            return {
-              column: loc.start.column,
-              fatal: false,
-              line: loc.start.line,
-              message,
-              ruleId: name,
-              severity,
-            };
-          }),
-          warningCount,
-        };
-      });
-
-      const { consoleMessage, errorCount } = getReportData(problemMetaData.filter(Boolean));
-
-      console.log(consoleMessage);
-
-      if (errorCount > 0 || (!suppressWarnings && errorCount === 0)) {
-        process.exit(1);
+      }
+      else {
+        for (const lintResultElement of lintResult) {
+          const { path, fixedResult } = lintResultElement;
+          await fs.writeFile(path, fixedResult);
+        }
       }
     }
     catch (e) {
