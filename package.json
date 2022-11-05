@@ -1,12 +1,17 @@
 {
   "name": "@lint-md/cli",
   "version": "2.0.0-beta.2",
-  "description": "Cli tool to lint your markdown file for Chinese.",
+  "description": "CLI tool to lint your markdown file for Chinese.",
   "main": "lib/index.js",
   "module": "esm/index.js",
   "bin": {
     "lint-md": "lib/lint-md.js"
   },
+  "author": "hustcc",
+  "contributors": [
+    "hustcc <i@hust.cc>",
+    "yuzhanglong <loveyzl1123@gmail.com>"
+  ],
   "scripts": {
     "test": "jest --no-cache",
     "lib:cjs": "tsc -p tsconfig.json --target ES6 --module commonjs --outDir lib",
@@ -49,7 +54,9 @@
     "fs-extra": "^10.1.0",
     "glob": "^8.0.3",
     "lodash": "^4.17.21",
-    "piscina": "^3.2.0"
+    "piscina": "^3.2.0",
+    "strip-ansi": "^6.0.1",
+    "text-table": "^0.2.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
@@ -65,7 +72,6 @@
     "ts-jest": "^29.0.3",
     "typescript": "^4.8.4"
   },
-  "author": "hustcc",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/lint-md/cli/issues"

@@ -1,9 +1,9 @@
-import { Lint } from '../src';
-import { examplePath } from './test-utils';
-import { configure } from '../src/utils/configure';
 import * as process from 'process';
-import * as common from '../src/utils/common';
 import * as chalk from 'chalk';
+import { Lint } from '../src';
+import { configure } from '../src/utils/configure';
+import * as common from '../src/utils/common';
+import { examplePath } from './test-utils';
 
 describe('cli linter test', () => {
   test('lint', async () => {
@@ -51,7 +51,7 @@ describe('cli linter test', () => {
     configure('./examples/NOT_EXIST.json');
     expect(mySpy).toBeCalledWith(
       chalk.red(
-        "lint-md: Configure file './examples/NOT_EXIST.json' is not exist."
+        'lint-md: Configure file \'./examples/NOT_EXIST.json\' is not exist.'
       )
     );
   });

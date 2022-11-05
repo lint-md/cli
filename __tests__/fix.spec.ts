@@ -1,6 +1,6 @@
-import { Fix } from '../src';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Fix } from '../src';
 import { examplePath } from './test-utils';
 
 describe('fix test', () => {

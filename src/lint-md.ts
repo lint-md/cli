@@ -12,6 +12,7 @@ import { averagedGroup } from './utils/averaged-group';
 import { getLintConfig } from './utils/configure';
 import type { CLIOptions, LintWorkerOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
+import { stylishPrint } from './utils/stylish';
 
 const { version } = require('../package.json');
 
@@ -109,8 +110,31 @@ program
         })
       );
 
-      const finalResult = res.flat();
-      console.log(finalResult);
+      const problemResult = res.flat().filter((item) => {
+        return item.lintResult.length > 0;
+      });
+
+      const problems = stylishPrint(problemResult.map((res) => {
+        const { path, lintResult } = res;
+        return {
+          errorCount: lintResult.length,
+          filePath: path,
+          fixableErrorCount: 0,
+          fixableWarningCount: 0,
+          messages: lintResult.map((lintItem) => {
+            return {
+              column: lintItem.loc.start.column,
+              fatal: false,
+              line: lintItem.loc.start.line,
+              message: lintItem.message,
+              ruleId: lintItem.name,
+              severity: lintItem.severity
+            };
+          }),
+          warningCount: 0
+        };
+      }));
+      console.log(problems);
     }
     catch (e) {
       // eslint-disable-next-line no-console
