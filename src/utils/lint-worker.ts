@@ -1,14 +1,31 @@
 import { lintMarkdown } from '@lint-md/core';
+import type { LintWorkerOptions } from '../types';
 
-export interface LintWorkerOptions {
-  content: string
-  rules?: any
-  isFixMode?: boolean
-}
+const lintWorker = (options: LintWorkerOptions) => {
+  const { contentList, rules, isFixMode, isDev } = options;
+  const start = new Date().getTime();
 
-const lintSingleMarkdownFile = (options: LintWorkerOptions) => {
-  const { content, rules, isFixMode } = options;
-  return lintMarkdown(content, rules, isFixMode);
+  const res = contentList.map((content) => {
+    return lintMarkdown(content, rules, isFixMode);
+  });
+
+  const end = new Date().getTime();
+
+  if (isDev) {
+    // eslint-disable-next-line no-console
+    console.log(
+      'Group 耗时：',
+      end - start,
+      ' Group 长度：',
+      contentList.length,
+      ' 字符串长度：',
+      contentList.reduce((acc, curr) => {
+        return acc + curr.length;
+      }, 0)
+    );
+  }
+
+  return res;
 };
 
-export default lintSingleMarkdownFile;
+export default lintWorker;
