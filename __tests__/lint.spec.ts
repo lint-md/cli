@@ -2,7 +2,6 @@ import * as process from 'process';
 import * as chalk from 'chalk';
 import { Lint } from '../src';
 import { configure } from '../src/utils/configure';
-import * as common from '../src/utils/common';
 import { examplePath } from './test-utils';
 
 describe('cli linter test', () => {
@@ -38,7 +37,7 @@ describe('cli linter test', () => {
   });
 
   test('user provide config file that does not exist', async () => {
-    const mySpy = jest.spyOn(common, 'log');
+    const mySpy = jest.spyOn(console, 'log');
     // mock process exit
     const exitMock = jest.fn();
     const realProcess = process;

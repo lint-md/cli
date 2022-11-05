@@ -5,7 +5,7 @@ import stripAnsi from 'strip-ansi';
 /**
  * Given a word and a count, append an s if count is not one.
  * @param {string} word A word in its singular form.
- * @param {int} count A number controlling whether word should be pluralized.
+ * @param {number} count A number controlling whether word should be pluralized.
  * @returns {string} The original word with an s on the end if count is not one.
  */
 function pluralize(word, count) {
@@ -28,7 +28,7 @@ interface Result {
   filePath: string
 }
 
-export const stylishPrint = (results: Result[]) => {
+export const getReportData = (results: Result[]) => {
   let output = '\n';
   let errorCount = 0;
   let warningCount = 0;
@@ -99,5 +99,9 @@ export const stylishPrint = (results: Result[]) => {
   }
 
   // Resets output color, for prevent change on top level
-  return total > 0 ? chalk.reset(output) : '';
+  return {
+    consoleMessage: total > 0 ? chalk.reset(output) : '',
+    errorCount,
+    warningCount
+  };
 };

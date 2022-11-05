@@ -2,11 +2,10 @@ import * as fs from 'fs';
 import * as chalk from 'chalk';
 import { merge } from 'lodash';
 import type { CLIConfig } from '../types';
-import { log } from './common';
 
 export const getLintConfig = (configFilePath: string): CLIConfig => {
   if (configFilePath && !fs.existsSync(configFilePath)) {
-    log(chalk.red(`lint-md: Configure file '${configFilePath}' is not exist.`));
+    console.log(chalk.red(`lint-md: Configure file '${configFilePath}' is not exist.`));
     process.exit(1);
   }
 

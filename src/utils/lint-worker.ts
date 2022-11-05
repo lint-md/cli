@@ -12,7 +12,6 @@ const lintWorker = (options: LintWorkerOptions) => {
   const end = new Date().getTime();
 
   if (isDev) {
-    // eslint-disable-next-line no-console
     console.log(
       'Group 耗时：',
       end - start,

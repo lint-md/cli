@@ -20,7 +20,7 @@
     "build": "rm -rf esm lib && run-p lib:*",
     "clean": "rimraf lib esm",
     "watch": "tsc -w",
-    "test-run": "lint-md examples/chinese/ --threads=8 --dev"
+    "test-run": "node ./lib/lint-md.js examples --threads=8 --dev --config=./examples/.lintmdrc.json"
   },
   "files": [
     "esm",
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@attachments/eslint-config": "^0.3.4",
-    "@lint-md/core": "2.0.0-beta.10",
+    "@lint-md/core": "2.0.0-beta.11",
     "chalk": "^4",
     "commander": "^9.4.1",
     "fs-extra": "^10.1.0",

@@ -12,7 +12,7 @@ import { averagedGroup } from './utils/averaged-group';
 import { getLintConfig } from './utils/configure';
 import type { CLIOptions, LintWorkerOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
-import { stylishPrint } from './utils/stylish';
+import { getReportData } from './utils/get-report-data';
 
 const { version } = require('../package.json');
 
@@ -44,7 +44,7 @@ program
       return;
     }
 
-    const { fix, config, threads = '1', dev } = options;
+    const { fix, config, threads = '1', dev, suppressWarnings } = options;
 
     const startTime = new Date().getTime();
     const cpuSize = cpus().length;
@@ -52,7 +52,6 @@ program
     const isDev = Boolean(dev);
 
     if (isDev) {
-      // eslint-disable-next-line no-console
       console.log(`dev -- version: ${version}, ${new Date().toString()}`);
     }
 
@@ -89,14 +88,15 @@ program
       const res = await Promise.all(
         markdownContentGroup.map((groupItem) => {
           const asyncCall = async () => {
-            const batchLintResult: ReturnType<typeof lintMarkdown>[] = await runner.run({
-              contentList: groupItem.items.map((value) => {
-                return value.content;
-              }),
-              isFixMode,
-              rules,
-              isDev,
-            } as LintWorkerOptions);
+            const batchLintResult: ReturnType<typeof lintMarkdown>[]
+              = await runner.run({
+                contentList: groupItem.items.map((value) => {
+                  return value.content;
+                }),
+                isFixMode,
+                rules,
+                isDev,
+              } as LintWorkerOptions);
 
             return batchLintResult.map((lintResult, index) => {
               return {
@@ -114,36 +114,54 @@ program
         return item.lintResult.length > 0;
       });
 
-      const problems = stylishPrint(problemResult.map((res) => {
+      const problemMetaData = problemResult.map((res) => {
         const { path, lintResult } = res;
+
+        const errorCount = lintResult.filter(
+          item => item.severity === 2
+        ).length;
+        const warningCount = lintResult.filter(
+          item => item.severity === 1
+        ).length;
+
+        if (errorCount + warningCount === 0) {
+          return null;
+        }
+
         return {
-          errorCount: lintResult.length,
+          errorCount,
           filePath: path,
           fixableErrorCount: 0,
           fixableWarningCount: 0,
           messages: lintResult.map((lintItem) => {
+            const { loc, message, severity, name } = lintItem;
             return {
-              column: lintItem.loc.start.column,
+              column: loc.start.column,
               fatal: false,
-              line: lintItem.loc.start.line,
-              message: lintItem.message,
-              ruleId: lintItem.name,
-              severity: lintItem.severity
+              line: loc.start.line,
+              message,
+              ruleId: name,
+              severity,
             };
           }),
-          warningCount: 0
+          warningCount,
         };
-      }));
-      console.log(problems);
+      });
+
+      const { consoleMessage, errorCount } = getReportData(problemMetaData.filter(Boolean));
+
+      console.log(consoleMessage);
+
+      if (errorCount > 0 || (!suppressWarnings && errorCount === 0)) {
+        process.exit(1);
+      }
     }
     catch (e) {
-      // eslint-disable-next-line no-console
       console.log(e);
     }
 
     if (isDev) {
       const endTime = new Date().getTime();
-      // eslint-disable-next-line no-console
       console.log(`\nTime cost: ${endTime - startTime}ms`);
     }
   });
