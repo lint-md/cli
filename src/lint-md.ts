@@ -2,6 +2,7 @@
 
 import * as process from 'process';
 import * as path from 'path';
+import { cpus } from 'os';
 import * as fs from 'fs-extra';
 import { program } from 'commander';
 // @ts-expect-error
@@ -38,6 +39,10 @@ program
   )
   .arguments('[files...]')
   .action(async (files: string[], options: CLIOptions) => {
+    const startTime = new Date().getTime();
+
+    const cpuSize = cpus().length;
+
     const { fix, config, parallel } = options;
     if (!files.length) {
       return;
@@ -47,18 +52,23 @@ program
 
     const mdFiles = await loadMdFiles(files, excludeFiles);
 
+    const threadsCount = parallel ? Number(parallel) : cpuSize;
+
     const runner = new Piscina({
       filename: path.resolve(__dirname, 'utils', 'lint-worker'),
-      maxThreads: parseInt(parallel),
+      minThreads: threadsCount,
+      maxThreads: threadsCount,
     });
 
-    const fileContentList = await Promise.all(mdFiles.map((path) => {
-      const call = async () => {
-        const res = await fs.readFile(path);
-        return res.toString();
-      };
-      return call();
-    }));
+    const fileContentList = await Promise.all(
+      mdFiles.map((path) => {
+        const call = async () => {
+          const res = await fs.readFile(path);
+          return res.toString();
+        };
+        return call();
+      })
+    );
 
     try {
       const finalResult = await Promise.all(
@@ -72,11 +82,13 @@ program
           return runner.run(lintWorkerOptions);
         })
       );
-      console.log(finalResult.length);
     }
     catch (e) {
       console.log(e);
     }
+
+    const endTime = new Date().getTime();
+    console.log(`Time cost: ${endTime - startTime}ms`);
   });
 
 program.parse(process.argv);

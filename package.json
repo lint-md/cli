@@ -12,7 +12,7 @@
     "lib:cjs": "tsc -p tsconfig.json --target ES6 --module commonjs --outDir lib",
     "lib:esm": "tsc -p tsconfig.json --target ES6 --module ESNext --outDir esm",
     "lint": "eslint --ext .ts,.tsx ./ --fix",
-    "build": "run-p lib:*",
+    "build": "rm -rf esm lib && run-p lib:*",
     "clean": "rimraf lib esm",
     "watch": "tsc -w"
   },
