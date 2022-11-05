@@ -9,7 +9,7 @@ export interface CLIOptions {
   fix?: boolean
   config?: string
   suppressWarnings: boolean
-  parallel?: number
+  parallel?: string
 }
 
 /** CLI lint 结果选项 */
