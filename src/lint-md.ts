@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
-import * as path from 'path';
 import { cpus } from 'os';
-import type { lintMarkdown } from '@lint-md/core';
 import * as fs from 'fs-extra';
 import { program } from 'commander';
-// @ts-expect-error
-import { Piscina } from 'piscina';
-import { averagedGroup } from './utils/averaged-group';
 import { batchLint } from './utils/batch-lint';
 import { getLintConfig } from './utils/configure';
-import type { CLIOptions, LintWorkerOptions } from './types';
+import type { CLIOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
 
@@ -81,7 +76,7 @@ program
       else {
         for (const lintResultElement of lintResult) {
           const { path, fixedResult } = lintResultElement;
-          await fs.writeFile(path, fixedResult);
+          await fs.writeFile(path, fixedResult.result);
         }
       }
     }

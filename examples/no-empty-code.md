@@ -1,8 +1,4 @@
- - code
+- code
 
 ```js
 ```
-
- - inline code
-
-``
