@@ -64,6 +64,7 @@ program
         isFixMode,
         rules
       );
+
       if (!isFixMode) {
         const { consoleMessage, errorCount } = getReportData(lintResult);
 

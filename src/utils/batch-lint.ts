@@ -1,5 +1,5 @@
 import path from 'path';
-import type { lintMarkdown } from '@lint-md/core';
+import type { LintMdRulesConfig, lintMarkdown } from '@lint-md/core';
 import * as fs from 'fs-extra';
 // @ts-expect-error
 import { Piscina } from 'piscina';
@@ -11,7 +11,7 @@ export const batchLint = async (
   mdFilePaths: string[],
   isDev: boolean,
   isFixMode: boolean,
-  rules: Record<string, any>
+  rules: LintMdRulesConfig
 ) => {
   const runner = new Piscina({
     filename: path.resolve(__dirname, './lint-worker'),

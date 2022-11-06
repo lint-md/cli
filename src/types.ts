@@ -1,7 +1,9 @@
 /** CLI 配置 */
+import type { LintMdRulesConfig } from '@lint-md/core';
+
 export interface CLIConfig {
   excludeFiles?: string[]
-  rules: any
+  rules: LintMdRulesConfig
 }
 
 /** 用户传入的 CLI 选项 */
@@ -27,7 +29,7 @@ export interface CliErrorCount {
 
 export interface LintWorkerOptions {
   contentList: string[]
-  rules?: any
+  rules?: LintMdRulesConfig
   isFixMode?: boolean
   isDev?: boolean
 }
