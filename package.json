@@ -1,6 +1,6 @@
 {
   "name": "@lint-md/cli",
-  "version": "2.0.0-beta.6",
+  "version": "2.0.0-beta.8",
   "description": "CLI tool to lint your markdown file for Chinese.",
   "main": "lib/index.js",
   "module": "esm/index.js",
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@attachments/eslint-config": "^0.3.4",
-    "@lint-md/core": "2.0.0-beta.15",
+    "@lint-md/core": "2.0.0-beta.17",
     "chalk": "^4",
     "commander": "^9.4.1",
     "fs-extra": "^10.1.0",

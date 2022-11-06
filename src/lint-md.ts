@@ -40,7 +40,13 @@ program
       return;
     }
 
-    const { fix, config, threads = '1', dev, suppressWarnings } = options;
+    const {
+      fix,
+      config,
+      threads = '1',
+      dev,
+      suppressWarnings
+    } = options;
 
     const startTime = new Date().getTime();
     const cpuSize = cpus().length;
@@ -51,10 +57,19 @@ program
       console.log(`dev -- version: ${version}, ${new Date().toString()}`);
     }
 
-    const { rules, excludeFiles } = getLintConfig(config);
+    const {
+      rules,
+      excludeFiles
+    } = getLintConfig(config);
     const threadsCount = threads ? Number(threads) : cpuSize;
 
     const mdFiles = await loadMdFiles(files, excludeFiles);
+
+    if (!mdFiles.length) {
+      console.log('🎉 No markdown files to lint 🎉');
+      process.exit(0);
+      return;
+    }
 
     try {
       const lintResult = await batchLint(
@@ -66,7 +81,10 @@ program
       );
 
       if (!isFixMode) {
-        const { consoleMessage, errorCount } = getReportData(lintResult);
+        const {
+          consoleMessage,
+          errorCount
+        } = getReportData(lintResult);
 
         console.log(consoleMessage);
 
@@ -76,7 +94,10 @@ program
       }
       else {
         for (const lintResultElement of lintResult) {
-          const { path, fixedResult } = lintResultElement;
+          const {
+            path,
+            fixedResult
+          } = lintResultElement;
           await fs.writeFile(path, fixedResult.result);
         }
       }
@@ -85,10 +106,8 @@ program
       console.log(e);
     }
 
-    if (isDev) {
-      const endTime = new Date().getTime();
-      console.log(`\nTime cost: ${endTime - startTime}ms`);
-    }
+    const endTime = new Date().getTime();
+    console.log(`\n⌛️Time cost: ${endTime - startTime}ms`);
   });
 
 program.parse(process.argv);

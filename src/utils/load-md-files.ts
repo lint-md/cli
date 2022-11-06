@@ -28,13 +28,15 @@ export const loadMdFiles = async (
   const filePaths = await Promise.all(
     // 先把 globList 去重，防止执行多余的 glob 查询
     uniq(globList).map((fileList) => {
-      return promisifyGlob(`${fileList}/**/*.{md,markdown}`, {
+      return promisifyGlob(`${fileList}`, {
         ignore: excludeFiles,
         absolute: true,
       });
     })
   );
 
-  // 最后对获取的路径结果进行一次去重，防止重复的文件
-  return uniq(filePaths.flat()) as string[];
+  // 最后对获取的路径结果进行一次去重，防止重复的文件，同时只考虑 Markdown 文本
+  return (uniq(filePaths.flat()) as string[]).filter((item) => {
+    return item.endsWith('.md') || item.endsWith('.markdown');
+  });
 };
