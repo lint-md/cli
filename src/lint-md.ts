@@ -40,13 +40,7 @@ program
       return;
     }
 
-    const {
-      fix,
-      config,
-      threads = '1',
-      dev,
-      suppressWarnings
-    } = options;
+    const { fix, config, threads = '1', dev, suppressWarnings } = options;
 
     const startTime = new Date().getTime();
     const cpuSize = cpus().length;
@@ -57,10 +51,7 @@ program
       console.log(`dev -- version: ${version}, ${new Date().toString()}`);
     }
 
-    const {
-      rules,
-      excludeFiles
-    } = getLintConfig(config);
+    const { rules, excludeFiles } = getLintConfig(config);
     const threadsCount = threads ? Number(threads) : cpuSize;
 
     const mdFiles = await loadMdFiles(files, excludeFiles);
@@ -81,23 +72,19 @@ program
       );
 
       if (!isFixMode) {
-        const {
-          consoleMessage,
-          errorCount
-        } = getReportData(lintResult);
+        const { consoleMessage, errorCount, warningCount }
+          = getReportData(lintResult);
 
         console.log(consoleMessage);
 
-        if (errorCount > 0 || (!suppressWarnings && errorCount === 0)) {
+        // 错误数目大于 0 或者没有抑制警告并且警告数目不为 0
+        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
           process.exit(1);
         }
       }
       else {
         for (const lintResultElement of lintResult) {
-          const {
-            path,
-            fixedResult
-          } = lintResultElement;
+          const { path, fixedResult } = lintResultElement;
           await fs.writeFile(path, fixedResult.result);
         }
       }
@@ -107,7 +94,7 @@ program
     }
 
     const endTime = new Date().getTime();
-    console.log(`\n⌛️Time cost: ${endTime - startTime}ms`);
+    console.log(`⌛️Done in ${endTime - startTime}ms.`);
   });
 
 program.parse(process.argv);
