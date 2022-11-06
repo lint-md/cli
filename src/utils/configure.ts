@@ -1,23 +1,34 @@
 import * as fs from 'fs';
-import * as chalk from 'chalk';
+import * as path from 'path';
+import chalk from 'chalk';
 import { merge } from 'lodash';
 import type { CLIConfig } from '../types';
 
 export const getLintConfig = (configFilePath: string): CLIConfig => {
   if (configFilePath && !fs.existsSync(configFilePath)) {
-    console.log(chalk.red(`lint-md: Configure file '${configFilePath}' is not exist.`));
+    console.log(
+      chalk.red(`lint-md: Configure file '${configFilePath}' is not exist.`)
+    );
     process.exit(1);
   }
 
   let config: CLIConfig;
-  try {
-    config = JSON.parse(
-      fs.readFileSync(configFilePath || './.lintmdrc').toString()
-    );
-  }
-  catch (e) {
-    // 不存在配置文件、配置文件不是 json，配置为空！
+
+  const configPath = path.resolve(configFilePath || './.lintmdrc');
+
+  // 如果不存在文件直接返回空对象
+  if (!fs.existsSync(configPath)) {
     config = {} as any;
+  }
+  else {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath).toString());
+    }
+    catch (e) {
+      console.log(chalk.red(`[lint-md] Configure file '${configPath}' is invalid.`));
+      console.log(e);
+      process.exit(1);
+    }
   }
 
   return merge(
@@ -28,4 +39,3 @@ export const getLintConfig = (configFilePath: string): CLIConfig => {
     config
   );
 };
-

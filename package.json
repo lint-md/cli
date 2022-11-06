@@ -1,6 +1,6 @@
 {
   "name": "@lint-md/cli",
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-beta.5",
   "description": "CLI tool to lint your markdown file for Chinese.",
   "main": "lib/index.js",
   "module": "esm/index.js",
@@ -79,6 +79,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lint-md/cli.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   },
   "homepage": "https://github.com/lint-md/cli#readme"
 }
