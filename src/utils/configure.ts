@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { cpus } from 'os';
 import * as path from 'path';
 import chalk from 'chalk';
 import { merge } from 'lodash';
@@ -25,7 +26,9 @@ export const getLintConfig = (configFilePath: string): CLIConfig => {
       config = JSON.parse(fs.readFileSync(configPath).toString());
     }
     catch (e) {
-      console.log(chalk.red(`[lint-md] Configure file '${configPath}' is invalid.`));
+      console.log(
+        chalk.red(`[lint-md] Configure file '${configPath}' is invalid.`)
+      );
       console.log(e);
       process.exit(1);
     }
@@ -34,8 +37,19 @@ export const getLintConfig = (configFilePath: string): CLIConfig => {
   return merge(
     {
       excludeFiles: ['**/node_modules/**', '**/.git/**'],
-      rules: {}
+      rules: {},
     },
     config
   );
+};
+
+export const getThreadCount = (threadCount: string | number | boolean) => {
+  if (typeof threadCount === 'number') {
+    return threadCount;
+  }
+  if (typeof threadCount === 'string') {
+    return Number(threadCount);
+  }
+
+  return threadCount ? cpus().length : 1;
 };

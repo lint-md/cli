@@ -15,7 +15,7 @@ export const batchLint = async (
 ) => {
   const runner = new Piscina({
     filename: path.resolve(__dirname, './lint-worker'),
-    maxThreads: threadsCount,
+    maxThreads: Math.max(threadsCount, 1),
   });
 
   const fileContentList = await Promise.all(

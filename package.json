@@ -20,7 +20,7 @@
     "build": "rm -rf esm lib && run-p build:*",
     "clean": "rimraf lib esm",
     "watch": "tsc -w",
-    "cli-run": "node ./lib/lint-md.js examples --config=./examples/.lintmdrc.json"
+    "cli-run": "node ./lib/lint-md.js examples/correct-title-trailing-punctuation.md"
   },
   "files": [
     "esm",

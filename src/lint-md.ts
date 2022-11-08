@@ -5,7 +5,7 @@ import { cpus } from 'os';
 import * as fs from 'fs-extra';
 import { program } from 'commander';
 import { batchLint } from './utils/batch-lint';
-import { getLintConfig } from './utils/configure';
+import { getLintConfig, getThreadCount } from './utils/configure';
 import type { CLIOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
@@ -40,10 +40,9 @@ program
       return;
     }
 
-    const { fix, config, threads = '1', dev, suppressWarnings } = options;
+    const { fix, config, threads, dev, suppressWarnings } = options;
 
     const startTime = new Date().getTime();
-    const cpuSize = cpus().length;
     const isFixMode = Boolean(fix);
     const isDev = Boolean(dev);
 
@@ -52,7 +51,6 @@ program
     }
 
     const { rules, excludeFiles } = getLintConfig(config);
-    const threadsCount = threads ? Number(threads) : cpuSize;
 
     const mdFiles = await loadMdFiles(files, excludeFiles);
 
@@ -64,7 +62,7 @@ program
 
     try {
       const lintResult = await batchLint(
-        threadsCount,
+        getThreadCount(threads),
         mdFiles,
         isDev,
         isFixMode,
