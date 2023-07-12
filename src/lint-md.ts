@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
-import { cpus } from 'os';
 import * as fs from 'fs-extra';
 import { program } from 'commander';
 import { batchLint } from './utils/batch-lint';
