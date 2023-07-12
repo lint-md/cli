@@ -1,4 +1,6 @@
 module.exports = {
-  extends: ['plugin:@attachments/eslint-plugin/recommended'],
-  plugins: ['@attachments/eslint-plugin']
+  extends: '@attachments/eslint-config',
+  rules: {
+    'no-console': 'off',
+  },
 };

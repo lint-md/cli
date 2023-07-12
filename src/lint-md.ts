@@ -1,50 +1,97 @@
 #!/usr/bin/env node
 
-import * as program from 'commander';
-import { Lint } from './lint';
-import { Fix } from './fix';
-import { configure } from './helper/configure';
-import { CliOptions } from './types';
 import * as process from 'process';
+import * as fs from 'fs-extra';
+import { program } from 'commander';
+import { batchLint } from './utils/batch-lint';
+import { getLintConfig, getThreadCount } from './utils/configure';
+import type { CLIOptions } from './types';
+import { loadMdFiles } from './utils/load-md-files';
+import { getReportData } from './utils/get-report-data';
 
 const { version } = require('../package.json');
 
 program
-  .version(version, '-v, --version')
+  .version(
+    version,
+    '-v, --version',
+    'output the version number（查看当前版本）'
+  )
   .usage('<lint-md> [files...]')
   .description('lint your markdown files')
   .option(
     '-c, --config [configure-file]',
-    'use the configure file, default .lintmdrc'
+    'use the configure file, default .lintmdrc（使用配置文件，默认为 .lintmdrc）'
   )
-  .option('-f, --fix', 'fix the errors automatically')
+  .option('-f, --fix', 'fix the errors automatically（开启修复模式）')
+  .option('-d, --dev', 'open dev mode（开启开发者模式）')
+  .option(
+    '-t, --threads [thread-count]',
+    'The number of threads. The default is based on the number of available CPUs.（执行 Lint / Fix 的线程数，默认为 1）'
+  )
   .option(
     '-s, --suppress-warnings',
-    'suppress all warnings, that means warnings will not blocked ci'
+    'suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）'
   )
   .arguments('[files...]')
-  .action(async (files: string[], cmd: CliOptions) => {
+  .action(async (files: string[], options: CLIOptions) => {
     if (!files.length) {
       return;
     }
 
-    const config = configure(cmd.config);
-    const fix = cmd.fix;
-    if (fix) {
-      await new Fix(files, config).start();
-    } else {
-      const linter = new Lint(files, config);
-      await linter.start();
-      linter.showResult().printOverview();
+    const { fix, config, threads, dev, suppressWarnings } = options;
 
-      const { error, warning } = linter.countError();
-      // 如果用户配置了 suppress warnings, 则不阻塞 ci
-      const isWarningBlock = warning > 0 && !cmd.suppressWarnings;
+    const startTime = new Date().getTime();
+    const isFixMode = Boolean(fix);
+    const isDev = Boolean(dev);
 
-      if (error > 0 || isWarningBlock) {
-        process.exit(1);
+    if (isDev) {
+      console.log(`dev -- version: ${version}, ${new Date().toString()}`);
+    }
+
+    const { rules, excludeFiles } = getLintConfig(config);
+
+    const mdFiles = await loadMdFiles(files, excludeFiles);
+
+    if (!mdFiles.length) {
+      console.log('🎉 No markdown files to lint 🎉');
+      process.exit(0);
+      return;
+    }
+
+    try {
+      const lintResult = await batchLint(
+        getThreadCount(threads),
+        mdFiles,
+        isDev,
+        isFixMode,
+        rules
+      );
+
+      if (!isFixMode) {
+        const { consoleMessage, errorCount, warningCount }
+          = getReportData(lintResult);
+
+        console.log(consoleMessage);
+
+        // 错误数目大于 0 或者没有抑制警告并且警告数目不为 0
+        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
+          process.exit(1);
+        }
+      }
+      else {
+        for (const lintResultElement of lintResult) {
+          const { path, fixedResult } = lintResultElement;
+          await fs.writeFile(path, fixedResult.result);
+        }
       }
     }
+    catch (e) {
+      console.log(e);
+    }
+
+    const endTime = new Date().getTime();
+    console.log(`⌛️Done in ${endTime - startTime}ms.`);
   });
 
 program.parse(process.argv);
