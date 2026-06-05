@@ -74,7 +74,7 @@ lint-md "docs/**/*.md" --fix
 
 安装 `@lint-md/cli` 后，在 `.vimrc` 或 `init.vim` 中添加以下配置即可在 Vim 中实时检测 Markdown 格式问题：
 
-> `--format=json` 模式下 stdout **仅输出合法 JSON**，耗时日志、异常信息均走 stderr。请勿在 ALE 的 `command` 中添加 `-d, --dev` 等参数。`g:ale_linters = { 'markdown': ['lintmd'] }` 确保 lint-md 作为唯一 Markdown linter 以避免和 markdownlint 等工具冲突。
+> `--format=json` 模式下 stdout **仅输出合法 JSON**，耗时日志、异常信息均走 stderr。通常不建议在 ALE 的 `command` 中添加 `-d, --dev` 参数（调试信息会写入 stderr，虽不破坏 JSON 但无必要）。`g:ale_linters = { 'markdown': ['lintmd'] }` 让 lint-md 作为唯一的 Markdown linter，避免和 markdownlint 等工具的诊断结果重复。
 
 ```vim
 function! LintMdAleHandler(bufnr, lines) abort
@@ -109,5 +109,6 @@ call ale#linter#Define('markdown', {
 \   'callback': 'LintMdAleHandler',
 \})
 
+" 让 lint-md 作为唯一 Markdown linter，避免和 markdownlint 等诊断重复
 let g:ale_linters = { 'markdown': ['lintmd'] }
 ```
