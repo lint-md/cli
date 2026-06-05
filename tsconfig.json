@@ -11,11 +11,13 @@
       "node"
     ],
     "allowJs": true,
-    "skipLibCheck": true,
+    "baseUrl": "./",
+    "paths": {
+      "eventemitter-asyncresource": ["src/types/eventemitter-asyncresource"]
+    },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "sourceMap": true,
-    "baseUrl": "./",
     "outDir": "lib"
   },
   "include": [
