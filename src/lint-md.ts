@@ -33,13 +33,18 @@ program
     '-s, --suppress-warnings',
     'suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）'
   )
+  .option(
+    '-F, --format <format>',
+    'output format: default | json（输出格式，默认 default）',
+    'default'
+  )
   .arguments('[files...]')
   .action(async (files: string[], options: CLIOptions) => {
     if (!files.length) {
       return;
     }
 
-    const { fix, config, threads, dev, suppressWarnings } = options;
+    const { fix, config, threads, dev, suppressWarnings, format } = options;
 
     const startTime = new Date().getTime();
     const isFixMode = Boolean(fix);
@@ -70,7 +75,7 @@ program
 
       if (!isFixMode) {
         const { consoleMessage, errorCount, warningCount }
-          = getReportData(lintResult);
+          = getReportData(lintResult, format);
 
         console.log(consoleMessage);
 

@@ -45,6 +45,7 @@ lint-md "docs/**/*.md" --fix
 - `-f, --fix`：自动修复可修复问题
 - `-t, --threads [thread-count]`：设置并发线程数
 - `-s, --suppress-warnings`：忽略 warning 对退出码的影响（便于 CI 渐进接入）
+- `-F, --format <format>`：输出格式，可选 `default`（默认）或 `json`（机器可读）
 - `-d, --dev`：开发调试模式
 - `-v, --version`：查看版本
 
@@ -68,3 +69,32 @@ lint-md "docs/**/*.md" --fix
 
 - `0`：无错误（或仅 warning 且启用了 `--suppress-warnings`）
 - `1`：存在错误，或存在 warning 且未启用 `--suppress-warnings`
+
+## Vim ALE 集成
+
+安装 `@lint-md/cli` 后，在 `.vimrc` 或 `init.vim` 中添加以下配置即可在 Vim 中实时检测 Markdown 格式问题：
+
+```vim
+function! s:lintmd_handler(bufnr, lines) abort
+  let l:data = json_decode(join(a:lines, ''))
+  let l:results = []
+  for l:item in l:data
+    for l:e in l:item.errors
+      call add(l:results, {
+      \ 'lnum': l:e.line,
+      \ 'col': l:e.column,
+      \ 'type': l:e.severity == 2 ? 'E' : 'W',
+      \ 'text': l:e.message . ' [' . l:e.ruleId . ']',
+      \ })
+    endfor
+  endfor
+  return l:results
+endfunction
+
+call ale#linter#Define('markdown', {
+\   'name': 'lintmd',
+\   'executable': 'lint-md',
+\   'command': '%e --format=json %t',
+\   'callback': 's:lintmd_handler',
+\})
+```

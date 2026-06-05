@@ -6,11 +6,14 @@ export interface CLIConfig {
   rules: LintMdRulesConfig
 }
 
+export type OutputFormat = 'default' | 'json'
+
 /** 用户传入的 CLI 选项 */
 export interface CLIOptions {
   fix?: boolean
   dev?: boolean
   config?: string
+  format?: OutputFormat
   suppressWarnings: boolean
   threads?: string | boolean
 }

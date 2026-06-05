@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import table from 'text-table';
 import stripAnsi from 'strip-ansi';
+import type { OutputFormat } from '../types';
 
 /**
  * Given a word and a count, append an s if count is not one.
@@ -12,15 +13,17 @@ function pluralize(word, count) {
   return count === 1 ? word : `${word}s`;
 }
 
+interface ResultMessage {
+  fatal: boolean
+  severity: number
+  line: number
+  column: number
+  message: string
+  ruleId: string
+}
+
 interface Result {
-  messages: {
-    fatal: boolean
-    severity: number
-    line: number
-    column: number
-    message: string
-    ruleId: string
-  }[]
+  messages: ResultMessage[]
   errorCount: number
   warningCount: number
   fixableErrorCount: number
@@ -28,9 +31,21 @@ interface Result {
   filePath: string
 }
 
-// TODO: 补充类型定义
-export const getReportData = (problemResult: any[]) => {
-  const results: Result[] = problemResult
+interface JsonError {
+  line: number
+  column: number
+  severity: number
+  message: string
+  ruleId: string
+}
+
+interface JsonResult {
+  path: string
+  errors: JsonError[]
+}
+
+const buildResults = (problemResult: any[]): Result[] => {
+  return problemResult
     .map((res) => {
       const { path, lintResult } = res;
 
@@ -66,6 +81,41 @@ export const getReportData = (problemResult: any[]) => {
       };
     })
     .filter(Boolean);
+};
+
+const formatJsonResult = (results: Result[]) => {
+  const jsonResults: JsonResult[] = results.map((result) => {
+    return {
+      path: result.filePath,
+      errors: result.messages.map((msg) => {
+        return {
+          line: msg.line,
+          column: msg.column,
+          severity: msg.severity,
+          message: msg.message,
+          ruleId: msg.ruleId,
+        };
+      }),
+    };
+  });
+
+  const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0);
+  const warningCount = results.reduce((sum, r) => sum + r.warningCount, 0);
+
+  return {
+    consoleMessage: JSON.stringify(jsonResults, null, 2),
+    errorCount,
+    warningCount,
+  };
+};
+
+// TODO: 补充类型定义
+export const getReportData = (problemResult: any[], format: OutputFormat = 'default') => {
+  const results: Result[] = buildResults(problemResult);
+
+  if (format === 'json') {
+    return formatJsonResult(results);
+  }
 
   let output = '\n';
   let errorCount = 0;
