@@ -11,6 +11,8 @@ import { getReportData } from './utils/get-report-data';
 
 const { version } = require('../package.json');
 
+const VALID_FORMATS = ['default', 'json'];
+
 program
   .version(
     version,
@@ -45,6 +47,12 @@ program
     }
 
     const { fix, config, threads, dev, suppressWarnings, format } = options;
+
+    if (format && !VALID_FORMATS.includes(format)) {
+      console.error(`Invalid format: ${format}. Valid values: ${VALID_FORMATS.join(', ')}`);
+      process.exit(1);
+      return;
+    }
 
     const startTime = new Date().getTime();
     const isFixMode = Boolean(fix);
@@ -96,7 +104,9 @@ program
     }
 
     const endTime = new Date().getTime();
-    console.log(`⌛️Done in ${endTime - startTime}ms.`);
+    if (format === 'default') {
+      console.log(`⌛️Done in ${endTime - startTime}ms.`);
+    }
   });
 
 program.parse(process.argv);
