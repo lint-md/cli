@@ -12,7 +12,7 @@ const lintWorker = (options: LintWorkerOptions) => {
   const end = new Date().getTime();
 
   if (isDev) {
-    console.log(
+    console.error(
       'Group 耗时：',
       end - start,
       ' Group 长度：',

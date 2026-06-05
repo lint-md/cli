@@ -59,7 +59,12 @@ program
     const isDev = Boolean(dev);
 
     if (isDev) {
-      console.log(`dev -- version: ${version}, ${new Date().toString()}`);
+      if (format === 'json') {
+        console.error(`dev -- version: ${version}, ${new Date().toString()}`);
+      }
+      else {
+        console.log(`dev -- version: ${version}, ${new Date().toString()}`);
+      }
     }
 
     const { rules, excludeFiles } = getLintConfig(config);
@@ -67,7 +72,12 @@ program
     const mdFiles = await loadMdFiles(files, excludeFiles);
 
     if (!mdFiles.length) {
-      console.log('🎉 No markdown files to lint 🎉');
+      if (format === 'json') {
+        console.log('[]');
+      }
+      else {
+        console.log('🎉 No markdown files to lint 🎉');
+      }
       process.exit(0);
       return;
     }
@@ -100,7 +110,7 @@ program
       }
     }
     catch (e) {
-      console.log(e);
+      console.error(e);
     }
 
     const endTime = new Date().getTime();
