@@ -31,7 +31,7 @@ interface Result {
   filePath: string
 }
 
-interface JsonError {
+interface JsonMessage {
   line: number
   column: number
   severity: number
@@ -41,7 +41,7 @@ interface JsonError {
 
 interface JsonResult {
   path: string
-  errors: JsonError[]
+  messages: JsonMessage[]
 }
 
 const buildResults = (problemResult: any[]): Result[] => {
@@ -87,7 +87,7 @@ const formatJsonResult = (results: Result[]) => {
   const jsonResults: JsonResult[] = results.map((result) => {
     return {
       path: result.filePath,
-      errors: result.messages.map((msg) => {
+      messages: result.messages.map((msg) => {
         return {
           line: msg.line,
           column: msg.column,

@@ -81,7 +81,7 @@ function! s:lintmd_handler(bufnr, lines) abort
   let l:data = json_decode(join(a:lines, ''))
   let l:results = []
   for l:item in l:data
-    for l:e in l:item.errors
+    for l:e in l:item.messages
       call add(l:results, {
       \ 'lnum': l:e.line,
       \ 'col': l:e.column,
