@@ -109,6 +109,6 @@ call ale#linter#Define('markdown', {
 \   'callback': 'LintMdAleHandler',
 \})
 
-" 让 lint-md 作为唯一 Markdown linter，避免和 markdownlint 等诊断重复
-let g:ale_linters = { 'markdown': ['lintmd'] }
+" 可选：让 lint-md 作为唯一 Markdown linter，避免和 markdownlint 等诊断重复
+" let g:ale_linters = { 'markdown': ['lintmd'] }
 ```
