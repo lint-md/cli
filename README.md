@@ -77,7 +77,7 @@ lint-md "docs/**/*.md" --fix
 > `--format=json` 模式下 stdout **仅输出合法 JSON**，耗时日志、异常信息均走 stderr。请勿在 ALE 的 `command` 中添加 `-d, --dev` 等参数。`g:ale_linters = { 'markdown': ['lintmd'] }` 确保 lint-md 作为唯一 Markdown linter 以避免和 markdownlint 等工具冲突。
 
 ```vim
-function! s:lintmd_handler(bufnr, lines) abort
+function! LintMdAleHandler(bufnr, lines) abort
   let l:data = json_decode(join(a:lines, ''))
   let l:results = []
   for l:item in l:data
@@ -97,6 +97,8 @@ call ale#linter#Define('markdown', {
 \   'name': 'lintmd',
 \   'executable': 'lint-md',
 \   'command': '%e --format=json %t',
-\   'callback': 's:lintmd_handler',
+\   'callback': 'LintMdAleHandler',
 \})
+
+let g:ale_linters = { 'markdown': ['lintmd'] }
 ```
