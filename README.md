@@ -78,10 +78,19 @@ lint-md "docs/**/*.md" --fix
 
 ```vim
 function! LintMdAleHandler(bufnr, lines) abort
-  let l:data = json_decode(join(a:lines, ''))
+  if empty(a:lines)
+    return []
+  endif
+
+  try
+    let l:data = json_decode(join(a:lines, ''))
+  catch
+    return []
+  endtry
+
   let l:results = []
   for l:item in l:data
-    for l:e in l:item.messages
+    for l:e in get(l:item, 'messages', [])
       call add(l:results, {
       \ 'lnum': l:e.line,
       \ 'col': l:e.column,
