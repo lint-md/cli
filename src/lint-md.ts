@@ -11,7 +11,7 @@ import { getReportData } from './utils/get-report-data';
 
 const { version } = require('../package.json');
 
-const VALID_FORMATS = ['default', 'json'];
+const VALID_FORMATS = ['default', 'json'] as const;
 
 program
   .version(
