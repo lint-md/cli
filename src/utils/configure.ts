@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import { cpus } from 'os';
 import * as path from 'path';
 import chalk from 'chalk';
-import { merge } from 'lodash';
 import type { CLIConfig } from '../types';
 
 export const getLintConfig = (configFilePath: string): CLIConfig => {
@@ -34,13 +33,11 @@ export const getLintConfig = (configFilePath: string): CLIConfig => {
     }
   }
 
-  return merge(
-    {
-      excludeFiles: ['**/node_modules/**', '**/.git/**'],
-      rules: {},
-    },
-    config
-  );
+  return {
+    excludeFiles: ['**/node_modules/**', '**/.git/**'],
+    rules: {},
+    ...config,
+  };
 };
 
 export const getThreadCount = (threadCount: string | number | boolean) => {
