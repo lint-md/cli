@@ -1,7 +1,6 @@
 import path from 'path';
 import type { LintMdRulesConfig, lintMarkdown } from '@lint-md/core';
 import * as fs from 'fs-extra';
-// @ts-expect-error
 import { Piscina } from 'piscina';
 import type { LintWorkerOptions } from '../types';
 import { averagedGroup } from './averaged-group';
