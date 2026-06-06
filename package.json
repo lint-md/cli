@@ -24,8 +24,7 @@
   },
   "files": [
     "esm",
-    "lib",
-    "src"
+    "lib"
   ],
   "keywords": [
     "lint",
