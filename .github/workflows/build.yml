@@ -1,25 +1,39 @@
 name: build
 
-on: [ pull_request ]
+on:
+  push:
+    branches: [master]
+  pull_request:
 
 jobs:
   unit-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: ${{ matrix.node-version }}
 
       - name: Install modules
-        run: yarn install
+        run: npm install
 
       - name: Run tests
-        run: yarn test
+        run: npm test
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
 
       - name: Install modules
-        run: yarn install
+        run: npm install
 
-      - name: Run tests
-        run: yarn lint
+      - name: Run lint
+        run: npm run lint

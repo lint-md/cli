@@ -48,5 +48,5 @@ export const getThreadCount = (threadCount: string | number | boolean) => {
     return Number(threadCount);
   }
 
-  return threadCount ? cpus().length : 1;
+  return cpus().length;
 };

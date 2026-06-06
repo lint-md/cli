@@ -24,8 +24,7 @@
   },
   "files": [
     "esm",
-    "lib",
-    "src"
+    "lib"
   ],
   "keywords": [
     "lint",
@@ -52,7 +51,7 @@
     "chalk": "^4",
     "commander": "^9.4.1",
     "glob": "^8.0.3",
-    "piscina": "^3.2.0",
+    "piscina": "^5.1.4",
     "strip-ansi": "^6.0.1",
     "text-table": "^0.2.0"
   },

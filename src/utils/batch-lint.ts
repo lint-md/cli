@@ -1,7 +1,6 @@
 import path from 'path';
 import { readFile } from 'fs/promises';
 import type { LintMdRulesConfig, lintMarkdown } from '@lint-md/core';
-// @ts-expect-error
 import { Piscina } from 'piscina';
 import type { LintWorkerOptions } from '../types';
 import { averagedGroup } from './averaged-group';
@@ -32,7 +31,7 @@ export const batchLint = async (
   );
 
   // 将 md 文件内容进行分组，供各个线程分配执行
-  const markdownContentGroup = averagedGroup(fileContentList, 10, (item) => {
+  const markdownContentGroup = averagedGroup(fileContentList, Math.max(threadsCount, 1), (item) => {
     return item.content.length;
   });
 
