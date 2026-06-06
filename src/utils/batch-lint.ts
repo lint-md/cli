@@ -1,6 +1,6 @@
 import path from 'path';
+import { readFile } from 'fs/promises';
 import type { LintMdRulesConfig, lintMarkdown } from '@lint-md/core';
-import * as fs from 'fs-extra';
 import { Piscina } from 'piscina';
 import type { LintWorkerOptions } from '../types';
 import { averagedGroup } from './averaged-group';
@@ -20,7 +20,7 @@ export const batchLint = async (
   const fileContentList = await Promise.all(
     mdFilePaths.map((path) => {
       const call = async () => {
-        const res = await fs.readFile(path);
+        const res = await readFile(path);
         return {
           path,
           content: res.toString(),
