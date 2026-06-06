@@ -37,6 +37,6 @@ export const loadMdFiles = async (
 
   // 最后对获取的路径结果进行一次去重，防止重复的文件，同时只考虑 Markdown 文本
   return (uniq(filePaths.flat()) as string[]).filter((item) => {
-    return item.endsWith('.md') || item.endsWith('.markdown');
+    return item.endsWith('.md') || item.endsWith('.markdown') || item.endsWith('.mdx');
   });
 };
