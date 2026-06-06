@@ -54,7 +54,7 @@
     "fs-extra": "^10.1.0",
     "glob": "^8.0.3",
     "lodash": "^4.17.21",
-    "piscina": "^3.2.0",
+    "piscina": "^5.1.4",
     "strip-ansi": "^6.0.1",
     "text-table": "^0.2.0"
   },
