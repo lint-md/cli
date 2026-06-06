@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
-import * as fs from 'fs-extra';
+import { writeFile } from 'fs/promises';
 import { program } from 'commander';
 import { batchLint } from './utils/batch-lint';
 import { getLintConfig, getThreadCount } from './utils/configure';
@@ -82,7 +82,7 @@ program
       else {
         for (const lintResultElement of lintResult) {
           const { path, fixedResult } = lintResultElement;
-          await fs.writeFile(path, fixedResult.result);
+          await writeFile(path, fixedResult.result);
         }
       }
     }
