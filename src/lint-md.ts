@@ -16,11 +16,8 @@ const readStdin = (): Promise<string> => {
   return new Promise((resolve) => {
     let content = '';
     process.stdin.setEncoding('utf8');
-    process.stdin.on('readable', () => {
-      let chunk;
-      while ((chunk = process.stdin.read()) !== null) {
-        content += chunk;
-      }
+    process.stdin.on('data', (chunk) => {
+      content += chunk;
     });
     process.stdin.on('end', () => {
       resolve(content);
