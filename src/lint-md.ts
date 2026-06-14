@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
+import { readFileSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import { program } from 'commander';
 import { lintMarkdown } from '@lint-md/core';
@@ -11,19 +12,6 @@ import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
 
 const { version } = require('../package.json');
-
-const readStdin = (): Promise<string> => {
-  return new Promise((resolve) => {
-    let content = '';
-    process.stdin.setEncoding('utf8');
-    process.stdin.on('data', (chunk) => {
-      content += chunk;
-    });
-    process.stdin.on('end', () => {
-      resolve(content);
-    });
-  });
-};
 
 program
   .version(
@@ -67,7 +55,7 @@ program
 
     // Handle stdin mode
     if (stdin) {
-      const content = await readStdin();
+      const content = readFileSync(process.stdin.fd, 'utf8');
 
       if (!content.trim()) {
         console.log('🎉 No content to lint 🎉');
