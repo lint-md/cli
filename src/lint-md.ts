@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 import * as process from 'process';
+import { readFileSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import { program } from 'commander';
+import { lintMarkdown } from '@lint-md/core';
 import { batchLint } from './utils/batch-lint';
 import { getLintConfig, getThreadCount } from './utils/configure';
 import type { CLIOptions } from './types';
@@ -33,13 +35,13 @@ program
     '-s, --suppress-warnings',
     'suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）'
   )
+  .option(
+    '-i, --stdin',
+    'read markdown content from stdin（从标准输入中读取内容）'
+  )
   .arguments('[files...]')
   .action(async (files: string[], options: CLIOptions) => {
-    if (!files.length) {
-      return;
-    }
-
-    const { fix, config, threads, dev, suppressWarnings } = options;
+    const { fix, config, threads, dev, suppressWarnings, stdin } = options;
 
     const startTime = new Date().getTime();
     const isFixMode = Boolean(fix);
@@ -49,7 +51,50 @@ program
       console.log(`dev -- version: ${version}, ${new Date().toString()}`);
     }
 
-    const { rules, excludeFiles } = getLintConfig(config);
+    const { rules } = getLintConfig(config);
+
+    // Handle stdin mode
+    if (stdin) {
+      const content = readFileSync(process.stdin.fd, 'utf8');
+
+      if (!content.trim()) {
+        console.log('🎉 No content to lint 🎉');
+        process.exit(0);
+        return;
+      }
+
+      try {
+        const result = lintMarkdown(content, rules, isFixMode);
+
+        if (isFixMode) {
+          process.stdout.write(result.fixedResult!.result);
+        }
+        else {
+          const { consoleMessage, errorCount, warningCount }
+            = getReportData([{ path: '(stdin)', lintResult: result.lintResult }]);
+
+          console.log(consoleMessage);
+
+          if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
+            process.exit(1);
+          }
+        }
+      }
+      catch (e) {
+        console.log(e);
+        process.exit(1);
+      }
+
+      const endTime = new Date().getTime();
+      console.log(`⌛️Done in ${endTime - startTime}ms.`);
+      return;
+    }
+
+    if (!files.length) {
+      return;
+    }
+
+    const { excludeFiles } = getLintConfig(config);
 
     const mdFiles = await loadMdFiles(files, excludeFiles);
 
@@ -74,7 +119,6 @@ program
 
         console.log(consoleMessage);
 
-        // 错误数目大于 0 或者没有抑制警告并且警告数目不为 0
         if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
           process.exit(1);
         }
@@ -96,6 +140,7 @@ program
 
 program.parse(process.argv);
 
-if (!program.args.length) {
+const isStdin = process.argv.includes('--stdin') || process.argv.includes('-i');
+if (!program.args.length && !isStdin) {
   program.help();
 }

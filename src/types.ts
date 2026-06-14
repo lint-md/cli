@@ -13,6 +13,7 @@ export interface CLIOptions {
   config?: string
   suppressWarnings: boolean
   threads?: string | boolean
+  stdin?: boolean
 }
 
 /** CLI lint 结果选项 */
