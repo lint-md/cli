@@ -140,6 +140,7 @@ program
 
 program.parse(process.argv);
 
-if (!program.args.length && !process.argv.includes('--stdin') && !process.argv.includes('-i')) {
+const isStdin = process.argv.includes('--stdin') || process.argv.includes('-i');
+if (!program.args.length && !isStdin) {
   program.help();
 }
