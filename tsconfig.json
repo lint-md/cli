@@ -11,8 +11,7 @@
       "node"
     ],
     "allowJs": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
     "sourceMap": true,
     "baseUrl": "./",
     "outDir": "lib"
