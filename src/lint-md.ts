@@ -94,9 +94,9 @@ program
       return;
     }
 
-    const { excludeFiles } = getLintConfig(config);
+    const { excludeFiles, extensions } = getLintConfig(config);
 
-    const mdFiles = await loadMdFiles(files, excludeFiles);
+    const mdFiles = await loadMdFiles(files, excludeFiles, extensions);
 
     if (!mdFiles.length) {
       console.log('🎉 No markdown files to lint 🎉');
