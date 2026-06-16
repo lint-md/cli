@@ -45,6 +45,7 @@ lint-md "docs/**/*.md" --fix
 - `-f, --fix`：自动修复可修复问题
 - `-t, --threads [thread-count]`：设置并发线程数
 - `-s, --suppress-warnings`：忽略 warning 对退出码的影响（便于 CI 渐进接入）
+- `-i, --stdin`：从标准输入读取 Markdown 内容
 - `-d, --dev`：开发调试模式
 - `-v, --version`：查看版本
 
@@ -56,13 +57,20 @@ lint-md "docs/**/*.md" --fix
     "**/node_modules/**",
     "**/.git/**"
   ],
+  "extensions": [".md", ".markdown", ".mdx"],
   "rules": {
     "no-empty-code": true
   }
 }
 ```
 
-> `rules` 的完整配置项请参考 `@lint-md/core` 文档。
+### 配置项说明
+
+| 字段 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `excludeFiles` | `string[]` | `["**/node_modules/**", "**/.git/**"]` | 排除的文件 glob 模式 |
+| `extensions` | `string[]` | `[".md", ".markdown", ".mdx"]` | 要 lint 的文件扩展名 |
+| `rules` | `object` | `{}` | 规则配置，详见 `@lint-md/core` 文档 |
 
 ## 退出码约定
 
