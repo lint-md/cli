@@ -3,7 +3,7 @@ import type { LintMdRulesConfig } from '@lint-md/core';
 
 export interface CLIConfig {
   excludeFiles?: string[]
-  rules: LintMdRulesConfig
+  rules?: LintMdRulesConfig
 }
 
 /** 用户传入的 CLI 选项 */
@@ -33,4 +33,19 @@ export interface LintWorkerOptions {
   rules?: LintMdRulesConfig
   isFixMode?: boolean
   isDev?: boolean
+}
+
+/** batchLint 单个文件的 lint 结果 */
+export interface BatchLintItem {
+  path: string
+  lintResult: {
+    loc: {
+      start: { line: number; column: number }
+      end: { line: number; column: number }
+    }
+    message: string
+    name: string
+    content: string
+    severity: number
+  }[]
 }

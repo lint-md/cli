@@ -1,14 +1,9 @@
 import chalk from 'chalk';
 import table from 'text-table';
 import stripAnsi from 'strip-ansi';
+import type { BatchLintItem } from '../types';
 
-/**
- * Given a word and a count, append an s if count is not one.
- * @param {string} word A word in its singular form.
- * @param {number} count A number controlling whether word should be pluralized.
- * @returns {string} The original word with an s on the end if count is not one.
- */
-function pluralize(word, count) {
+function pluralize(word: string, count: number): string {
   return count === 1 ? word : `${word}s`;
 }
 
@@ -28,8 +23,7 @@ interface Result {
   filePath: string
 }
 
-// TODO: 补充类型定义
-export const getReportData = (problemResult: any[]) => {
+export const getReportData = (problemResult: BatchLintItem[]) => {
   const results: Result[] = problemResult
     .map((res) => {
       const { path, lintResult } = res;

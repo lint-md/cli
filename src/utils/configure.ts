@@ -18,7 +18,7 @@ export const getLintConfig = (configFilePath: string): CLIConfig => {
 
   // 如果不存在文件直接返回空对象
   if (!fs.existsSync(configPath)) {
-    config = {} as any;
+    config = {};
   }
   else {
     try {
