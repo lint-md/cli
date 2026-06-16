@@ -36,6 +36,7 @@ export const getLintConfig = (configFilePath: string): CLIConfig => {
   return {
     excludeFiles: ['**/node_modules/**', '**/.git/**'],
     rules: {},
+    extensions: ['.md', '.markdown', '.mdx'],
     ...config,
   };
 };

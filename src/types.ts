@@ -4,6 +4,7 @@ import type { LintMdRulesConfig } from '@lint-md/core';
 export interface CLIConfig {
   excludeFiles?: string[]
   rules: LintMdRulesConfig
+  extensions?: string[]
 }
 
 /** 用户传入的 CLI 选项 */
