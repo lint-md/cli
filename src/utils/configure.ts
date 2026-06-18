@@ -4,7 +4,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import type { CLIConfig } from '../types';
 
-export const getLintConfig = (configFilePath: string): CLIConfig => {
+export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
   if (configFilePath && !fs.existsSync(configFilePath)) {
     console.log(
       chalk.red(`lint-md: Configure file '${configFilePath}' is not exist.`)
@@ -41,7 +41,7 @@ export const getLintConfig = (configFilePath: string): CLIConfig => {
   };
 };
 
-export const getThreadCount = (threadCount: string | number | boolean) => {
+export const getThreadCount = (threadCount?: string | number | boolean) => {
   if (typeof threadCount === 'number') {
     return threadCount;
   }
