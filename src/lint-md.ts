@@ -11,7 +11,7 @@ import type { CLIOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
 
-const { version } = require('../package.json');
+import { version } from '../package.json';
 
 program
   .version(
@@ -43,7 +43,7 @@ program
   .action(async (files: string[], options: CLIOptions) => {
     const { fix, config, threads, dev, suppressWarnings, stdin } = options;
 
-    const startTime = new Date().getTime();
+    const startTime = Date.now();
     const isFixMode = Boolean(fix);
     const isDev = Boolean(dev);
 
@@ -51,7 +51,7 @@ program
       console.log(`dev -- version: ${version}, ${new Date().toString()}`);
     }
 
-    const { rules } = getLintConfig(config);
+    const { rules, excludeFiles, extensions } = getLintConfig(config);
 
     // Handle stdin mode
     if (stdin) {
@@ -66,8 +66,8 @@ program
       try {
         const result = lintMarkdown(content, rules, isFixMode);
 
-        if (isFixMode) {
-          process.stdout.write(result.fixedResult!.result);
+        if (isFixMode && result.fixedResult) {
+          process.stdout.write(result.fixedResult.result);
         }
         else {
           const { consoleMessage, errorCount, warningCount }
@@ -81,7 +81,7 @@ program
         }
       }
       catch (e) {
-        console.log(e);
+        console.error(e);
         process.exit(1);
       }
 
@@ -94,8 +94,6 @@ program
       return;
     }
 
-    const { excludeFiles, extensions } = getLintConfig(config);
-
     const mdFiles = await loadMdFiles(files, excludeFiles, extensions);
 
     if (!mdFiles.length) {
@@ -106,7 +104,7 @@ program
 
     try {
       const lintResult = await batchLint(
-        getThreadCount(threads),
+          getThreadCount(threads),
         mdFiles,
         isDev,
         isFixMode,
@@ -124,17 +122,19 @@ program
         }
       }
       else {
-        for (const lintResultElement of lintResult) {
-          const { path, fixedResult } = lintResultElement;
-          await writeFile(path, fixedResult.result);
-        }
+        await Promise.all(
+          lintResult.flatMap(({ path, fixedResult }) =>
+            fixedResult ? writeFile(path, fixedResult.result) : []
+          )
+        );
       }
     }
     catch (e) {
-      console.log(e);
+      console.error(e);
+      process.exit(1);
     }
 
-    const endTime = new Date().getTime();
+    const endTime = Date.now();
     console.log(`⌛️Done in ${endTime - startTime}ms.`);
   });
 
