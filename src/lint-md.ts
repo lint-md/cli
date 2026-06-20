@@ -60,6 +60,10 @@ program
       const content = readFileSync(process.stdin.fd, 'utf8');
 
       if (isFixMode) {
+        if (content.length === 0) {
+          return;
+        }
+
         if (!content.trim()) {
           process.stdout.write(content);
           return;
