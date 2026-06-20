@@ -35,6 +35,7 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "modulePathIgnorePatterns": ["<rootDir>/esm/", "<rootDir>/lib/"],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,ts,tsx}",
