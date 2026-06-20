@@ -53,6 +53,9 @@ program
 
     const { rules, excludeFiles, extensions } = getLintConfig(config);
 
+    // --threads 参数校验，所有分支共用
+    const threadCount = getThreadCount(threads);
+
     // Handle stdin mode
     if (stdin) {
       const content = readFileSync(process.stdin.fd, 'utf8');
@@ -105,7 +108,7 @@ program
 
     try {
       const lintResult = await batchLint(
-          getThreadCount(threads),
+          threadCount,
         mdFiles,
         isDev,
         isFixMode,
