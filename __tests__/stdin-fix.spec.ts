@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { lintMarkdown } from '@lint-md/core';
 
+const TSX = path.resolve(__dirname, '../node_modules/tsx/dist/cli.mjs');
 const CLI = path.resolve(__dirname, '../src/lint-md.ts');
 const EXAMPLE = path.resolve(__dirname, '../examples/space-around.md');
 
@@ -11,8 +12,8 @@ describe('--stdin --fix output', () => {
     const input = fs.readFileSync(EXAMPLE, 'utf8');
 
     const stdout = execFileSync(
-      'npx',
-      ['tsx', CLI, '--stdin', '--fix'],
+      process.execPath,
+      [TSX, CLI, '--stdin', '--fix'],
       {
         input,
         encoding: 'utf8',
@@ -29,8 +30,8 @@ describe('--stdin --fix output', () => {
     const input = fs.readFileSync(EXAMPLE, 'utf8');
 
     const stdout = execFileSync(
-      'npx',
-      ['tsx', CLI, '--stdin', '--fix'],
+      process.execPath,
+      [TSX, CLI, '--stdin', '--fix'],
       {
         input,
         encoding: 'utf8',
