@@ -5,7 +5,7 @@ import { Piscina } from 'piscina';
 import type { LintWorkerOptions } from '../types';
 import { averagedGroup } from './averaged-group';
 
-async function runTasksWithLimit<T>(
+export async function runTasksWithLimit<T>(
   tasks: (() => Promise<T>)[],
   limit: number
 ): Promise<T[]> {
