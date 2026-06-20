@@ -1,21 +1,7 @@
 name: docker
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - .github/workflows/docker.yml
-      - Dockerfile
-      - .dockerignore
-      - package.json
-      - package-lock.json
-  pull_request:
-    paths:
-      - .github/workflows/docker.yml
-      - Dockerfile
-      - .dockerignore
-      - package.json
-      - package-lock.json
+  workflow_dispatch:
 
 jobs:
   docker-smoke:
