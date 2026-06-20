@@ -51,7 +51,7 @@ docker build -t lint-md .
 
 ```bash
 docker run --rm \
-  -v "$PWD:/work" \
+  -v "$PWD:/work:ro" \
   -w /work \
   lint-md "docs/**/*.md"
 ```

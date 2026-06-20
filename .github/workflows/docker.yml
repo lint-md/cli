@@ -28,4 +28,4 @@ jobs:
         run: echo "# Hello" | docker run -i lint-md-test --stdin
 
       - name: Smoke test - file lint
-        run: docker run --rm -v ${{ github.workspace }}/examples:/docs lint-md-test /docs/
+        run: docker run --rm -v ${{ github.workspace }}/examples:/docs:ro lint-md-test /docs/
