@@ -41,22 +41,10 @@ describe('getThreadCount', () => {
     expect(getThreadCount('4')).toBe(4);
   });
 
-  test('"0" → exit 1', () => {
-    expect(() => getThreadCount('0')).toThrow('process.exit: 1');
+  test.each(['0', '-1', 'abc', '1.5'])('%s → exit 1 + stderr', (value) => {
+    expect(() => getThreadCount(value)).toThrow('process.exit: 1');
     expect(mockError).toHaveBeenCalledWith(
       expect.stringContaining('--threads must be a positive integer'),
     );
-  });
-
-  test('"-1" → exit 1', () => {
-    expect(() => getThreadCount('-1')).toThrow('process.exit: 1');
-  });
-
-  test('"abc" → exit 1', () => {
-    expect(() => getThreadCount('abc')).toThrow('process.exit: 1');
-  });
-
-  test('"1.5" → exit 1', () => {
-    expect(() => getThreadCount('1.5')).toThrow('process.exit: 1');
   });
 });
