@@ -42,16 +42,14 @@ export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
 };
 
 export const getThreadCount = (threadCount?: string | number | boolean) => {
-  if (threadCount === undefined || threadCount === false) {
+  if (threadCount === undefined || threadCount === false || threadCount === true) {
     return cpus().length;
   }
 
   const num = typeof threadCount === 'number' ? threadCount : Number(threadCount);
 
   if (!Number.isInteger(num) || num <= 0) {
-    console.log(
-      chalk.red('[lint-md] --threads must be a positive integer.')
-    );
+    console.error(chalk.red('[lint-md] --threads must be a positive integer.'));
     process.exit(1);
   }
 

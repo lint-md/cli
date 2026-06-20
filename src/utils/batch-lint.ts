@@ -31,9 +31,11 @@ export const batchLint = async (
   isFixMode: boolean,
   rules: LintMdRulesConfig
 ) => {
+  const concurrency = Math.max(threadsCount, 1);
+
   const runner = new Piscina({
     filename: path.resolve(__dirname, './lint-worker'),
-    maxThreads: Math.max(threadsCount, 1),
+    maxThreads: concurrency,
   });
 
   const fileContentList = await limitConcurrency(
@@ -46,11 +48,11 @@ export const batchLint = async (
         };
       };
     }),
-    threadsCount
+    concurrency
   );
 
   // 将 md 文件内容进行分组，供各个线程分配执行
-  const markdownContentGroup = averagedGroup(fileContentList, Math.max(threadsCount, 1), (item) => {
+  const markdownContentGroup = averagedGroup(fileContentList, concurrency, (item) => {
     return item.content.length;
   });
 
