@@ -60,4 +60,20 @@ describe('--stdin --fix output', () => {
     expect(stdout).not.toContain('Done in');
     expect(stdout).not.toContain('⌛️');
   });
+
+  test('whitespace-only stdin in fix mode is passed through unchanged', () => {
+    const input = '   \n\n';
+
+    const stdout = execFileSync(
+      process.execPath,
+      [TSX, CLI, '--stdin', '--fix'],
+      {
+        input,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      },
+    );
+
+    expect(stdout).toBe(input);
+  });
 });

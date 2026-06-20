@@ -60,7 +60,10 @@ program
       const content = readFileSync(process.stdin.fd, 'utf8');
 
       if (!content.trim()) {
-        if (!isFixMode) {
+        if (isFixMode) {
+          process.stdout.write(content);
+        }
+        else {
           console.error('No content to lint');
         }
         process.exit(0);
