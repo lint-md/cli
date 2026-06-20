@@ -5,13 +5,12 @@ import { readFileSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import { program } from 'commander';
 import { lintMarkdown } from '@lint-md/core';
+import { version } from '../package.json';
 import { batchLint } from './utils/batch-lint';
 import { getLintConfig, getThreadCount } from './utils/configure';
 import type { CLIOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
-
-import { version } from '../package.json';
 
 program
   .version(
@@ -29,7 +28,7 @@ program
   .option('-d, --dev', 'open dev mode（开启开发者模式）')
   .option(
     '-t, --threads [thread-count]',
-    'The number of threads. The default is based on the number of available CPUs.（执行 Lint / Fix 的线程数，默认为 1）'
+    'The number of threads. The default is based on the number of available CPUs.（执行 Lint / Fix 的线程数，默认为 CPU 核心数）'
   )
   .option(
     '-s, --suppress-warnings',
@@ -53,31 +52,48 @@ program
 
     const { rules, excludeFiles, extensions } = getLintConfig(config);
 
+    // --threads 参数校验，所有分支共用
+    const threadCount = getThreadCount(threads);
+
     // Handle stdin mode
     if (stdin) {
       const content = readFileSync(process.stdin.fd, 'utf8');
 
+      if (isFixMode) {
+        if (content.length === 0) {
+          return;
+        }
+
+        if (!content.trim()) {
+          process.stdout.write(content);
+          return;
+        }
+
+        try {
+          const result = lintMarkdown(content, rules, true);
+          process.stdout.write(result.fixedResult?.result ?? content);
+          return;
+        }
+        catch (e) {
+          console.error(e);
+          process.exit(1);
+        }
+      }
+
       if (!content.trim()) {
-        console.log('🎉 No content to lint 🎉');
+        console.error('No content to lint');
         process.exit(0);
-        return;
       }
 
       try {
-        const result = lintMarkdown(content, rules, isFixMode);
+        const result = lintMarkdown(content, rules, false);
+        const { consoleMessage, errorCount, warningCount }
+          = getReportData([{ path: '(stdin)', lintResult: result.lintResult }]);
 
-        if (isFixMode && result.fixedResult) {
-          process.stdout.write(result.fixedResult.result);
-        }
-        else {
-          const { consoleMessage, errorCount, warningCount }
-            = getReportData([{ path: '(stdin)', lintResult: result.lintResult }]);
+        console.log(consoleMessage);
 
-          console.log(consoleMessage);
-
-          if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
-            process.exit(1);
-          }
+        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
+          process.exit(1);
         }
       }
       catch (e) {
@@ -104,7 +120,7 @@ program
 
     try {
       const lintResult = await batchLint(
-          getThreadCount(threads),
+        threadCount,
         mdFiles,
         isDev,
         isFixMode,

@@ -5,33 +5,54 @@ import { Piscina } from 'piscina';
 import type { LintWorkerOptions } from '../types';
 import { averagedGroup } from './averaged-group';
 
+export async function runTasksWithLimit<T>(
+  tasks: (() => Promise<T>)[],
+  limit: number
+): Promise<T[]> {
+  const results: T[] = [];
+  let index = 0;
+
+  async function runNext(): Promise<void> {
+    while (index < tasks.length) {
+      const i = index++;
+      results[i] = await tasks[i]();
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => runNext());
+  await Promise.all(workers);
+  return results;
+}
+
 export const batchLint = async (
   threadsCount: number,
   mdFilePaths: string[],
   isDev: boolean,
   isFixMode: boolean,
-  rules: LintMdRulesConfig
+  rules: LintMdRulesConfig,
 ) => {
-  const runner = new Piscina({
+  const concurrency = Math.max(threadsCount, 1);
+
+  const lintWorkerPool = new Piscina({
     filename: path.resolve(__dirname, './lint-worker'),
-    maxThreads: Math.max(threadsCount, 1),
+    maxThreads: concurrency,
   });
 
-  const fileContentList = await Promise.all(
-    mdFilePaths.map((path) => {
-      const call = async () => {
-        const res = await readFile(path);
+  const fileContentList = await runTasksWithLimit(
+    mdFilePaths.map((filePath) => {
+      return async () => {
+        const res = await readFile(filePath);
         return {
-          path,
+          path: filePath,
           content: res.toString(),
         };
       };
-      return call();
-    })
+    }),
+    concurrency
   );
 
   // 将 md 文件内容进行分组，供各个线程分配执行
-  const markdownContentGroup = averagedGroup(fileContentList, Math.max(threadsCount, 1), (item) => {
+  const markdownContentGroup = averagedGroup(fileContentList, concurrency, (item) => {
     return item.content.length;
   });
 
@@ -39,7 +60,7 @@ export const batchLint = async (
     markdownContentGroup.map((groupItem) => {
       const asyncCall = async () => {
         const batchLintResult: ReturnType<typeof lintMarkdown>[]
-          = await runner.run({
+          = await lintWorkerPool.run({
             contentList: groupItem.items.map((value) => {
               return value.content;
             }),
