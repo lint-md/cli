@@ -47,6 +47,12 @@ export const getThreadCount = (threadCount?: string | number | boolean): number 
     return cpus().length;
   }
 
+  // 字符串必须是十进制正整数（拒绝 0x10、1e3、010 等）
+  if (typeof threadCount === 'string' && !/^[1-9]\d*$/.test(threadCount)) {
+    console.error(chalk.red('[lint-md] --threads must be a positive integer.'));
+    process.exit(1);
+  }
+
   const num = Number(threadCount);
 
   if (!Number.isInteger(num) || num <= 0) {

@@ -41,7 +41,7 @@ describe('getThreadCount', () => {
     expect(getThreadCount('4')).toBe(4);
   });
 
-  test.each([0, -1, '0', '-1', 'abc', '1.5'])('%s → exit 1 + stderr', (value) => {
+  test.each([0, -1, '0', '-1', 'abc', '1.5', '0x10', '1e3'])('%s → exit 1 + stderr', (value) => {
     expect(() => getThreadCount(value)).toThrow('process.exit: 1');
     expect(mockError).toHaveBeenCalledWith(
       expect.stringContaining('--threads must be a positive integer'),

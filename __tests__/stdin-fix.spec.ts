@@ -42,4 +42,22 @@ describe('--stdin --fix output', () => {
     const result = lintMarkdown(stdout, {}, false);
     expect(result.lintResult).toHaveLength(0);
   });
+
+  test('clean markdown → stdout equals input, no report/timing', () => {
+    const clean = '# Hello\n\nThis is clean.\n';
+
+    const stdout = execFileSync(
+      process.execPath,
+      [TSX, CLI, '--stdin', '--fix'],
+      {
+        input: clean,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      },
+    );
+
+    expect(stdout).toBe(clean);
+    expect(stdout).not.toContain('Done in');
+    expect(stdout).not.toContain('⌛️');
+  });
 });

@@ -5,13 +5,12 @@ import { readFileSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import { program } from 'commander';
 import { lintMarkdown } from '@lint-md/core';
+import { version } from '../package.json';
 import { batchLint } from './utils/batch-lint';
 import { getLintConfig, getThreadCount } from './utils/configure';
 import type { CLIOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
-
-import { version } from '../package.json';
 
 program
   .version(
@@ -29,7 +28,7 @@ program
   .option('-d, --dev', 'open dev mode（开启开发者模式）')
   .option(
     '-t, --threads [thread-count]',
-    'The number of threads. The default is based on the number of available CPUs.（执行 Lint / Fix 的线程数，默认为 1）'
+    'The number of threads. The default is based on the number of available CPUs.（执行 Lint / Fix 的线程数，默认为 CPU 核心数）'
   )
   .option(
     '-s, --suppress-warnings',
@@ -61,7 +60,9 @@ program
       const content = readFileSync(process.stdin.fd, 'utf8');
 
       if (!content.trim()) {
-        console.log('🎉 No content to lint 🎉');
+        if (!isFixMode) {
+          console.error('No content to lint');
+        }
         process.exit(0);
         return;
       }
@@ -69,8 +70,8 @@ program
       try {
         const result = lintMarkdown(content, rules, isFixMode);
 
-        if (isFixMode && result.fixedResult) {
-          process.stdout.write(result.fixedResult.result);
+        if (isFixMode) {
+          process.stdout.write(result.fixedResult?.result ?? content);
           return;
         }
         else {
@@ -108,7 +109,7 @@ program
 
     try {
       const lintResult = await batchLint(
-          threadCount,
+        threadCount,
         mdFiles,
         isDev,
         isFixMode,
