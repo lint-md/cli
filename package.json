@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "module": "esm/index.js",
   "bin": {
-    "lint-md": "lib/lint-md.js"
+    "lint-md": "lib/src/lint-md.js"
   },
   "author": "hustcc",
   "contributors": [
@@ -20,7 +20,7 @@
     "build": "rm -rf esm lib && run-p build:*",
     "clean": "rimraf lib esm",
     "watch": "tsc -w",
-    "cli-run": "node ./lib/lint-md.js examples/correct-title-trailing-punctuation.md"
+    "cli-run": "node ./lib/src/lint-md.js examples/correct-title-trailing-punctuation.md"
   },
   "files": [
     "esm",
