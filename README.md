@@ -1,5 +1,8 @@
 # @lint-md/cli
 
+[![build](https://github.com/lint-md/cli/actions/workflows/build.yml/badge.svg)](https://github.com/lint-md/cli/actions/workflows/build.yml)
+[![docker](https://github.com/lint-md/cli/actions/workflows/docker.yml/badge.svg)](https://github.com/lint-md/cli/actions/workflows/docker.yml)
+
 `@lint-md/cli` 是 [Lint Markdown](https://github.com/lint-md/lint-md) 的命令行工具，用于检查和修复中文 Markdown 文档中的格式问题。
 
 ## 项目定位
