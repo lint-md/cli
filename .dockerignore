@@ -9,6 +9,8 @@ docs
 esm
 lib
 .git
+.gitignore
+*.tgz
 .eslintrc*
 .prettierrc*
 .lintmdrc*
