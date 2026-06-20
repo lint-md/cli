@@ -8,7 +8,7 @@ describe('runTasksWithLimit', () => {
     const tasks = Array.from({ length: 10 }, () => async () => {
       running++;
       maxRunning = Math.max(maxRunning, running);
-      await new Promise(r => setTimeout(r, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
       running--;
       return true;
     });
