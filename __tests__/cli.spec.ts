@@ -1,16 +1,20 @@
-import * as program from 'commander';
-
 describe('cli tests', () => {
+  let mockExit: jest.SpyInstance;
+
   beforeEach(() => {
-    // 先将 argv 置为空。防止 commander 将 jest 启动的参数传入而导致异常
     process.argv = [];
+    jest.resetModules();
+    mockExit = jest.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('process.exit');
+    }) as never);
   });
 
-  test('if user does not pass any argument, we show show helps', () => {
-    const helpMock = jest.fn();
-    // @ts-expect-error
-    program.help = helpMock;
-    require('../src/lint-md');
-    expect(helpMock).toBeCalled();
+  afterEach(() => {
+    mockExit.mockRestore();
+  });
+
+  test('if user does not pass any argument, process.exit is called', () => {
+    expect(() => require('../src/lint-md')).toThrow('process.exit');
+    expect(mockExit).toHaveBeenCalled();
   });
 });
