@@ -2,4 +2,15 @@ node_modules
 Dockerfile
 **/.DS_STORE
 coverage
-tests
+__tests__
+.codegraph
+.github
+docs
+esm
+lib
+.git
+.gitignore
+*.tgz
+.eslintrc*
+.prettierrc*
+.lintmdrc*

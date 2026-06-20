@@ -1,12 +1,22 @@
-FROM node:current-alpine
+FROM node:22.22.1-alpine3.23 AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
 
-WORKDIR /usr/local/lint-md
+FROM deps AS builder
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
 
-COPY . .
+FROM node:22.22.1-alpine3.23 AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+COPY --from=builder /app/lib ./lib
+RUN npm ci --omit=dev && npm cache clean --force
+RUN chmod +x /app/lib/src/lint-md.js \
+    && ln -s /app/lib/src/lint-md.js /usr/local/bin/lint-md \
+    && chown -R node:node /app
 
-RUN set -x \
-    && yarn install --production \
-    && yarn build \
-    && ln -s /usr/local/lint-md/lib/lint-md.js /usr/local/bin/lint-md
-
+USER node
 ENTRYPOINT ["lint-md"]

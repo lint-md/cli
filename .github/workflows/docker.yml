@@ -1,0 +1,19 @@
+name: docker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Build Docker image
+        run: docker build -t lint-md-test .
+
+      - name: Smoke test - stdin lint
+        run: echo "# Hello" | docker run -i lint-md-test --stdin
+
+      - name: Smoke test - file lint
+        run: docker run --rm -v ${{ github.workspace }}/examples:/docs:ro lint-md-test /docs/
