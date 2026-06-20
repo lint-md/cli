@@ -68,6 +68,7 @@ program
 
         if (isFixMode && result.fixedResult) {
           process.stdout.write(result.fixedResult.result);
+          return;
         }
         else {
           const { consoleMessage, errorCount, warningCount }
