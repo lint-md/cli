@@ -59,33 +59,37 @@ program
     if (stdin) {
       const content = readFileSync(process.stdin.fd, 'utf8');
 
-      if (!content.trim()) {
-        if (isFixMode) {
+      if (isFixMode) {
+        if (!content.trim()) {
           process.stdout.write(content);
+          return;
         }
-        else {
-          console.error('No content to lint');
-        }
-        process.exit(0);
-        return;
-      }
 
-      try {
-        const result = lintMarkdown(content, rules, isFixMode);
-
-        if (isFixMode) {
+        try {
+          const result = lintMarkdown(content, rules, true);
           process.stdout.write(result.fixedResult?.result ?? content);
           return;
         }
-        else {
-          const { consoleMessage, errorCount, warningCount }
-            = getReportData([{ path: '(stdin)', lintResult: result.lintResult }]);
+        catch (e) {
+          console.error(e);
+          process.exit(1);
+        }
+      }
 
-          console.log(consoleMessage);
+      if (!content.trim()) {
+        console.error('No content to lint');
+        process.exit(0);
+      }
 
-          if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
-            process.exit(1);
-          }
+      try {
+        const result = lintMarkdown(content, rules, false);
+        const { consoleMessage, errorCount, warningCount }
+          = getReportData([{ path: '(stdin)', lintResult: result.lintResult }]);
+
+        console.log(consoleMessage);
+
+        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
+          process.exit(1);
         }
       }
       catch (e) {
