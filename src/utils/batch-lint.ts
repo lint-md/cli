@@ -3,7 +3,6 @@ import { readFile } from 'fs/promises';
 import type { LintMdRulesConfig, lintMarkdown } from '@lint-md/core';
 import { Piscina } from 'piscina';
 import type { LintWorkerOptions } from '../types';
-import { averagedGroup } from './averaged-group';
 
 export async function runTasksWithLimit<T>(
   tasks: (() => Promise<T>)[],
@@ -38,50 +37,45 @@ export const batchLint = async (
     maxThreads: concurrency,
   });
 
-  const fileContentList = await runTasksWithLimit(
-    mdFilePaths.map((filePath) => {
-      return async () => {
-        const res = await readFile(filePath);
-        return {
-          path: filePath,
-          content: res.toString(),
-        };
-      };
-    }),
-    concurrency
-  );
+  const problemResults: {
+    path: string
+    lintResult: ReturnType<typeof lintMarkdown>['lintResult']
+    fixedResult?: ReturnType<typeof lintMarkdown>['fixedResult']
+  }[] = [];
 
-  // 将 md 文件内容进行分组，供各个线程分配执行
-  const markdownContentGroup = averagedGroup(fileContentList, concurrency, (item) => {
-    return item.content.length;
-  });
-
-  const res = await Promise.all(
-    markdownContentGroup.map((groupItem) => {
-      const asyncCall = async () => {
-        const batchLintResult: ReturnType<typeof lintMarkdown>[]
-          = await lintWorkerPool.run({
-            contentList: groupItem.items.map((value) => {
-              return value.content;
-            }),
-            isFixMode,
-            rules,
-            isDev,
-          } as LintWorkerOptions);
-
-        return batchLintResult.map((lintResult, index) => {
+  for (let start = 0; start < mdFilePaths.length; start += concurrency) {
+    const currentBatchPaths = mdFilePaths.slice(start, start + concurrency);
+    const fileContentList = await runTasksWithLimit(
+      currentBatchPaths.map((filePath) => {
+        return async () => {
+          const content = await readFile(filePath, 'utf8');
           return {
-            ...lintResult,
-            path: groupItem.items[index].path,
+            path: filePath,
+            content,
           };
-        });
+        };
+      }),
+      concurrency
+    );
+
+    const batchLintResult = await lintWorkerPool.run({
+      contentList: fileContentList.map(item => item.content),
+      isFixMode,
+      rules,
+      isDev,
+    } as LintWorkerOptions) as ReturnType<typeof lintMarkdown>[];
+
+    const batchResults = batchLintResult.map((lintResult, index) => {
+      return {
+        ...lintResult,
+        path: fileContentList[index].path,
       };
+    });
 
-      return asyncCall();
-    })
-  );
+    problemResults.push(...batchResults.filter((item) => {
+      return item.lintResult.length > 0;
+    }));
+  }
 
-  return res.flat().filter((item) => {
-    return item.lintResult.length > 0;
-  });
+  return problemResults;
 };
