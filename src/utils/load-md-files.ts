@@ -1,17 +1,4 @@
-import glob from 'glob';
-
-const promisifyGlob = (pattern: string, options: glob.IOptions) => {
-  return new Promise((resolve, reject) => {
-    glob(pattern, options, (err, files) => {
-      if (err) {
-        reject(err);
-      }
-      else {
-        resolve(files);
-      }
-    });
-  });
-};
+import { glob } from 'glob';
 
 /**
  * 读取所有文件
@@ -28,7 +15,7 @@ export const loadMdFiles = async (
   const filePaths = await Promise.all(
     // 先把 globList 去重，防止执行多余的 glob 查询
     [...new Set(globList)].map((fileList) => {
-      return promisifyGlob(`${fileList}`, {
+      return glob(`${fileList}`, {
         ignore: excludeFiles,
         absolute: true,
       });
