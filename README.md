@@ -39,6 +39,35 @@ lint-md "docs/**/*.md"
 lint-md "docs/**/*.md" --fix
 ```
 
+## Docker 使用
+
+先构建镜像：
+
+```bash
+docker build -t lint-md .
+```
+
+只读检查场景：
+
+```bash
+docker run --rm \
+  -v "$PWD:/work" \
+  -w /work \
+  lint-md "docs/**/*.md"
+```
+
+对挂载目录执行 `--fix` 时，建议显式传入当前用户，避免把宿主文件写成容器内用户的属主：
+
+```bash
+docker run --rm \
+  -u "$(id -u):$(id -g)" \
+  -v "$PWD:/work" \
+  -w /work \
+  lint-md "docs/**/*.md" --fix
+```
+
+镜像默认使用非 root 用户运行；如果挂载目录权限较严格，`--user` 是最稳妥的用法。
+
 ## 常用参数
 
 - `-c, --config [configure-file]`：指定配置文件（默认 `./.lintmdrc`）
