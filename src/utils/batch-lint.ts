@@ -5,7 +5,7 @@ import { Piscina } from 'piscina';
 import type { LintWorkerOptions } from '../types';
 import { averagedGroup } from './averaged-group';
 
-async function limitConcurrency<T>(
+async function runTasksWithLimit<T>(
   tasks: (() => Promise<T>)[],
   limit: number
 ): Promise<T[]> {
@@ -33,12 +33,12 @@ export const batchLint = async (
 ) => {
   const concurrency = Math.max(threadsCount, 1);
 
-  const runner = new Piscina({
+  const lintWorkerPool = new Piscina({
     filename: path.resolve(__dirname, './lint-worker'),
     maxThreads: concurrency,
   });
 
-  const fileContentList = await limitConcurrency(
+  const fileContentList = await runTasksWithLimit(
     mdFilePaths.map((filePath) => {
       return async () => {
         const res = await readFile(filePath);
@@ -60,7 +60,7 @@ export const batchLint = async (
     markdownContentGroup.map((groupItem) => {
       const asyncCall = async () => {
         const batchLintResult: ReturnType<typeof lintMarkdown>[]
-          = await runner.run({
+          = await lintWorkerPool.run({
             contentList: groupItem.items.map((value) => {
               return value.content;
             }),
