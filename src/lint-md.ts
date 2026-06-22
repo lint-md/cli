@@ -6,7 +6,7 @@ import { writeFile } from 'fs/promises';
 import { program } from 'commander';
 import { lintMarkdown } from '@lint-md/core';
 import { version } from '../package.json';
-import { batchLint } from './utils/batch-lint';
+import { batchLint, runTasksWithLimit } from './utils/batch-lint';
 import { getLintConfig, getThreadCount } from './utils/configure';
 import type { CLIOptions } from './types';
 import { loadMdFiles } from './utils/load-md-files';
@@ -138,10 +138,11 @@ program
         }
       }
       else {
-        await Promise.all(
-          lintResult.flatMap(({ path, fixedResult }) =>
-            fixedResult ? writeFile(path, fixedResult.result) : []
-          )
+        await runTasksWithLimit(
+          lintResult
+            .filter(({ fixedResult }) => fixedResult)
+            .map(({ path, fixedResult }) => () => writeFile(path, fixedResult!.result)),
+          threadCount
         );
       }
     }
