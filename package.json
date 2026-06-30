@@ -1,9 +1,9 @@
 {
   "name": "@lint-md/cli",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "CLI tool to lint your markdown file for Chinese.",
-  "main": "lib/index.js",
-  "module": "esm/index.js",
+  "main": "lib/src/index.js",
+  "module": "esm/src/index.js",
   "bin": {
     "lint-md": "lib/src/lint-md.js"
   },
@@ -35,7 +35,10 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "modulePathIgnorePatterns": ["<rootDir>/esm/", "<rootDir>/lib/"],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/esm/",
+      "<rootDir>/lib/"
+    ],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,ts,tsx}",
@@ -47,7 +50,7 @@
     ]
   },
   "dependencies": {
-    "@lint-md/core": "^2.0.0",
+    "@lint-md/core": "^2.1.1",
     "chalk": "^4",
     "commander": "^9.4.1",
     "glob": "^13.0.6",
@@ -63,8 +66,8 @@
     "jest": "^30.0.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.7.1",
-    "tsx": "^4.22.4",
     "ts-jest": "^29.0.3",
+    "tsx": "^4.22.4",
     "typescript": "^4.8.4"
   },
   "license": "MIT",

@@ -1,0 +1,14 @@
+__tests__/
+.codegraph/
+.github/
+coverage/
+docs/
+examples/
+node_modules/
+src/
+
+.dockerignore
+.eslintrc.js
+.gitignore
+Dockerfile
+tsconfig.json
