@@ -1,6 +1,6 @@
 {
   "name": "@lint-md/cli",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "CLI tool to lint your markdown file for Chinese.",
   "main": "lib/index.js",
   "module": "esm/index.js",
@@ -23,8 +23,10 @@
     "cli-run": "node ./lib/src/lint-md.js examples/correct-title-trailing-punctuation.md"
   },
   "files": [
-    "esm",
-    "lib",
+    "esm/package.json",
+    "esm/src",
+    "lib/package.json",
+    "lib/src",
     "CHANGELOG.md"
   ],
   "keywords": [
