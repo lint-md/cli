@@ -5,7 +5,7 @@ coverage/
 docs/
 examples/
 node_modules/
-src/
+/src/
 
 .dockerignore
 .eslintrc.js
