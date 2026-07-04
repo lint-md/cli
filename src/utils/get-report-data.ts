@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import table from 'text-table';
 import stripAnsi from 'strip-ansi';
 import type { BatchLintItem } from '../types';
+import { sanitizeTerminalText } from './sanitize-terminal';
 
 function pluralize(word: string, count: number): string {
   return count === 1 ? word : `${word}s`;
@@ -80,7 +81,7 @@ export const getReportData = (problemResult: BatchLintItem[]) => {
     fixableErrorCount += result.fixableErrorCount;
     fixableWarningCount += result.fixableWarningCount;
 
-    output += `${chalk.underline(result.filePath)}\n`;
+    output += `${chalk.underline(sanitizeTerminalText(result.filePath))}\n`;
 
     output += `${table(
       messages.map((message) => {
