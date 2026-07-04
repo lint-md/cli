@@ -26,7 +26,11 @@ describe('sanitizeTerminalText', () => {
     expect(sanitizeTerminalText('文件.md')).toBe('文件.md');
   });
 
-  test('preserves newlines', () => {
-    expect(sanitizeTerminalText('line1\nline2')).toBe('line1\nline2');
+  test('replaces tab with ^I', () => {
+    expect(sanitizeTerminalText('col1\tcol2')).toBe('col1^Icol2');
+  });
+
+  test('replaces newline with ^J', () => {
+    expect(sanitizeTerminalText('line1\nline2')).toBe('line1^Jline2');
   });
 });
