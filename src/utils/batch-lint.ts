@@ -31,7 +31,7 @@ export const batchLint = async (
   isFixMode: boolean,
   rules: LintMdRulesConfig,
 ) => {
-  const concurrency = Math.max(threadsCount, 1);
+  const concurrency = Math.min(Math.max(threadsCount, 1), mdFilePaths.length);
 
   const lintWorkerPool = new Piscina({
     filename: path.resolve(__dirname, './lint-worker'),
