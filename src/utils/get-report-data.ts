@@ -100,8 +100,8 @@ export const getReportData = (problemResult: BatchLintItem[]) => {
           message.line || 0,
           message.column || 0,
           messageType,
-          message.message.replace(/([^ ])\.$/u, '$1'),
-          chalk.dim(message.ruleId || ''),
+          sanitizeTerminalText(message.message).replace(/([^ ])\.$/u, '$1'),
+          chalk.dim(sanitizeTerminalText(message.ruleId || '')),
         ];
       }),
       {
