@@ -1,3 +1,4 @@
+import { lstat } from 'fs/promises';
 import { glob } from 'glob';
 
 /**
@@ -18,12 +19,29 @@ export const loadMdFiles = async (
       return glob(`${fileList}`, {
         ignore: excludeFiles,
         absolute: true,
+        nodir: true,
+        follow: false,
       });
     })
   );
 
-  // 最后对获取的路径结果进行一次去重，防止重复的文件，同时只考虑 Markdown 文本
-  return ([...new Set(filePaths.flat())] as string[]).filter((item) => {
+  const filtered = ([...new Set(filePaths.flat())] as string[]).filter((item) => {
     return extensions.some(ext => item.endsWith(ext));
   });
+
+  // lstat 过滤：跳过符号链接，只忽略 ENOENT，其他错误继续抛出
+  const stats = await Promise.all(
+    filtered.map(async (f) => {
+      try {
+        return await lstat(f);
+      }
+      catch (e: any) {
+        if (e.code === 'ENOENT')
+          return null;
+        throw e;
+      }
+    })
+  );
+
+  return filtered.filter((_, i) => stats[i] !== null && !stats[i]!.isSymbolicLink());
 };
