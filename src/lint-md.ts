@@ -2,10 +2,10 @@
 
 import * as process from 'process';
 import { readFileSync } from 'fs';
-import { writeFile } from 'fs/promises';
 import { program } from 'commander';
 import { lintMarkdown } from '@lint-md/core';
 import { version } from '../package.json';
+import { safeWriteFile } from './utils/safe-write-file';
 import { batchLint, runTasksWithLimit } from './utils/batch-lint';
 import { getLintConfig, getThreadCount } from './utils/configure';
 import type { CLIOptions } from './types';
@@ -141,7 +141,7 @@ program
         await runTasksWithLimit(
           lintResult
             .filter(({ fixedResult }) => fixedResult)
-            .map(({ path, fixedResult }) => () => writeFile(path, fixedResult!.result)),
+            .map(({ path, fixedResult }) => () => safeWriteFile(path, fixedResult!.result)),
           threadCount
         );
       }
