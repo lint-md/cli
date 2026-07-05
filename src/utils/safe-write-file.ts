@@ -1,23 +1,42 @@
 import { constants } from 'fs';
-import { open } from 'fs/promises';
+import { chmod, open, rename, unlink, writeFile } from 'fs/promises';
+import { randomBytes } from 'crypto';
+import { dirname, join } from 'path';
 
 /**
  * 安全写入文件，拒绝符号链接
  *
- * 使用 O_NOFOLLOW 防止最终路径是符号链接，
- * 打开后通过 fstat 验证句柄指向普通文件，解决 TOCTOU 竞态。
+ * 使用 O_NOFOLLOW 验证目标不是符号链接，
+ * 再通过临时文件 + rename 实现原子替换。
  */
 export async function safeWriteFile(filePath: string, content: string) {
-  const handle = await open(filePath, constants.O_WRONLY | constants.O_NOFOLLOW);
+  const tempPath = join(
+    dirname(filePath),
+    `.lint-md-${process.pid}-${randomBytes(8).toString('hex')}.tmp`
+  );
+
+  const target = await open(
+    filePath,
+    constants.O_WRONLY | constants.O_NOFOLLOW
+  );
+
   try {
-    const stat = await handle.stat();
+    const stat = await target.stat();
     if (!stat.isFile()) {
       throw new Error(`Refusing to write non-regular file: ${filePath}`);
     }
-    await handle.truncate(0);
-    await handle.writeFile(content, 'utf8');
+
+    const mode = stat.mode & 0o777;
+
+    await writeFile(tempPath, content, { flag: 'wx', mode });
+    await chmod(tempPath, mode);
+    await rename(tempPath, filePath);
   }
   finally {
-    await handle.close();
+    await target.close();
+    try {
+      await unlink(tempPath);
+    }
+    catch {}
   }
 }

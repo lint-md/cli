@@ -63,4 +63,33 @@ describe('symlink security', () => {
     await expect(safeWriteFile(filePath, '# hacked'))
       .rejects.toThrow(/ELOOP|ENOENT/);
   });
+
+  test('safeWriteFile preserves original file mode', async () => {
+    const filePath = path.join(tmpDir, 'mode-test.md');
+    fs.writeFileSync(filePath, '# old');
+    fs.chmodSync(filePath, 0o666);
+
+    const oldUmask = process.umask(0o077);
+    try {
+      await safeWriteFile(filePath, '# new');
+    }
+    finally {
+      process.umask(oldUmask);
+    }
+
+    const mode = fs.statSync(filePath).mode & 0o777;
+    expect(mode).toBe(0o666);
+    expect(fs.readFileSync(filePath, 'utf8')).toBe('# new');
+  });
+
+  test('safeWriteFile leaves no temp file residue on success', async () => {
+    const filePath = path.join(tmpDir, 'residue.md');
+    fs.writeFileSync(filePath, '# old');
+
+    await safeWriteFile(filePath, '# new');
+
+    const entries = fs.readdirSync(tmpDir);
+    const tmpFiles = entries.filter(e => e.startsWith('.lint-md-') && e.endsWith('.tmp'));
+    expect(tmpFiles).toHaveLength(0);
+  });
 });
