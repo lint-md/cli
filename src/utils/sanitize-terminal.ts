@@ -15,7 +15,8 @@ export function sanitizeTerminalText(text: string): string {
   // 替换所有 C0 控制字符和 DEL 为可见转义
   // eslint-disable-next-line no-control-regex
   result = result.replace(/[\x00-\x1F\x7F]/g, (ch) => {
-    if (ch === '\x7F') return '^?';
+    if (ch === '\x7F')
+      return '^?';
     return `^${String.fromCharCode(ch.charCodeAt(0) + 0x40)}`;
   });
   return result;
