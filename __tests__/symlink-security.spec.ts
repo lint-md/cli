@@ -63,4 +63,25 @@ describe('symlink security', () => {
     await expect(safeWriteFile(filePath, '# hacked'))
       .rejects.toThrow(/ELOOP|ENOENT/);
   });
+
+  test('safeWriteFile preserves original file mode', async () => {
+    const filePath = path.join(tmpDir, 'mode-test.md');
+    fs.writeFileSync(filePath, '# old');
+    fs.chmodSync(filePath, 0o666);
+
+    await safeWriteFile(filePath, '# new');
+
+    const mode = fs.statSync(filePath).mode & 0o777;
+    expect(mode).toBe(0o666);
+    expect(fs.readFileSync(filePath, 'utf8')).toBe('# new');
+  });
+
+  test('safeWriteFile truncates old tail when new content is shorter', async () => {
+    const filePath = path.join(tmpDir, 'shorter.md');
+    fs.writeFileSync(filePath, '# old content with tail');
+
+    await safeWriteFile(filePath, '# new');
+
+    expect(fs.readFileSync(filePath, 'utf8')).toBe('# new');
+  });
 });
