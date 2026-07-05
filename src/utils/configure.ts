@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { cpus } from 'os';
+import { availableParallelism } from 'os';
 import * as path from 'path';
 import chalk from 'chalk';
 import type { CLIConfig } from '../types';
@@ -44,7 +44,7 @@ export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
 export const getThreadCount = (threadCount?: string | number | boolean): number => {
   // 只接受 number 或 string，其他（undefined / boolean）视为未指定
   if (typeof threadCount !== 'number' && typeof threadCount !== 'string') {
-    return cpus().length;
+    return availableParallelism();
   }
 
   // 字符串必须是十进制正整数（拒绝 0x10、1e3、010 等）
