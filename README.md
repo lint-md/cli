@@ -1,5 +1,7 @@
 # @lint-md/cli
 
+[English](./README.en-US.md) | 简体中文
+
 [![build](https://github.com/lint-md/cli/actions/workflows/build.yml/badge.svg)](https://github.com/lint-md/cli/actions/workflows/build.yml)
 [![docker](https://github.com/lint-md/cli/actions/workflows/docker.yml/badge.svg)](https://github.com/lint-md/cli/actions/workflows/docker.yml)
 
@@ -85,10 +87,7 @@ docker run --rm \
 
 ```json
 {
-  "excludeFiles": [
-    "**/node_modules/**",
-    "**/.git/**"
-  ],
+  "excludeFiles": ["**/node_modules/**", "**/.git/**"],
   "extensions": [".md", ".markdown", ".mdx"],
   "rules": {
     "no-empty-code": true
@@ -98,11 +97,11 @@ docker run --rm \
 
 ### 配置项说明
 
-| 字段 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `excludeFiles` | `string[]` | `["**/node_modules/**", "**/.git/**"]` | 排除的文件 glob 模式 |
-| `extensions` | `string[]` | `[".md", ".markdown", ".mdx"]` | 要 lint 的文件扩展名 |
-| `rules` | `object` | `{}` | 规则配置，详见 `@lint-md/core` 文档 |
+| 字段           | 类型       | 默认值                                 | 说明                                |
+| -------------- | ---------- | -------------------------------------- | ----------------------------------- |
+| `excludeFiles` | `string[]` | `["**/node_modules/**", "**/.git/**"]` | 排除的文件 glob 模式                |
+| `extensions`   | `string[]` | `[".md", ".markdown", ".mdx"]`         | 要 lint 的文件扩展名                |
+| `rules`        | `object`   | `{}`                                   | 规则配置，详见 `@lint-md/core` 文档 |
 
 ## 退出码约定
 
