@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "test": "jest --no-cache",
+    "pretest": "npm run build",
     "build:cjs": "tsc -p tsconfig.json --target ESNext --module commonjs --outDir lib",
     "build:esm": "tsc -p tsconfig.json --target ESNext --module ESNext --outDir esm",
     "lint": "eslint --ext .ts,.tsx ./ --fix",

@@ -30,7 +30,7 @@ export interface CliErrorCount {
 }
 
 export interface LintWorkerOptions {
-  contentList: string[]
+  filePath: string
   rules?: LintMdRulesConfig
   isFixMode?: boolean
   isDev?: boolean
@@ -49,4 +49,12 @@ export interface BatchLintItem {
     content: string
     severity: number
   }[]
+  fixedResult?: {
+    result: string
+    notAppliedFixes: {
+      range: number[]
+      text: string
+      data?: Record<string, unknown>
+    }[]
+  } | null
 }
