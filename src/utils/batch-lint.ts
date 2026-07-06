@@ -1,9 +1,8 @@
 import path from 'path';
-import { readFile } from 'fs/promises';
-import type { LintMdRulesConfig, lintMarkdown } from '@lint-md/core';
+import { existsSync } from 'fs';
 import { Piscina } from 'piscina';
-import type { LintWorkerOptions } from '../types';
-import { averagedGroup } from './averaged-group';
+import type { LintMdRulesConfig } from '@lint-md/core';
+import type { BatchLintItem, LintWorkerOptions } from '../types';
 
 export async function runTasksWithLimit<T>(
   tasks: (() => Promise<T>)[],
@@ -24,13 +23,21 @@ export async function runTasksWithLimit<T>(
   return results;
 }
 
+const resolveWorkerFilename = (): string => {
+  const compiled = path.resolve(__dirname, './lint-worker.js');
+  if (existsSync(compiled)) {
+    return compiled;
+  }
+  return path.resolve(__dirname, '../../lib/src/utils/lint-worker.js');
+};
+
 export const batchLint = async (
   threadsCount: number,
   mdFilePaths: string[],
   isDev: boolean,
   isFixMode: boolean,
-  rules: LintMdRulesConfig,
-) => {
+  rules: LintMdRulesConfig
+): Promise<BatchLintItem[]> => {
   if (mdFilePaths.length === 0) {
     return [];
   }
@@ -38,54 +45,28 @@ export const batchLint = async (
   const concurrency = Math.min(Math.max(threadsCount, 1), mdFilePaths.length);
 
   const lintWorkerPool = new Piscina({
-    filename: path.resolve(__dirname, './lint-worker'),
+    filename: resolveWorkerFilename(),
     maxThreads: concurrency,
   });
 
-  const fileContentList = await runTasksWithLimit(
-    mdFilePaths.map((filePath) => {
-      return async () => {
-        const res = await readFile(filePath);
-        return {
-          path: filePath,
-          content: res.toString(),
-        };
-      };
-    }),
-    concurrency
-  );
+  try {
+    const results = await runTasksWithLimit<BatchLintItem>(
+      mdFilePaths.map((filePath) => {
+        return () => lintWorkerPool.run({
+          filePath,
+          isFixMode,
+          rules,
+          isDev,
+        } as LintWorkerOptions);
+      }),
+      concurrency
+    );
 
-  // 将 md 文件内容进行分组，供各个线程分配执行
-  const markdownContentGroup = averagedGroup(fileContentList, concurrency, (item) => {
-    return item.content.length;
-  });
-
-  const res = await Promise.all(
-    markdownContentGroup.map((groupItem) => {
-      const asyncCall = async () => {
-        const batchLintResult: ReturnType<typeof lintMarkdown>[]
-          = await lintWorkerPool.run({
-            contentList: groupItem.items.map((value) => {
-              return value.content;
-            }),
-            isFixMode,
-            rules,
-            isDev,
-          } as LintWorkerOptions);
-
-        return batchLintResult.map((lintResult, index) => {
-          return {
-            ...lintResult,
-            path: groupItem.items[index].path,
-          };
-        });
-      };
-
-      return asyncCall();
-    })
-  );
-
-  return res.flat().filter((item) => {
-    return item.lintResult.length > 0;
-  });
+    return results.filter((item) => {
+      return item.lintResult.length > 0;
+    });
+  }
+  finally {
+    await lintWorkerPool.destroy();
+  }
 };
