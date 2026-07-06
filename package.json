@@ -20,7 +20,9 @@
     "build": "rm -rf esm lib && run-p build:*",
     "clean": "rm -rf lib esm",
     "watch": "tsc -w",
-    "cli-run": "node ./lib/src/lint-md.js examples/correct-title-trailing-punctuation.md"
+    "cli-run": "node ./lib/src/lint-md.js examples/correct-title-trailing-punctuation.md",
+    "benchmark:memory": "node scripts/benchmark-memory.mjs",
+    "test:benchmark-memory": "node scripts/benchmark-memory-smoke.mjs"
   },
   "files": [
     "esm/package.json",
