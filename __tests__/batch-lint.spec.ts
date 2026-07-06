@@ -1,6 +1,7 @@
 import { mkdtemp, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import * as path from 'path';
+import { Piscina } from 'piscina';
 import type { LintMdRulesConfig } from '@lint-md/core';
 import { batchLint, runTasksWithLimit } from '../src/utils/batch-lint';
 
@@ -140,9 +141,12 @@ describe('batchLint', () => {
     });
 
     test('destroys the pool even when a worker throws', async () => {
+      const destroySpy = jest.spyOn(Piscina.prototype, 'destroy');
       const file = path.join(tmpDir, 'missing.md');
 
       await expect(batchLint(1, [file], false, false, RULES_NO_EMPTY_LIST)).rejects.toThrow();
+      expect(destroySpy).toHaveBeenCalled();
+      destroySpy.mockRestore();
     });
   });
 
