@@ -16,6 +16,8 @@ const timeCommand = '/usr/bin/time';
 
 const usage = `Usage: node scripts/benchmark-memory.mjs [options]
 
+Linux only: requires GNU /usr/bin/time -v.
+
 Options:
   --files <count>            Number of generated Markdown files (default: 8)
   --bytes-per-file <bytes>   Approximate bytes per file (default: 65536)
@@ -82,8 +84,15 @@ const parseArgs = (args) => {
   return options;
 };
 
+if (process.platform !== 'linux') {
+  throw new Error(
+    `Unsupported platform: ${process.platform}. `
+    + 'This benchmark currently requires GNU time on Linux.'
+  );
+}
+
 if (!existsSync(timeCommand)) {
-  throw new Error('/usr/bin/time is required for this Linux memory benchmark');
+  throw new Error('GNU /usr/bin/time is required for this Linux benchmark');
 }
 
 const options = parseArgs(process.argv.slice(2));
