@@ -144,9 +144,13 @@ describe('batchLint', () => {
       const destroySpy = jest.spyOn(Piscina.prototype, 'destroy');
       const file = path.join(tmpDir, 'missing.md');
 
-      await expect(batchLint(1, [file], false, false, RULES_NO_EMPTY_LIST)).rejects.toThrow();
-      expect(destroySpy).toHaveBeenCalled();
-      destroySpy.mockRestore();
+      try {
+        await expect(batchLint(1, [file], false, false, RULES_NO_EMPTY_LIST)).rejects.toThrow();
+        expect(destroySpy).toHaveBeenCalled();
+      }
+      finally {
+        destroySpy.mockRestore();
+      }
     });
   });
 
