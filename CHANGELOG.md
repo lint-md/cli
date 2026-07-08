@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- **lint-md:** add `--threads auto` to cap worker concurrency for large Markdown files (issue #77, P1)
+
 ## [2.1.1](https://github.com/lint-md/cli/compare/v2.0.0...v2.1.1) (2026-06-30)
 
 ### Features

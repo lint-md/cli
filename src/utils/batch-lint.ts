@@ -1,8 +1,16 @@
 import path from 'path';
 import { existsSync } from 'fs';
+import { stat } from 'fs/promises';
+import { availableParallelism } from 'os';
 import { Piscina } from 'piscina';
 import type { LintMdRulesConfig } from '@lint-md/core';
-import type { BatchLintItem, LintWorkerOptions } from '../types';
+import type { BatchLintItem, LintWorkerOptions, ThreadCount } from '../types';
+
+const ONE_MIB = 1024 * 1024;
+const FIVE_MIB = 5 * ONE_MIB;
+const ADAPTIVE_MEDIUM_CAP = 2;
+const ADAPTIVE_LARGE_FILE_THRESHOLD = ONE_MIB;
+const ADAPTIVE_HUGE_FILE_THRESHOLD = FIVE_MIB;
 
 export async function runTasksWithLimit<T>(
   tasks: (() => Promise<T>)[],
@@ -29,6 +37,43 @@ const resolveWorkerFilename = (): string => {
     return compiled;
   }
   return path.resolve(__dirname, '../../lib/src/utils/lint-worker.js');
+};
+
+// TODO(perf, #78): getMaxFileSize() currently stats every file with one
+// Promise.all. For very large repositories, consider chunking stat calls
+// or short-circuiting once a file >= ADAPTIVE_HUGE_FILE_THRESHOLD is found.
+export const getMaxFileSize = async (filePaths: string[]): Promise<number> => {
+  if (filePaths.length === 0) {
+    return 0;
+  }
+  const stats = await Promise.all(filePaths.map(filePath => stat(filePath)));
+  return stats.reduce((max, current) => (current.size > max ? current.size : max), 0);
+};
+
+export const resolveAdaptiveConcurrency = async (
+  threadCount: ThreadCount,
+  mdFilePaths: string[]
+): Promise<number> => {
+  if (mdFilePaths.length === 0) {
+    return 0;
+  }
+
+  if (typeof threadCount === 'number') {
+    return Math.min(Math.max(threadCount, 1), mdFilePaths.length);
+  }
+
+  const maxFileSize = await getMaxFileSize(mdFilePaths);
+  const cpuLimit = availableParallelism();
+
+  let limit = cpuLimit;
+  if (maxFileSize >= ADAPTIVE_HUGE_FILE_THRESHOLD) {
+    limit = 1;
+  }
+  else if (maxFileSize >= ADAPTIVE_LARGE_FILE_THRESHOLD) {
+    limit = Math.min(limit, ADAPTIVE_MEDIUM_CAP);
+  }
+
+  return Math.min(Math.max(limit, 1), mdFilePaths.length);
 };
 
 export const batchLint = async (
