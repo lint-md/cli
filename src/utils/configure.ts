@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { availableParallelism } from 'os';
 import * as path from 'path';
 import chalk from 'chalk';
-import type { CLIConfig } from '../types';
+import type { CLIConfig, ThreadCount } from '../types';
 
 export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
   if (configFilePath && !fs.existsSync(configFilePath)) {
@@ -41,7 +41,13 @@ export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
   };
 };
 
-export const getThreadCount = (threadCount?: string | number | boolean): number => {
+export const getThreadCount = (
+  threadCount?: string | number | boolean
+): ThreadCount => {
+  if (threadCount === 'auto') {
+    return 'auto';
+  }
+
   // 只接受 number 或 string，其他（undefined / boolean）视为未指定
   if (typeof threadCount !== 'number' && typeof threadCount !== 'string') {
     return availableParallelism();

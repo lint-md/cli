@@ -21,7 +21,7 @@ Linux only: requires GNU /usr/bin/time -v.
 Options:
   --files <count>            Number of generated Markdown files (default: 8)
   --bytes-per-file <bytes>   Approximate bytes per file (default: 65536)
-  --threads <count>          lint-md worker count (default: 2)
+  --threads <count|auto>     lint-md worker count or "auto" (default: 2)
   --runs <count>             Number of benchmark repetitions (default: 1)
   --fix                      Benchmark fix mode
   -h, --help                 Show this help
@@ -33,6 +33,13 @@ const parsePositiveInteger = (value, option) => {
   }
 
   return Number(value);
+};
+
+const parseThreads = (value, option) => {
+  if (value === 'auto') {
+    return 'auto';
+  }
+  return parsePositiveInteger(value, option);
 };
 
 const parseArgs = (args) => {
@@ -69,7 +76,7 @@ const parseArgs = (args) => {
       options.bytesPerFile = parsePositiveInteger(value, arg);
     }
     else if (arg === '--threads') {
-      options.threads = parsePositiveInteger(value, arg);
+      options.threads = parseThreads(value, arg);
     }
     else if (arg === '--runs') {
       options.runs = parsePositiveInteger(value, arg);

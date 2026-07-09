@@ -47,4 +47,8 @@ describe('getThreadCount', () => {
       expect.stringContaining('--threads must be a positive integer'),
     );
   });
+
+  test('"auto" → "auto"', () => {
+    expect(getThreadCount('auto')).toBe('auto');
+  });
 });

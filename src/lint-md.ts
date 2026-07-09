@@ -2,13 +2,19 @@
 
 import * as process from 'process';
 import { readFileSync } from 'fs';
+import { availableParallelism } from 'os';
 import { program } from 'commander';
 import { lintMarkdown } from '@lint-md/core';
 import { version } from '../package.json';
 import { safeWriteFile } from './utils/safe-write-file';
-import { batchLint, runTasksWithLimit } from './utils/batch-lint';
+import {
+  batchLint,
+  getMaxFileSize,
+  resolveAdaptiveConcurrency,
+  runTasksWithLimit,
+} from './utils/batch-lint';
 import { getLintConfig, getThreadCount } from './utils/configure';
-import type { CLIOptions } from './types';
+import type { CLIOptions, ThreadCount } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
 
@@ -28,7 +34,7 @@ program
   .option('-d, --dev', 'open dev mode（开启开发者模式）')
   .option(
     '-t, --threads [thread-count]',
-    'The number of threads. The default is based on the number of available CPUs.（执行 Lint / Fix 的线程数，默认为 CPU 核心数）'
+    'Number of worker threads, or "auto" to cap concurrency for large files. Default: CPU count.（执行 Lint / Fix 的线程数，传 "auto" 时根据文件大小自适应）'
   )
   .option(
     '-s, --suppress-warnings',
@@ -53,7 +59,7 @@ program
     const { rules, excludeFiles, extensions } = getLintConfig(config);
 
     // --threads 参数校验，所有分支共用
-    const threadCount = getThreadCount(threads);
+    const threadCount: ThreadCount = getThreadCount(threads);
 
     // Handle stdin mode
     if (stdin) {
@@ -118,9 +124,23 @@ program
       return;
     }
 
+    const effectiveThreads = await resolveAdaptiveConcurrency(threadCount, mdFiles);
+
+    if (isDev && threadCount === 'auto') {
+      const maxFileSize = await getMaxFileSize(mdFiles);
+      const adaptiveApplied = maxFileSize >= 1024 * 1024;
+      const requested = availableParallelism();
+      if (adaptiveApplied && effectiveThreads < requested) {
+        const maxMiB = (maxFileSize / (1024 * 1024)).toFixed(2);
+        console.log(
+          `[lint-md] Adaptive concurrency: requested auto, effective ${effectiveThreads}, max file ${maxMiB} MiB`
+        );
+      }
+    }
+
     try {
       const lintResult = await batchLint(
-        threadCount,
+        effectiveThreads,
         mdFiles,
         isDev,
         isFixMode,
@@ -142,7 +162,7 @@ program
           lintResult
             .filter(({ fixedResult }) => fixedResult)
             .map(({ path, fixedResult }) => () => safeWriteFile(path, fixedResult!.result)),
-          threadCount
+          effectiveThreads
         );
       }
     }

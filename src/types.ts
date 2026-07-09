@@ -1,6 +1,8 @@
 /** CLI 配置 */
 import type { LintMdRulesConfig } from '@lint-md/core';
 
+export type ThreadCount = number | 'auto';
+
 export interface CLIConfig {
   excludeFiles?: string[]
   rules?: LintMdRulesConfig

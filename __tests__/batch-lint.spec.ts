@@ -1,9 +1,9 @@
 import { mkdtemp, rm, writeFile } from 'fs/promises';
-import { tmpdir } from 'os';
+import { availableParallelism, tmpdir } from 'os';
 import * as path from 'path';
 import { Piscina } from 'piscina';
 import type { LintMdRulesConfig } from '@lint-md/core';
-import { batchLint, runTasksWithLimit } from '../src/utils/batch-lint';
+import { batchLint, getMaxFileSize, resolveAdaptiveConcurrency, runTasksWithLimit } from '../src/utils/batch-lint';
 
 const RULES_NO_EMPTY_LIST: LintMdRulesConfig = {
   'no-empty-list': 2,
@@ -174,6 +174,145 @@ describe('batchLint', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].fixedResult == null).toBe(true);
+    });
+  });
+});
+
+describe('getMaxFileSize', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(path.join(tmpdir(), 'batch-lint-max-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test('returns 0 for empty list', async () => {
+    expect(await getMaxFileSize([])).toBe(0);
+  });
+
+  test('returns size of the only file', async () => {
+    const file = path.join(tmpDir, 'only.md');
+    await writeFile(file, 'hello');
+    expect(await getMaxFileSize([file])).toBe(5);
+  });
+
+  test('returns size of the largest file among many', async () => {
+    const small = path.join(tmpDir, 'small.md');
+    const large = path.join(tmpDir, 'large.md');
+    const medium = path.join(tmpDir, 'medium.md');
+    await writeFile(small, 'a'.repeat(10));
+    await writeFile(large, 'b'.repeat(1000));
+    await writeFile(medium, 'c'.repeat(500));
+
+    expect(await getMaxFileSize([small, large, medium])).toBe(1000);
+  });
+
+  test('rejects when a file cannot be stat-ed', async () => {
+    const missing = path.join(tmpDir, 'missing.md');
+    await expect(getMaxFileSize([missing])).rejects.toThrow();
+  });
+});
+
+describe('resolveAdaptiveConcurrency', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(path.join(tmpdir(), 'batch-lint-adaptive-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  const writeSizedFile = async (name: string, sizeBytes: number) => {
+    const file = path.join(tmpDir, name);
+    await writeFile(file, Buffer.alloc(sizeBytes));
+    return file;
+  };
+
+  describe('numeric threadCount (preserves existing behavior)', () => {
+    test('numeric 2 with 3 files → 2', async () => {
+      const files = await Promise.all([
+        writeSizedFile('a.md', 100),
+        writeSizedFile('b.md', 100),
+        writeSizedFile('c.md', 100),
+      ]);
+      expect(await resolveAdaptiveConcurrency(2, files)).toBe(2);
+    });
+
+    test('numeric threads > fileCount is clamped to fileCount', async () => {
+      const file = await writeSizedFile('only.md', 100);
+      expect(await resolveAdaptiveConcurrency(100, [file])).toBe(1);
+    });
+
+    test('numeric 0 is clamped to 1 (matches existing min clamp)', async () => {
+      const files = await Promise.all([
+        writeSizedFile('a.md', 100),
+        writeSizedFile('b.md', 100),
+      ]);
+      expect(await resolveAdaptiveConcurrency(0, files)).toBe(1);
+    });
+
+    test('numeric threads ignores file size', async () => {
+      const files = await Promise.all(
+        Array.from({ length: 8 }, (_, index) =>
+          writeSizedFile(`huge-${index}.md`, 10 * 1024 * 1024)
+        )
+      );
+
+      expect(await resolveAdaptiveConcurrency(8, files)).toBe(8);
+    });
+  });
+
+  describe('auto threadCount', () => {
+    test('empty file list → 0', async () => {
+      expect(await resolveAdaptiveConcurrency('auto', [])).toBe(0);
+    });
+
+    test('small files (< 1 MiB) use cpuLimit clamped to fileCount', async () => {
+      const files = await Promise.all([
+        writeSizedFile('a.md', 1024),
+        writeSizedFile('b.md', 2048),
+        writeSizedFile('c.md', 4096),
+      ]);
+      const cpuLimit = availableParallelism();
+      expect(await resolveAdaptiveConcurrency('auto', files)).toBe(Math.min(cpuLimit, files.length));
+    });
+
+    test('max file exactly 1 MiB caps at 2', async () => {
+      const files = await Promise.all([
+        writeSizedFile('small.md', 1024),
+        writeSizedFile('one-mib.md', 1024 * 1024),
+      ]);
+      expect(await resolveAdaptiveConcurrency('auto', files)).toBeLessThanOrEqual(2);
+    });
+
+    test('max file 1.5 MiB caps at 2', async () => {
+      const file = await writeSizedFile('medium.md', 1.5 * 1024 * 1024);
+      expect(await resolveAdaptiveConcurrency('auto', [file])).toBeLessThanOrEqual(2);
+    });
+
+    test('max file exactly 5 MiB forces 1', async () => {
+      const file = await writeSizedFile('five-mib.md', 5 * 1024 * 1024);
+      expect(await resolveAdaptiveConcurrency('auto', [file])).toBe(1);
+    });
+
+    test('max file 6 MiB forces 1', async () => {
+      const file = await writeSizedFile('six-mib.md', 6 * 1024 * 1024);
+      expect(await resolveAdaptiveConcurrency('auto', [file])).toBe(1);
+    });
+
+    test('single small file → 1', async () => {
+      const file = await writeSizedFile('only.md', 100);
+      expect(await resolveAdaptiveConcurrency('auto', [file])).toBe(1);
+    });
+
+    test('medium cap respects fileCount when files < 2', async () => {
+      const file = await writeSizedFile('one-mib.md', 1.2 * 1024 * 1024);
+      expect(await resolveAdaptiveConcurrency('auto', [file])).toBe(1);
     });
   });
 });
