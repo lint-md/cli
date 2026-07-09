@@ -9,18 +9,16 @@ const SIZE_UNITS: Record<string, number> = {
 };
 
 // Parses a human size string (e.g. "5mb", "500kb", "1gb") into bytes.
-// Rejects decimals (1.5mb), whitespace (1 mb), 0, negatives, and any
-// unrecognized unit. Throws on invalid input so callers can present the
-// error in the CLI style (see getMaxFileSizeOption in configure.ts).
+// Units are explicitly b / k / kb / m / mb / g / gb (case-insensitive);
+// decimals, whitespace, 0, negatives, and any other unit are rejected.
+// Throws on invalid input so callers can present the error in the CLI
+// style (see getMaxFileSizeOption in configure.ts).
 export const parseSize = (input: string): number => {
-  const match = /^(\d+)([bkmg]+)$/i.exec(input.trim());
+  const match = /^(\d+)(b|k|kb|m|mb|g|gb)$/i.exec(input.trim());
   if (!match) {
     throw new Error('invalid size');
   }
   const multiplier = SIZE_UNITS[match[2].toLowerCase()];
-  if (!multiplier) {
-    throw new Error('invalid size');
-  }
   const bytes = Number(match[1]) * multiplier;
   if (!Number.isFinite(bytes) || bytes <= 0) {
     throw new Error('invalid size');

@@ -21,6 +21,12 @@ describe('parseSize', () => {
     expect(() => parseSize('')).toThrow();
     expect(() => parseSize('10x')).toThrow();
   });
+
+  test('rejects malformed-but-permissible-looking units', () => {
+    expect(() => parseSize('kk')).toThrow();
+    expect(() => parseSize('mbb')).toThrow();
+    expect(() => parseSize('kbk')).toThrow();
+  });
 });
 
 describe('formatBytes', () => {
