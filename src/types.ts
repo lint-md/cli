@@ -17,6 +17,7 @@ export interface CLIOptions {
   suppressWarnings: boolean
   threads?: string | boolean
   stdin?: boolean
+  maxFileSize?: string
 }
 
 /** CLI lint 结果选项 */

@@ -13,10 +13,11 @@ import {
   resolveAdaptiveConcurrency,
   runTasksWithLimit,
 } from './utils/batch-lint';
-import { getLintConfig, getThreadCount } from './utils/configure';
+import { getLintConfig, getMaxFileSizeOption, getThreadCount } from './utils/configure';
 import type { CLIOptions, ThreadCount } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
+import { filterFilesByMaxSize } from './utils/filter-by-max-size';
 
 program
   .version(
@@ -44,9 +45,13 @@ program
     '-i, --stdin',
     'read markdown content from stdin（从标准输入中读取内容）'
   )
+  .option(
+    '--max-file-size <size>',
+    'skip Markdown files larger than <size> (e.g. 5mb, 500kb, 1gb), warn to stderr（跳过超过指定大小的 Markdown 文件）'
+  )
   .arguments('[files...]')
   .action(async (files: string[], options: CLIOptions) => {
-    const { fix, config, threads, dev, suppressWarnings, stdin } = options;
+    const { fix, config, threads, dev, suppressWarnings, stdin, maxFileSize } = options;
 
     const startTime = Date.now();
     const isFixMode = Boolean(fix);
@@ -60,6 +65,9 @@ program
 
     // --threads 参数校验，所有分支共用
     const threadCount: ThreadCount = getThreadCount(threads);
+
+    // --max-file-size 校验（未传 = null = 不过滤），失败早退，与 --threads 一致
+    const maxFileSizeBytes = getMaxFileSizeOption(maxFileSize);
 
     // Handle stdin mode
     if (stdin) {
@@ -116,7 +124,13 @@ program
       return;
     }
 
-    const mdFiles = await loadMdFiles(files, excludeFiles, extensions);
+    let mdFiles = await loadMdFiles(files, excludeFiles, extensions);
+
+    // 过滤超大文件（stderr warning + 跳过），发生在 resolveAdaptiveConcurrency
+    // 之前，使 --threads auto 只基于剩余文件重算并发，两者互不感知。
+    if (maxFileSizeBytes !== null) {
+      mdFiles = await filterFilesByMaxSize(mdFiles, maxFileSizeBytes);
+    }
 
     if (!mdFiles.length) {
       console.log('🎉 No markdown files to lint 🎉');
