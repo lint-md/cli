@@ -3,6 +3,7 @@ import { availableParallelism } from 'os';
 import * as path from 'path';
 import chalk from 'chalk';
 import type { CLIConfig, ThreadCount } from '../types';
+import { parseSize } from './parse-size';
 
 export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
   if (configFilePath && !fs.existsSync(configFilePath)) {
@@ -67,4 +68,26 @@ export const getThreadCount = (
   }
 
   return num;
+};
+
+// Resolves the optional --max-file-size CLI flag into a byte limit.
+// Returns null when the flag is not provided (no filtering, backward
+// compatible). Invalid input exits 1 with a stderr message, matching the
+// --threads validation style.
+export const getMaxFileSizeOption = (
+  maxFileSize?: string | boolean
+): number | null => {
+  if (maxFileSize === undefined || typeof maxFileSize !== 'string') {
+    return null;
+  }
+
+  try {
+    return parseSize(maxFileSize);
+  }
+  catch {
+    console.error(
+      chalk.red('[lint-md] --max-file-size must be a valid size (e.g. 5mb, 500kb, 1gb).')
+    );
+    process.exit(1);
+  }
 };
