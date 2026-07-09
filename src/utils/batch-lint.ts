@@ -11,6 +11,7 @@ const FIVE_MIB = 5 * ONE_MIB;
 const ADAPTIVE_MEDIUM_CAP = 2;
 const ADAPTIVE_LARGE_FILE_THRESHOLD = ONE_MIB;
 const ADAPTIVE_HUGE_FILE_THRESHOLD = FIVE_MIB;
+// Upper bound on concurrent stat() fds in getMaxFileSize (see #80).
 export const STAT_CONCURRENCY_LIMIT = 128;
 
 export async function runTasksWithLimit<T>(
@@ -42,7 +43,12 @@ const resolveWorkerFilename = (): string => {
 
 // getMaxFileSize() stats every file but bounds the in-flight stat calls to
 // STAT_CONCURRENCY_LIMIT via runTasksWithLimit, avoiding an N-fd filesystem
-// burst on very large repositories. See #80.
+// burst on very large repositories (see #80).
+// We bound concurrency rather than short-circuit on a >= 5 MiB file: this
+// function must return the TRUE maximum size, because src/lint-md.ts logs
+// `max file ${maxMiB} MiB` under --threads auto --dev. An early return would
+// make that log (and any future consumer) inaccurate. STAT_CONCURRENCY_LIMIT
+// is an empirical cap (the issue suggests 64/128), not benchmark-derived.
 export const getMaxFileSize = async (filePaths: string[]): Promise<number> => {
   if (filePaths.length === 0) {
     return 0;
