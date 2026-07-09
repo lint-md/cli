@@ -11,6 +11,7 @@ const FIVE_MIB = 5 * ONE_MIB;
 const ADAPTIVE_MEDIUM_CAP = 2;
 const ADAPTIVE_LARGE_FILE_THRESHOLD = ONE_MIB;
 const ADAPTIVE_HUGE_FILE_THRESHOLD = FIVE_MIB;
+export const STAT_CONCURRENCY_LIMIT = 128;
 
 export async function runTasksWithLimit<T>(
   tasks: (() => Promise<T>)[],
@@ -39,15 +40,18 @@ const resolveWorkerFilename = (): string => {
   return path.resolve(__dirname, '../../lib/src/utils/lint-worker.js');
 };
 
-// TODO(perf, #78): getMaxFileSize() currently stats every file with one
-// Promise.all. For very large repositories, consider chunking stat calls
-// or short-circuiting once a file >= ADAPTIVE_HUGE_FILE_THRESHOLD is found.
+// getMaxFileSize() stats every file but bounds the in-flight stat calls to
+// STAT_CONCURRENCY_LIMIT via runTasksWithLimit, avoiding an N-fd filesystem
+// burst on very large repositories. See #80.
 export const getMaxFileSize = async (filePaths: string[]): Promise<number> => {
   if (filePaths.length === 0) {
     return 0;
   }
-  const stats = await Promise.all(filePaths.map(filePath => stat(filePath)));
-  return stats.reduce((max, current) => (current.size > max ? current.size : max), 0);
+  const sizes = await runTasksWithLimit(
+    filePaths.map(filePath => () => stat(filePath).then(stats => stats.size)),
+    STAT_CONCURRENCY_LIMIT
+  );
+  return sizes.reduce((max, current) => (current > max ? current : max), 0);
 };
 
 export const resolveAdaptiveConcurrency = async (

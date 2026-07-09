@@ -3,7 +3,7 @@ import { availableParallelism, tmpdir } from 'os';
 import * as path from 'path';
 import { Piscina } from 'piscina';
 import type { LintMdRulesConfig } from '@lint-md/core';
-import { batchLint, getMaxFileSize, resolveAdaptiveConcurrency, runTasksWithLimit } from '../src/utils/batch-lint';
+import { STAT_CONCURRENCY_LIMIT, batchLint, getMaxFileSize, resolveAdaptiveConcurrency, runTasksWithLimit } from '../src/utils/batch-lint';
 
 const RULES_NO_EMPTY_LIST: LintMdRulesConfig = {
   'no-empty-list': 2,
@@ -213,6 +213,41 @@ describe('getMaxFileSize', () => {
   test('rejects when a file cannot be stat-ed', async () => {
     const missing = path.join(tmpDir, 'missing.md');
     await expect(getMaxFileSize([missing])).rejects.toThrow();
+  });
+
+  test('bounds concurrent stat calls to STAT_CONCURRENCY_LIMIT', async () => {
+    const fileCount = STAT_CONCURRENCY_LIMIT * 3;
+    const filePaths = Array.from({ length: fileCount }, (_, index) =>
+      path.join(tmpDir, `bounded-${index}.md`)
+    );
+    const sizeMap = new Map(filePaths.map((filePath, index) => [filePath, index + 1]));
+
+    let inFlight = 0;
+    let maxInFlight = 0;
+
+    const fsPromises = require('fs/promises');
+    const statSpy = jest.spyOn(fsPromises, 'stat').mockImplementation((filePath: string) => {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          inFlight--;
+          resolve({ size: sizeMap.get(filePath) ?? 0 });
+        }, 20);
+      });
+    });
+
+    try {
+      const result = await getMaxFileSize(filePaths);
+
+      expect(result).toBe(fileCount);
+      expect(statSpy).toHaveBeenCalledTimes(fileCount);
+      expect(maxInFlight).toBeGreaterThan(1);
+      expect(maxInFlight).toBeLessThanOrEqual(STAT_CONCURRENCY_LIMIT);
+    }
+    finally {
+      statSpy.mockRestore();
+    }
   });
 });
 
