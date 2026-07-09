@@ -1,6 +1,6 @@
 import { stat } from 'fs/promises';
 import { STAT_CONCURRENCY_LIMIT, runTasksWithLimit } from './batch-lint';
-import { formatMiB } from './parse-size';
+import { formatBytes } from './parse-size';
 
 // Drops Markdown files larger than limitBytes, emitting a stderr warning for
 // each skipped file. Stat concurrency is bounded by STAT_CONCURRENCY_LIMIT
@@ -16,7 +16,7 @@ export const filterFilesByMaxSize = async (
       const { size } = await stat(file);
       if (size > limitBytes) {
         console.error(
-          `warning: skipped large Markdown file ${file}, size ${formatMiB(size)} exceeds limit ${formatMiB(limitBytes)}`
+          `warning: skipped large Markdown file ${file}, size ${formatBytes(size)} exceeds limit ${formatBytes(limitBytes)}`
         );
         return null;
       }

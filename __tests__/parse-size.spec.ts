@@ -1,4 +1,4 @@
-import { formatMiB, parseSize } from '../src/utils/parse-size';
+import { formatBytes, parseSize } from '../src/utils/parse-size';
 
 describe('parseSize', () => {
   test('parses kb/m/g units case-insensitively', () => {
@@ -23,9 +23,13 @@ describe('parseSize', () => {
   });
 });
 
-describe('formatMiB', () => {
-  test('formats with one decimal and drops trailing .0', () => {
-    expect(formatMiB(5 * 1024 * 1024)).toBe('5 MiB');
-    expect(formatMiB(Math.round(8.3 * 1024 * 1024))).toBe('8.3 MiB');
+describe('formatBytes', () => {
+  test('uses dynamic units with one decimal and drops trailing .0', () => {
+    expect(formatBytes(5 * 1024 * 1024)).toBe('5 MiB');
+    expect(formatBytes(Math.round(8.3 * 1024 * 1024))).toBe('8.3 MiB');
+    expect(formatBytes(500)).toBe('500 B');
+    expect(formatBytes(1024)).toBe('1 KiB');
+    expect(formatBytes(200 * 1024)).toBe('200 KiB');
+    expect(formatBytes(1024 * 1024 * 1024)).toBe('1 GiB');
   });
 });

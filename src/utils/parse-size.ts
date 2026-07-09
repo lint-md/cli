@@ -28,7 +28,20 @@ export const parseSize = (input: string): number => {
   return bytes;
 };
 
-// Formats bytes as "X.X MiB", dropping a trailing ".0" to match the
-// issue's warning examples (8.3 MiB, 5 MiB).
-export const formatMiB = (bytes: number): string =>
-  `${(bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MiB`;
+const SIZE_LABELS = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+
+// Formats a byte count with a dynamic unit, picking the largest unit where
+// the value stays >= 1 so small files read in B / KiB instead of a
+// misleading "0 MiB". One decimal, trailing ".0" dropped.
+export const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < SIZE_LABELS.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${value.toFixed(1).replace(/\.0$/, '')} ${SIZE_LABELS[unit]}`;
+};
