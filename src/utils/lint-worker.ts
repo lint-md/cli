@@ -26,6 +26,8 @@ const lintWorker = async (options: LintWorkerOptions) => {
     path: filePath,
     lintResult: result.lintResult,
     fixedResult: result.fixedResult,
+    fixableErrorCount: result.fixableErrorCount,
+    fixableWarningCount: result.fixableWarningCount,
   };
 };
 

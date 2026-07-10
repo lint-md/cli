@@ -44,8 +44,8 @@ export const getReportData = (problemResult: BatchLintItem[]) => {
       return {
         errorCount,
         filePath: path,
-        fixableErrorCount: 0,
-        fixableWarningCount: 0,
+        fixableErrorCount: res.fixableErrorCount ?? 0,
+        fixableWarningCount: res.fixableWarningCount ?? 0,
         messages: lintResult.map((lintItem) => {
           const { loc, message, severity, name } = lintItem;
           return {
