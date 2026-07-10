@@ -1,4 +1,5 @@
 import type { BatchLintItem } from '../types';
+import { sanitizeTerminalText } from './sanitize-terminal';
 
 // Returns stderr warning lines for files whose --fix pass left fixes
 // unapplied due to conflicts. `fixedResult.notAppliedFixes` (from
@@ -12,7 +13,7 @@ export const getUnappliedFixesWarnings = (lintResult: BatchLintItem[]): string[]
     const count = item.fixedResult?.notAppliedFixes?.length ?? 0;
     if (count > 0) {
       warnings.push(
-        `[lint-md] ${item.path}: ${count} fixes were not applied due to conflicts.`
+        `[lint-md] ${sanitizeTerminalText(item.path)}: ${count} fixes were not applied due to conflicts.`
       );
     }
   }

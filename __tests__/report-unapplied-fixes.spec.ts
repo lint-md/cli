@@ -76,4 +76,19 @@ describe('getUnappliedFixesWarnings', () => {
       '[lint-md] bad.md: 1 fixes were not applied due to conflicts.',
     ]);
   });
+
+  test('sanitizes file path in warning output', () => {
+    const result: BatchLintItem[] = [
+      makeItem({
+        path: 'bad\u001B[31m.md\nnext-line',
+        fixedResult: {
+          result: 'x',
+          notAppliedFixes: [{ range: [0, 1], text: 'y' }],
+        },
+      }),
+    ];
+
+    expect(getUnappliedFixesWarnings(result)[0]).not.toContain('\u001B');
+    expect(getUnappliedFixesWarnings(result)[0]).not.toContain('\n');
+  });
 });
