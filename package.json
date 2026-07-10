@@ -56,7 +56,7 @@
     ]
   },
   "dependencies": {
-    "@lint-md/core": "^2.1.3",
+    "@lint-md/core": "^2.1.4",
     "chalk": "^4",
     "commander": "^9.4.1",
     "glob": "^13.0.6",
