@@ -18,6 +18,7 @@
     "build:cjs": "tsc -p tsconfig.json --target ESNext --module commonjs --outDir lib",
     "build:esm": "tsc -p tsconfig.json --target ESNext --module ESNext --outDir esm",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "lint": "npm run typecheck && prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "build": "rm -rf esm lib && run-p build:*",
     "clean": "rm -rf lib esm",
