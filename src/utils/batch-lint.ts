@@ -86,6 +86,14 @@ export const resolveAdaptiveConcurrency = async (
   return Math.min(Math.max(limit, 1), mdFilePaths.length);
 };
 
+// Keep a file's result when it has lint findings, or — in fix mode — when
+// core left fixes unapplied due to conflicts. notAppliedFixes can in theory
+// occur without a lint report, so we must not drop it (see #86 / P1-6
+// "partially-unfixed is observable", which the #89 stderr warning surfaces).
+export const keepLintItem = (item: BatchLintItem): boolean =>
+  item.lintResult.length > 0
+  || Boolean(item.fixedResult?.notAppliedFixes?.length);
+
 export const batchLint = async (
   threadsCount: number,
   mdFilePaths: string[],
@@ -117,9 +125,7 @@ export const batchLint = async (
       concurrency
     );
 
-    return results.filter((item) => {
-      return item.lintResult.length > 0;
-    });
+    return results.filter(keepLintItem);
   }
   finally {
     await lintWorkerPool.destroy();
