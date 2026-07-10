@@ -1,8 +1,8 @@
-import chalk from 'chalk';
-import table from 'text-table';
-import stripAnsi from 'strip-ansi';
-import type { BatchLintItem } from '../types';
-import { sanitizeTerminalText } from './sanitize-terminal';
+import chalk from "chalk";
+import table from "text-table";
+import stripAnsi from "strip-ansi";
+import type { BatchLintItem } from "../types";
+import { sanitizeTerminalText } from "./sanitize-terminal";
 
 function pluralize(word: string, count: number): string {
   return count === 1 ? word : `${word}s`;
@@ -10,18 +10,18 @@ function pluralize(word: string, count: number): string {
 
 interface Result {
   messages: {
-    fatal: boolean
-    severity: number
-    line: number
-    column: number
-    message: string
-    ruleId: string
-  }[]
-  errorCount: number
-  warningCount: number
-  fixableErrorCount: number
-  fixableWarningCount: number
-  filePath: string
+    fatal: boolean;
+    severity: number;
+    line: number;
+    column: number;
+    message: string;
+    ruleId: string;
+  }[];
+  errorCount: number;
+  warningCount: number;
+  fixableErrorCount: number;
+  fixableWarningCount: number;
+  filePath: string;
 }
 
 export const getReportData = (problemResult: BatchLintItem[]) => {
@@ -30,11 +30,11 @@ export const getReportData = (problemResult: BatchLintItem[]) => {
       const { path, lintResult } = res;
 
       const errorCount = lintResult.filter(
-        item => item.severity === 2
+        (item) => item.severity === 2
       ).length;
 
       const warningCount = lintResult.filter(
-        item => item.severity === 1
+        (item) => item.severity === 1
       ).length;
 
       if (errorCount + warningCount === 0) {
@@ -62,12 +62,12 @@ export const getReportData = (problemResult: BatchLintItem[]) => {
     })
     .filter(Boolean);
 
-  let output = '\n';
+  let output = "\n";
   let errorCount = 0;
   let warningCount = 0;
   let fixableErrorCount = 0;
   let fixableWarningCount = 0;
-  let summaryColor = 'yellow';
+  let summaryColor = "yellow";
 
   results.forEach((result) => {
     const messages = result.messages;
@@ -88,34 +88,33 @@ export const getReportData = (problemResult: BatchLintItem[]) => {
         let messageType;
 
         if (message.fatal || message.severity === 2) {
-          messageType = chalk.red('error');
-          summaryColor = 'red';
-        }
- else {
-          messageType = chalk.yellow('warning');
+          messageType = chalk.red("error");
+          summaryColor = "red";
+        } else {
+          messageType = chalk.yellow("warning");
         }
 
         return [
-          '',
+          "",
           message.line || 0,
           message.column || 0,
           messageType,
-          sanitizeTerminalText(message.message).replace(/([^ ])\.$/u, '$1'),
-          chalk.dim(sanitizeTerminalText(message.ruleId || '')),
+          sanitizeTerminalText(message.message).replace(/([^ ])\.$/u, "$1"),
+          chalk.dim(sanitizeTerminalText(message.ruleId || "")),
         ];
       }),
       {
-        align: ['', 'r', 'l'],
+        align: ["", "r", "l"],
         stringLength(str) {
           return stripAnsi(str).length;
         },
       }
     )
-      .split('\n')
-      .map(el =>
+      .split("\n")
+      .map((el) =>
         el.replace(/(\d+)\s+(\d+)/u, (m, p1, p2) => chalk.dim(`${p1}:${p2}`))
       )
-      .join('\n')}\n\n`;
+      .join("\n")}\n\n`;
   });
 
   const total = errorCount + warningCount;
@@ -123,37 +122,37 @@ export const getReportData = (problemResult: BatchLintItem[]) => {
   if (total > 0) {
     output += chalk[summaryColor].bold(
       [
-        '\u2716 ',
+        "\u2716 ",
         total,
-        pluralize(' problem', total),
-        ' (',
+        pluralize(" problem", total),
+        " (",
         errorCount,
-        pluralize(' error', errorCount),
-        ', ',
+        pluralize(" error", errorCount),
+        ", ",
         warningCount,
-        pluralize(' warning', warningCount),
-        ')\n',
-      ].join('')
+        pluralize(" warning", warningCount),
+        ")\n",
+      ].join("")
     );
 
     if (fixableErrorCount > 0 || fixableWarningCount > 0) {
       output += chalk[summaryColor].bold(
         [
-          '  ',
+          "  ",
           fixableErrorCount,
-          pluralize(' error', fixableErrorCount),
-          ' and ',
+          pluralize(" error", fixableErrorCount),
+          " and ",
           fixableWarningCount,
-          pluralize(' warning', fixableWarningCount),
-          ' potentially fixable with the `--fix` option.\n',
-        ].join('')
+          pluralize(" warning", fixableWarningCount),
+          " potentially fixable with the `--fix` option.\n",
+        ].join("")
       );
     }
   }
 
   // Resets output color, for prevent change on top level
   return {
-    consoleMessage: total > 0 ? chalk.reset(output) : '',
+    consoleMessage: total > 0 ? chalk.reset(output) : "",
     errorCount,
     warningCount,
   };

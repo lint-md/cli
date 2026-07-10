@@ -1,5 +1,5 @@
-import { constants } from 'fs';
-import { open } from 'fs/promises';
+import { constants } from "fs";
+import { open } from "fs/promises";
 
 /**
  * 安全写入文件，拒绝符号链接。
@@ -14,10 +14,7 @@ import { open } from 'fs/promises';
  * 注意：这不是完全原子写入；崩溃时仍可能出现部分新内容或旧尾部残留。
  */
 export async function safeWriteFile(filePath: string, content: string) {
-  const handle = await open(
-    filePath,
-    constants.O_RDWR | constants.O_NOFOLLOW
-  );
+  const handle = await open(filePath, constants.O_RDWR | constants.O_NOFOLLOW);
 
   try {
     const stat = await handle.stat();
@@ -26,7 +23,7 @@ export async function safeWriteFile(filePath: string, content: string) {
       throw new Error(`Refusing to write non-regular file: ${filePath}`);
     }
 
-    const buf = Buffer.from(content, 'utf8');
+    const buf = Buffer.from(content, "utf8");
 
     let written = 0;
     while (written < buf.length) {
@@ -46,8 +43,7 @@ export async function safeWriteFile(filePath: string, content: string) {
 
     await handle.truncate(buf.length);
     await handle.sync();
-  }
-  finally {
+  } finally {
     await handle.close();
   }
 }

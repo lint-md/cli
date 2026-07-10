@@ -1,4 +1,4 @@
-import { glob } from 'glob';
+import { glob } from "glob";
 
 /**
  * 读取所有文件
@@ -11,7 +11,7 @@ import { glob } from 'glob';
 export const loadMdFiles = async (
   globList: string[],
   excludeFiles: string[],
-  extensions: string[] = ['.md', '.markdown', '.mdx']
+  extensions: string[] = [".md", ".markdown", ".mdx"]
 ) => {
   const entries = await glob([...new Set(globList)], {
     ignore: excludeFiles,
@@ -23,11 +23,9 @@ export const loadMdFiles = async (
   const files = new Set<string>();
 
   for (const entry of entries) {
-    if (entry.isSymbolicLink())
-      continue;
+    if (entry.isSymbolicLink()) continue;
     const fullPath = entry.fullpath();
-    if (extensions.some(ext => fullPath.endsWith(ext)))
-      files.add(fullPath);
+    if (extensions.some((ext) => fullPath.endsWith(ext))) files.add(fullPath);
   }
 
   return [...files];

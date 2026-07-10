@@ -1,58 +1,63 @@
 #!/usr/bin/env node
 
-import * as process from 'process';
-import { readFileSync } from 'fs';
-import { availableParallelism } from 'os';
-import { program } from 'commander';
-import { lintMarkdown } from '@lint-md/core';
-import { version } from '../package.json';
-import { safeWriteFile } from './utils/safe-write-file';
+import * as process from "process";
+import { readFileSync } from "fs";
+import { availableParallelism } from "os";
+import { program } from "commander";
+import { lintMarkdown } from "@lint-md/core";
+import { version } from "../package.json";
+import { safeWriteFile } from "./utils/safe-write-file";
 import {
   batchLint,
   getMaxFileSize,
   resolveAdaptiveConcurrency,
   runTasksWithLimit,
-} from './utils/batch-lint';
-import { getLintConfig, getMaxFileSizeOption, getThreadCount } from './utils/configure';
-import type { CLIOptions, ThreadCount } from './types';
-import { loadMdFiles } from './utils/load-md-files';
-import { getReportData } from './utils/get-report-data';
-import { filterFilesByMaxSize } from './utils/filter-by-max-size';
-import { getUnappliedFixesWarnings } from './utils/report-unapplied-fixes';
+} from "./utils/batch-lint";
+import {
+  getLintConfig,
+  getMaxFileSizeOption,
+  getThreadCount,
+} from "./utils/configure";
+import type { CLIOptions, ThreadCount } from "./types";
+import { loadMdFiles } from "./utils/load-md-files";
+import { getReportData } from "./utils/get-report-data";
+import { filterFilesByMaxSize } from "./utils/filter-by-max-size";
+import { getUnappliedFixesWarnings } from "./utils/report-unapplied-fixes";
 
 program
   .version(
     version,
-    '-v, --version',
-    'output the version number（查看当前版本）'
+    "-v, --version",
+    "output the version number（查看当前版本）"
   )
-  .usage('<lint-md> [files...]')
-  .description('lint your markdown files')
+  .usage("<lint-md> [files...]")
+  .description("lint your markdown files")
   .option(
-    '-c, --config [configure-file]',
-    'use the configure file, default .lintmdrc（使用配置文件，默认为 .lintmdrc）'
+    "-c, --config [configure-file]",
+    "use the configure file, default .lintmdrc（使用配置文件，默认为 .lintmdrc）"
   )
-  .option('-f, --fix', 'fix the errors automatically（开启修复模式）')
-  .option('-d, --dev', 'open dev mode（开启开发者模式）')
+  .option("-f, --fix", "fix the errors automatically（开启修复模式）")
+  .option("-d, --dev", "open dev mode（开启开发者模式）")
   .option(
-    '-t, --threads [thread-count]',
+    "-t, --threads [thread-count]",
     'Number of worker threads, or "auto" to cap concurrency for large files. Default: CPU count.（执行 Lint / Fix 的线程数，传 "auto" 时根据文件大小自适应）'
   )
   .option(
-    '-s, --suppress-warnings',
-    'suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）'
+    "-s, --suppress-warnings",
+    "suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）"
   )
   .option(
-    '-i, --stdin',
-    'read markdown content from stdin（从标准输入中读取内容）'
+    "-i, --stdin",
+    "read markdown content from stdin（从标准输入中读取内容）"
   )
   .option(
-    '--max-file-size <size>',
-    'skip Markdown files larger than <size> (e.g. 5mb, 500kb, 1gb), warn to stderr（跳过超过指定大小的 Markdown 文件）'
+    "--max-file-size <size>",
+    "skip Markdown files larger than <size> (e.g. 5mb, 500kb, 1gb), warn to stderr（跳过超过指定大小的 Markdown 文件）"
   )
-  .arguments('[files...]')
+  .arguments("[files...]")
   .action(async (files: string[], options: CLIOptions) => {
-    const { fix, config, threads, dev, suppressWarnings, stdin, maxFileSize } = options;
+    const { fix, config, threads, dev, suppressWarnings, stdin, maxFileSize } =
+      options;
 
     const startTime = Date.now();
     const isFixMode = Boolean(fix);
@@ -72,7 +77,7 @@ program
 
     // Handle stdin mode
     if (stdin) {
-      const content = readFileSync(process.stdin.fd, 'utf8');
+      const content = readFileSync(process.stdin.fd, "utf8");
 
       if (isFixMode) {
         if (content.length === 0) {
@@ -88,35 +93,34 @@ program
           const result = lintMarkdown(content, rules, true);
           process.stdout.write(result.fixedResult?.result ?? content);
           return;
-        }
-        catch (e) {
+        } catch (e) {
           console.error(e);
           process.exit(1);
         }
       }
 
       if (!content.trim()) {
-        console.error('No content to lint');
+        console.error("No content to lint");
         process.exit(0);
       }
 
       try {
         const result = lintMarkdown(content, rules, false);
-        const { consoleMessage, errorCount, warningCount }
-          = getReportData([{
-            path: '(stdin)',
+        const { consoleMessage, errorCount, warningCount } = getReportData([
+          {
+            path: "(stdin)",
             lintResult: result.lintResult,
             fixableErrorCount: result.fixableErrorCount,
             fixableWarningCount: result.fixableWarningCount,
-          }]);
+          },
+        ]);
 
         console.log(consoleMessage);
 
         if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
           process.exit(1);
         }
-      }
-      catch (e) {
+      } catch (e) {
         console.error(e);
         process.exit(1);
       }
@@ -139,14 +143,17 @@ program
     }
 
     if (!mdFiles.length) {
-      console.log('🎉 No markdown files to lint 🎉');
+      console.log("🎉 No markdown files to lint 🎉");
       process.exit(0);
       return;
     }
 
-    const effectiveThreads = await resolveAdaptiveConcurrency(threadCount, mdFiles);
+    const effectiveThreads = await resolveAdaptiveConcurrency(
+      threadCount,
+      mdFiles
+    );
 
-    if (isDev && threadCount === 'auto') {
+    if (isDev && threadCount === "auto") {
       const maxFileSize = await getMaxFileSize(mdFiles);
       const adaptiveApplied = maxFileSize >= 1024 * 1024;
       const requested = availableParallelism();
@@ -168,20 +175,23 @@ program
       );
 
       if (!isFixMode) {
-        const { consoleMessage, errorCount, warningCount }
-          = getReportData(lintResult);
+        const { consoleMessage, errorCount, warningCount } =
+          getReportData(lintResult);
 
         console.log(consoleMessage);
 
         if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
           process.exit(1);
         }
-      }
-      else {
+      } else {
         await runTasksWithLimit(
           lintResult
             .filter(({ fixedResult }) => fixedResult)
-            .map(({ path, fixedResult }) => () => safeWriteFile(path, fixedResult!.result)),
+            .map(
+              ({ path, fixedResult }) =>
+                () =>
+                  safeWriteFile(path, fixedResult!.result)
+            ),
           effectiveThreads
         );
 
@@ -189,8 +199,7 @@ program
           console.error(warning);
         }
       }
-    }
-    catch (e) {
+    } catch (e) {
       console.error(e);
       process.exit(1);
     }
@@ -201,7 +210,7 @@ program
 
 program.parse(process.argv);
 
-const isStdin = process.argv.includes('--stdin') || process.argv.includes('-i');
+const isStdin = process.argv.includes("--stdin") || process.argv.includes("-i");
 if (!program.args.length && !isStdin) {
   program.help();
 }
