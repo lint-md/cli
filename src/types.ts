@@ -1,5 +1,5 @@
 /** CLI 配置 */
-import type { LintMdRulesConfig } from '@lint-md/core';
+import type { LintMdRulesConfig, LintReportItem, FixedResult } from '@lint-md/core';
 
 export type ThreadCount = number | 'auto';
 
@@ -42,22 +42,6 @@ export interface LintWorkerOptions {
 /** batchLint 单个文件的 lint 结果 */
 export interface BatchLintItem {
   path: string
-  lintResult: {
-    loc: {
-      start: { line: number; column: number }
-      end: { line: number; column: number }
-    }
-    message: string
-    name: string
-    content: string
-    severity: number
-  }[]
-  fixedResult?: {
-    result: string
-    notAppliedFixes: {
-      range: number[]
-      text: string
-      data?: Record<string, unknown>
-    }[]
-  } | null
+  lintResult: LintReportItem[]
+  fixedResult?: FixedResult | null
 }
