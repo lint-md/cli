@@ -16,17 +16,17 @@ const SIZE_UNITS: Record<string, number> = {
 export const parseSize = (input: string): number => {
   const match = /^(\d+)(b|k|kb|m|mb|g|gb)$/i.exec(input.trim());
   if (!match) {
-    throw new Error('invalid size');
+    throw new Error("invalid size");
   }
   const multiplier = SIZE_UNITS[match[2].toLowerCase()];
   const bytes = Number(match[1]) * multiplier;
   if (!Number.isFinite(bytes) || bytes <= 0) {
-    throw new Error('invalid size');
+    throw new Error("invalid size");
   }
   return bytes;
 };
 
-const SIZE_LABELS = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+const SIZE_LABELS = ["B", "KiB", "MiB", "GiB", "TiB"];
 
 // Formats a byte count with a dynamic unit, picking the largest unit where
 // the value stays >= 1 so small files read in B / KiB instead of a
@@ -41,5 +41,5 @@ export const formatBytes = (bytes: number): string => {
     value /= 1024;
     unit++;
   }
-  return `${value.toFixed(1).replace(/\.0$/, '')} ${SIZE_LABELS[unit]}`;
+  return `${value.toFixed(1).replace(/\.0$/, "")} ${SIZE_LABELS[unit]}`;
 };

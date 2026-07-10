@@ -1,10 +1,10 @@
-import path from 'path';
-import { existsSync } from 'fs';
-import { stat } from 'fs/promises';
-import { availableParallelism } from 'os';
-import { Piscina } from 'piscina';
-import type { LintMdRulesConfig } from '@lint-md/core';
-import type { BatchLintItem, LintWorkerOptions, ThreadCount } from '../types';
+import path from "path";
+import { existsSync } from "fs";
+import { stat } from "fs/promises";
+import { availableParallelism } from "os";
+import { Piscina } from "piscina";
+import type { LintMdRulesConfig } from "@lint-md/core";
+import type { BatchLintItem, LintWorkerOptions, ThreadCount } from "../types";
 
 const ONE_MIB = 1024 * 1024;
 const FIVE_MIB = 5 * ONE_MIB;
@@ -28,17 +28,19 @@ export async function runTasksWithLimit<T>(
     }
   }
 
-  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => runNext());
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () =>
+    runNext()
+  );
   await Promise.all(workers);
   return results;
 }
 
 const resolveWorkerFilename = (): string => {
-  const compiled = path.resolve(__dirname, './lint-worker.js');
+  const compiled = path.resolve(__dirname, "./lint-worker.js");
   if (existsSync(compiled)) {
     return compiled;
   }
-  return path.resolve(__dirname, '../../lib/src/utils/lint-worker.js');
+  return path.resolve(__dirname, "../../lib/src/utils/lint-worker.js");
 };
 
 // getMaxFileSize() stats every file but bounds the in-flight stat calls to
@@ -54,7 +56,9 @@ export const getMaxFileSize = async (filePaths: string[]): Promise<number> => {
     return 0;
   }
   const sizes = await runTasksWithLimit(
-    filePaths.map(filePath => () => stat(filePath).then(stats => stats.size)),
+    filePaths.map(
+      (filePath) => () => stat(filePath).then((stats) => stats.size)
+    ),
     STAT_CONCURRENCY_LIMIT
   );
   return sizes.reduce((max, current) => (current > max ? current : max), 0);
@@ -68,7 +72,7 @@ export const resolveAdaptiveConcurrency = async (
     return 0;
   }
 
-  if (typeof threadCount === 'number') {
+  if (typeof threadCount === "number") {
     return Math.min(Math.max(threadCount, 1), mdFilePaths.length);
   }
 
@@ -78,8 +82,7 @@ export const resolveAdaptiveConcurrency = async (
   let limit = cpuLimit;
   if (maxFileSize >= ADAPTIVE_HUGE_FILE_THRESHOLD) {
     limit = 1;
-  }
-  else if (maxFileSize >= ADAPTIVE_LARGE_FILE_THRESHOLD) {
+  } else if (maxFileSize >= ADAPTIVE_LARGE_FILE_THRESHOLD) {
     limit = Math.min(limit, ADAPTIVE_MEDIUM_CAP);
   }
 
@@ -91,8 +94,8 @@ export const resolveAdaptiveConcurrency = async (
 // occur without a lint report, so we must not drop it (see #86 / P1-6
 // "partially-unfixed is observable", which the #89 stderr warning surfaces).
 export const keepLintItem = (item: BatchLintItem): boolean =>
-  item.lintResult.length > 0
-  || Boolean(item.fixedResult?.notAppliedFixes?.length);
+  item.lintResult.length > 0 ||
+  Boolean(item.fixedResult?.notAppliedFixes?.length);
 
 export const batchLint = async (
   threadsCount: number,
@@ -115,19 +118,19 @@ export const batchLint = async (
   try {
     const results = await runTasksWithLimit<BatchLintItem>(
       mdFilePaths.map((filePath) => {
-        return () => lintWorkerPool.run({
-          filePath,
-          isFixMode,
-          rules,
-          isDev,
-        } as LintWorkerOptions);
+        return () =>
+          lintWorkerPool.run({
+            filePath,
+            isFixMode,
+            rules,
+            isDev,
+          } as LintWorkerOptions);
       }),
       concurrency
     );
 
     return results.filter(keepLintItem);
-  }
-  finally {
+  } finally {
     await lintWorkerPool.destroy();
   }
 };

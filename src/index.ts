@@ -1,2 +1,2 @@
 // type declarations
-export { CLILintResult, CLIConfig, CliErrorCount, CLIOptions } from './types';
+export { CLILintResult, CLIConfig, CliErrorCount, CLIOptions } from "./types";
