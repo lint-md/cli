@@ -103,7 +103,12 @@ program
       try {
         const result = lintMarkdown(content, rules, false);
         const { consoleMessage, errorCount, warningCount }
-          = getReportData([{ path: '(stdin)', lintResult: result.lintResult }]);
+          = getReportData([{
+            path: '(stdin)',
+            lintResult: result.lintResult,
+            fixableErrorCount: result.fixableErrorCount,
+            fixableWarningCount: result.fixableWarningCount,
+          }]);
 
         console.log(consoleMessage);
 

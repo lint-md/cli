@@ -44,4 +44,6 @@ export interface BatchLintItem {
   path: string
   lintResult: LintReportItem[]
   fixedResult?: FixedResult | null
+  fixableErrorCount?: number
+  fixableWarningCount?: number
 }
