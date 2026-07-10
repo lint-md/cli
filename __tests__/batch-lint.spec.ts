@@ -3,7 +3,14 @@ import { availableParallelism, tmpdir } from 'os';
 import * as path from 'path';
 import { Piscina } from 'piscina';
 import type { LintMdRulesConfig } from '@lint-md/core';
-import { STAT_CONCURRENCY_LIMIT, batchLint, getMaxFileSize, resolveAdaptiveConcurrency, runTasksWithLimit } from '../src/utils/batch-lint';
+import { STAT_CONCURRENCY_LIMIT, batchLint, getMaxFileSize, keepLintItem, resolveAdaptiveConcurrency, runTasksWithLimit } from '../src/utils/batch-lint';
+import type { BatchLintItem } from '../src/types';
+
+const makeItem = (overrides: Partial<BatchLintItem> = {}): BatchLintItem => ({
+  path: 'doc.md',
+  lintResult: [],
+  ...overrides,
+});
 
 const RULES_NO_EMPTY_LIST: LintMdRulesConfig = {
   'no-empty-list': 2,
@@ -175,6 +182,30 @@ describe('batchLint', () => {
       expect(result).toHaveLength(1);
       expect(result[0].fixedResult == null).toBe(true);
     });
+  });
+});
+
+describe('keepLintItem', () => {
+  test('keeps items with a non-empty lint report', () => {
+    expect(keepLintItem(makeItem({ lintResult: [{ message: 'x', name: 'y', content: 'z', severity: 2, loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } }] }))).toBe(true);
+  });
+
+  test('drops items with empty lint report and null fixedResult', () => {
+    expect(keepLintItem(makeItem({ fixedResult: null }))).toBe(false);
+  });
+
+  test('drops items with empty lint report and empty notAppliedFixes', () => {
+    expect(keepLintItem(makeItem({ fixedResult: { result: 'x', notAppliedFixes: [] } }))).toBe(false);
+  });
+
+  test('keeps items with empty lint report but non-empty notAppliedFixes', () => {
+    expect(
+      keepLintItem(
+        makeItem({
+          fixedResult: { result: 'x', notAppliedFixes: [{ range: [0, 1], text: 'y' }] },
+        })
+      )
+    ).toBe(true);
   });
 });
 
