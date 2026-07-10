@@ -18,6 +18,7 @@ import type { CLIOptions, ThreadCount } from './types';
 import { loadMdFiles } from './utils/load-md-files';
 import { getReportData } from './utils/get-report-data';
 import { filterFilesByMaxSize } from './utils/filter-by-max-size';
+import { getUnappliedFixesWarnings } from './utils/report-unapplied-fixes';
 
 program
   .version(
@@ -178,6 +179,10 @@ program
             .map(({ path, fixedResult }) => () => safeWriteFile(path, fixedResult!.result)),
           effectiveThreads
         );
+
+        for (const warning of getUnappliedFixesWarnings(lintResult)) {
+          console.error(warning);
+        }
       }
     }
     catch (e) {
