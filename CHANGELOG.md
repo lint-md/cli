@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.2.1](https://github.com/lint-md/cli/compare/v2.1.1...v2.2.1) (2026-07-13)
+## [2.2.2](https://github.com/lint-md/cli/compare/v2.1.1...v2.2.2) (2026-07-13)
 
 ### Features
 
