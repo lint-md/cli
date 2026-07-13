@@ -95,13 +95,14 @@ export const resolveAdaptiveConcurrency = async (
 // occur without a lint report, so we must not drop it (see #86 / P1-6
 // "partially-unfixed is observable", which the #89 stderr warning surfaces).
 // Also retain items whose fix pass did not fully converge (cycle / max) so
-// the #98 stderr warning has a target. Older cores that predate the
-// `convergence` field leave it undefined, which is treated as stable and
-// filtered as before.
+// the #98 stderr warning has a target, and items that carry rule execution
+// errors so the #96 stderr warning + exit(1) have a target. Older cores
+// that predate these fields leave them undefined and are filtered as before.
 export const keepLintItem = (item: BatchLintItem): boolean =>
   item.lintResult.length > 0 ||
   Boolean(item.fixedResult?.notAppliedFixes?.length) ||
-  isIncompleteFix(item);
+  isIncompleteFix(item) ||
+  (item.executionErrors?.length ?? 0) > 0;
 
 export interface BatchLintResult {
   /** Every worker result, including clean files. Used for dev metrics. */

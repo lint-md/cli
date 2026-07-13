@@ -88,4 +88,26 @@ describe("keepLintItem", () => {
   test("treats pre-#182 cores (no convergence field) like the old behaviour", () => {
     expect(keepLintItem(baseItem({}))).toBe(false);
   });
+
+  test("keeps items with only execution errors so #96 warning has a target", () => {
+    expect(
+      keepLintItem(
+        baseItem({
+          executionErrors: [
+            {
+              ruleName: "r",
+              message: "boom",
+              round: 1,
+              phase: "fix",
+            },
+          ],
+        })
+      )
+    ).toBe(true);
+  });
+
+  test("drops items without execution errors when nothing else is set", () => {
+    expect(keepLintItem(baseItem({ executionErrors: [] }))).toBe(false);
+    expect(keepLintItem(baseItem({ executionErrors: undefined }))).toBe(false);
+  });
 });

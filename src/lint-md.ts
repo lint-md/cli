@@ -27,6 +27,10 @@ import {
   getFixDevMetrics,
   getIncompleteFixWarnings,
 } from "./utils/report-incomplete-fixes";
+import {
+  getExecutionErrorWarnings,
+  hasExecutionErrors,
+} from "./utils/report-execution-errors";
 import { formatCoreError } from "./utils/format-core-error";
 
 program
@@ -103,14 +107,21 @@ program
             fixedResult: result.fixedResult,
             fixableErrorCount: result.fixableErrorCount,
             fixableWarningCount: result.fixableWarningCount,
+            executionErrors: result.executionErrors,
           };
           for (const warning of getIncompleteFixWarnings([stdinItem])) {
+            console.error(warning);
+          }
+          for (const warning of getExecutionErrorWarnings([stdinItem])) {
             console.error(warning);
           }
           if (isDev) {
             for (const line of getFixDevMetrics([stdinItem])) {
               console.error(line);
             }
+          }
+          if (hasExecutionErrors([stdinItem])) {
+            process.exit(1);
           }
           return;
         } catch (e) {
@@ -127,18 +138,28 @@ program
 
       try {
         const result = lintMarkdown(content, rules, false);
+        const stdinItem = {
+          path: "(stdin)",
+          lintResult: result.lintResult,
+          fixableErrorCount: result.fixableErrorCount,
+          fixableWarningCount: result.fixableWarningCount,
+          executionErrors: result.executionErrors,
+        };
         const { consoleMessage, errorCount, warningCount } = getReportData([
-          {
-            path: "(stdin)",
-            lintResult: result.lintResult,
-            fixableErrorCount: result.fixableErrorCount,
-            fixableWarningCount: result.fixableWarningCount,
-          },
+          stdinItem,
         ]);
 
         console.log(consoleMessage);
 
-        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
+        for (const warning of getExecutionErrorWarnings([stdinItem])) {
+          console.error(warning);
+        }
+
+        if (
+          errorCount > 0 ||
+          (!suppressWarnings && warningCount !== 0) ||
+          hasExecutionErrors([stdinItem])
+        ) {
           process.exit(1);
         }
       } catch (e) {
@@ -201,7 +222,15 @@ program
 
         console.log(consoleMessage);
 
-        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
+        for (const warning of getExecutionErrorWarnings(actionableResults)) {
+          console.error(warning);
+        }
+
+        if (
+          errorCount > 0 ||
+          (!suppressWarnings && warningCount !== 0) ||
+          hasExecutionErrors(actionableResults)
+        ) {
           process.exit(1);
         }
       } else {
@@ -222,11 +251,21 @@ program
         for (const warning of getUnappliedFixesWarnings(actionableResults)) {
           console.error(warning);
         }
+        for (const warning of getExecutionErrorWarnings(actionableResults)) {
+          console.error(warning);
+        }
 
         if (isDev) {
           for (const line of getFixDevMetrics(allResults)) {
             console.log(line);
           }
+        }
+
+        // Rule execution errors (core #185) are hard failures: surface them
+        // after the fixes are written and fail the CI run regardless of
+        // --suppress-warnings.
+        if (hasExecutionErrors(actionableResults)) {
+          process.exit(1);
         }
       }
     } catch (e) {
