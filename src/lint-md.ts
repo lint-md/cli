@@ -23,6 +23,10 @@ import { loadMdFiles } from "./utils/load-md-files";
 import { getReportData } from "./utils/get-report-data";
 import { filterFilesByMaxSize } from "./utils/filter-by-max-size";
 import { getUnappliedFixesWarnings } from "./utils/report-unapplied-fixes";
+import {
+  getFixDevMetrics,
+  getIncompleteFixWarnings,
+} from "./utils/report-incomplete-fixes";
 import { formatCoreError } from "./utils/format-core-error";
 
 program
@@ -93,6 +97,17 @@ program
         try {
           const result = lintMarkdown(content, rules, true);
           process.stdout.write(result.fixedResult?.result ?? content);
+          for (const warning of getIncompleteFixWarnings([
+            {
+              path: "(stdin)",
+              lintResult: result.lintResult,
+              fixedResult: result.fixedResult,
+              fixableErrorCount: result.fixableErrorCount,
+              fixableWarningCount: result.fixableWarningCount,
+            },
+          ])) {
+            console.error(warning);
+          }
           return;
         } catch (e) {
           const formatted = formatCoreError(e);
@@ -198,8 +213,17 @@ program
           effectiveThreads
         );
 
+        for (const warning of getIncompleteFixWarnings(lintResult)) {
+          console.error(warning);
+        }
         for (const warning of getUnappliedFixesWarnings(lintResult)) {
           console.error(warning);
+        }
+
+        if (isDev) {
+          for (const line of getFixDevMetrics(lintResult)) {
+            console.log(line);
+          }
         }
       }
     } catch (e) {
