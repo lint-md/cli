@@ -31,10 +31,7 @@ import {
   getFixDevMetrics,
   getIncompleteFixWarnings,
 } from "./utils/report-incomplete-fixes";
-import {
-  emitExecutionErrorsAndSetExitCode,
-  hasExecutionErrors,
-} from "./utils/report-execution-errors";
+import { emitExecutionErrorsAndSetExitCode } from "./utils/report-execution-errors";
 import { formatCoreError } from "./utils/format-core-error";
 
 program
@@ -150,14 +147,15 @@ program
 
         console.log(consoleMessage);
 
-        emitExecutionErrorsAndSetExitCode([stdinItem]);
+        const hasRuleFailures = emitExecutionErrorsAndSetExitCode([stdinItem]);
 
         if (
           errorCount > 0 ||
           (!suppressWarnings && warningCount !== 0) ||
-          hasExecutionErrors([stdinItem])
+          hasRuleFailures
         ) {
           setExitCode(1);
+          return;
         }
       } catch (e) {
         const formatted = formatCoreError(e);
@@ -219,14 +217,16 @@ program
 
         console.log(consoleMessage);
 
-        emitExecutionErrorsAndSetExitCode(actionableResults);
+        const hasRuleFailures =
+          emitExecutionErrorsAndSetExitCode(actionableResults);
 
         if (
           errorCount > 0 ||
           (!suppressWarnings && warningCount !== 0) ||
-          hasExecutionErrors(actionableResults)
+          hasRuleFailures
         ) {
           setExitCode(1);
+          return;
         }
       } else {
         await runTasksWithLimit(
