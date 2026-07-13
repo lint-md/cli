@@ -1,11 +1,27 @@
 # Changelog
 
-## Unreleased
+## [2.2.0](https://github.com/lint-md/cli/compare/v2.1.1...v2.2.0) (2026-07-13)
 
 ### Features
 
 - **lint-md:** add `--threads auto` to cap worker concurrency for large Markdown files (issue #77, P1)
 - **lint-md:** add `--max-file-size <size>` to skip large Markdown files with a stderr warning (issue #81)
+- **lint-md:** surface core executionErrors and exit(1) ([#96](https://github.com/lint-md/cli/issues/96), [#101](https://github.com/lint-md/cli/pull/101))
+- **lint-md:** surface fix convergence warnings (cycle/max) ([#98](https://github.com/lint-md/cli/issues/98), [#100](https://github.com/lint-md/cli/pull/100))
+- **lint-md:** warn to stderr when fixes not applied ([#85](https://github.com/lint-md/cli/issues/85), [#89](https://github.com/lint-md/cli/pull/89))
+
+### Bug Fixes
+
+- **batch-lint:** keep files with notAppliedFixes ([#86](https://github.com/lint-md/cli/issues/86), [#90](https://github.com/lint-md/cli/pull/90))
+- **get-report-data:** use real fixable counts from core ([#91](https://github.com/lint-md/cli/pull/91))
+- **package.json:** pin js-yaml >=3.15.0 to resolve moderate vulnerability ([#92](https://github.com/lint-md/cli/issues/92), [#93](https://github.com/lint-md/cli/pull/93))
+- format core configuration errors ([#99](https://github.com/lint-md/cli/pull/99))
+
+### Refactoring
+
+- **types:** reuse @lint-md/core LintReportItem / FixedResult ([#88](https://github.com/lint-md/cli/pull/88))
+- replace eslint with tsc --noEmit + prettier --check ([#94](https://github.com/lint-md/cli/pull/94))
+- add format script and explicit .prettierrc ([#95](https://github.com/lint-md/cli/pull/95))
 
 ## [2.1.1](https://github.com/lint-md/cli/compare/v2.0.0...v2.1.1) (2026-06-30)
 
