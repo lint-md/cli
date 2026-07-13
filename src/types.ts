@@ -40,7 +40,6 @@ export interface LintWorkerOptions {
   filePath: string;
   rules?: LintMdRulesConfig;
   isFixMode?: boolean;
-  isDev?: boolean;
 }
 
 /** batchLint 单个文件的 lint 结果 */

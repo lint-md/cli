@@ -77,8 +77,12 @@ describe("keepLintItem", () => {
     );
   });
 
-  test("drops items with no fixedResult and no lint findings", () => {
-    expect(keepLintItem(baseItem({}))).toBe(false);
+  test("drops items with fixedResult: null", () => {
+    expect(keepLintItem(baseItem({ fixedResult: null }))).toBe(false);
+  });
+
+  test("drops items with fixedResult: undefined", () => {
+    expect(keepLintItem(baseItem({ fixedResult: undefined }))).toBe(false);
   });
 
   test("treats pre-#182 cores (no convergence field) like the old behaviour", () => {

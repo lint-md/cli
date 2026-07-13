@@ -103,15 +103,21 @@ export const keepLintItem = (item: BatchLintItem): boolean =>
   Boolean(item.fixedResult?.notAppliedFixes?.length) ||
   isIncompleteFix(item);
 
+export interface BatchLintResult {
+  /** Every worker result, including clean files. Used for dev metrics. */
+  allResults: BatchLintItem[];
+  /** Worker results filtered through `keepLintItem`. Used for I/O, warnings, and reporting. */
+  actionableResults: BatchLintItem[];
+}
+
 export const batchLint = async (
   threadsCount: number,
   mdFilePaths: string[],
-  isDev: boolean,
   isFixMode: boolean,
   rules: LintMdRulesConfig
-): Promise<BatchLintItem[]> => {
+): Promise<BatchLintResult> => {
   if (mdFilePaths.length === 0) {
-    return [];
+    return { allResults: [], actionableResults: [] };
   }
 
   const concurrency = Math.min(Math.max(threadsCount, 1), mdFilePaths.length);
@@ -122,20 +128,22 @@ export const batchLint = async (
   });
 
   try {
-    const results = await runTasksWithLimit<BatchLintItem>(
+    const allResults = await runTasksWithLimit<BatchLintItem>(
       mdFilePaths.map((filePath) => {
         return () =>
           lintWorkerPool.run({
             filePath,
             isFixMode,
             rules,
-            isDev,
           } as LintWorkerOptions);
       }),
       concurrency
     );
 
-    return results.filter(keepLintItem);
+    return {
+      allResults,
+      actionableResults: allResults.filter(keepLintItem),
+    };
   } finally {
     await lintWorkerPool.destroy();
   }

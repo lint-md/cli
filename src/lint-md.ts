@@ -97,16 +97,20 @@ program
         try {
           const result = lintMarkdown(content, rules, true);
           process.stdout.write(result.fixedResult?.result ?? content);
-          for (const warning of getIncompleteFixWarnings([
-            {
-              path: "(stdin)",
-              lintResult: result.lintResult,
-              fixedResult: result.fixedResult,
-              fixableErrorCount: result.fixableErrorCount,
-              fixableWarningCount: result.fixableWarningCount,
-            },
-          ])) {
+          const stdinItem = {
+            path: "(stdin)",
+            lintResult: result.lintResult,
+            fixedResult: result.fixedResult,
+            fixableErrorCount: result.fixableErrorCount,
+            fixableWarningCount: result.fixableWarningCount,
+          };
+          for (const warning of getIncompleteFixWarnings([stdinItem])) {
             console.error(warning);
+          }
+          if (isDev) {
+            for (const line of getFixDevMetrics([stdinItem])) {
+              console.error(line);
+            }
           }
           return;
         } catch (e) {
@@ -184,17 +188,16 @@ program
     }
 
     try {
-      const lintResult = await batchLint(
+      const { allResults, actionableResults } = await batchLint(
         effectiveThreads,
         mdFiles,
-        isDev,
         isFixMode,
         rules
       );
 
       if (!isFixMode) {
         const { consoleMessage, errorCount, warningCount } =
-          getReportData(lintResult);
+          getReportData(actionableResults);
 
         console.log(consoleMessage);
 
@@ -203,7 +206,7 @@ program
         }
       } else {
         await runTasksWithLimit(
-          lintResult
+          actionableResults
             .filter(({ fixedResult }) => fixedResult)
             .map(
               ({ path, fixedResult }) =>
@@ -213,15 +216,15 @@ program
           effectiveThreads
         );
 
-        for (const warning of getIncompleteFixWarnings(lintResult)) {
+        for (const warning of getIncompleteFixWarnings(actionableResults)) {
           console.error(warning);
         }
-        for (const warning of getUnappliedFixesWarnings(lintResult)) {
+        for (const warning of getUnappliedFixesWarnings(actionableResults)) {
           console.error(warning);
         }
 
         if (isDev) {
-          for (const line of getFixDevMetrics(lintResult)) {
+          for (const line of getFixDevMetrics(allResults)) {
             console.log(line);
           }
         }
