@@ -5,6 +5,7 @@ import { availableParallelism } from "os";
 import { Piscina } from "piscina";
 import type { LintMdRulesConfig } from "@lint-md/core";
 import type { BatchLintItem, LintWorkerOptions, ThreadCount } from "../types";
+import { isIncompleteFix } from "./report-incomplete-fixes";
 
 const ONE_MIB = 1024 * 1024;
 const FIVE_MIB = 5 * ONE_MIB;
@@ -93,19 +94,30 @@ export const resolveAdaptiveConcurrency = async (
 // core left fixes unapplied due to conflicts. notAppliedFixes can in theory
 // occur without a lint report, so we must not drop it (see #86 / P1-6
 // "partially-unfixed is observable", which the #89 stderr warning surfaces).
+// Also retain items whose fix pass did not fully converge (cycle / max) so
+// the #98 stderr warning has a target. Older cores that predate the
+// `convergence` field leave it undefined, which is treated as stable and
+// filtered as before.
 export const keepLintItem = (item: BatchLintItem): boolean =>
   item.lintResult.length > 0 ||
-  Boolean(item.fixedResult?.notAppliedFixes?.length);
+  Boolean(item.fixedResult?.notAppliedFixes?.length) ||
+  isIncompleteFix(item);
+
+export interface BatchLintResult {
+  /** Every worker result, including clean files. Used for dev metrics. */
+  allResults: BatchLintItem[];
+  /** Worker results filtered through `keepLintItem`. Used for I/O, warnings, and reporting. */
+  actionableResults: BatchLintItem[];
+}
 
 export const batchLint = async (
   threadsCount: number,
   mdFilePaths: string[],
-  isDev: boolean,
   isFixMode: boolean,
   rules: LintMdRulesConfig
-): Promise<BatchLintItem[]> => {
+): Promise<BatchLintResult> => {
   if (mdFilePaths.length === 0) {
-    return [];
+    return { allResults: [], actionableResults: [] };
   }
 
   const concurrency = Math.min(Math.max(threadsCount, 1), mdFilePaths.length);
@@ -116,20 +128,22 @@ export const batchLint = async (
   });
 
   try {
-    const results = await runTasksWithLimit<BatchLintItem>(
+    const allResults = await runTasksWithLimit<BatchLintItem>(
       mdFilePaths.map((filePath) => {
         return () =>
           lintWorkerPool.run({
             filePath,
             isFixMode,
             rules,
-            isDev,
           } as LintWorkerOptions);
       }),
       concurrency
     );
 
-    return results.filter(keepLintItem);
+    return {
+      allResults,
+      actionableResults: allResults.filter(keepLintItem),
+    };
   } finally {
     await lintWorkerPool.destroy();
   }

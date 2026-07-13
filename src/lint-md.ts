@@ -23,6 +23,10 @@ import { loadMdFiles } from "./utils/load-md-files";
 import { getReportData } from "./utils/get-report-data";
 import { filterFilesByMaxSize } from "./utils/filter-by-max-size";
 import { getUnappliedFixesWarnings } from "./utils/report-unapplied-fixes";
+import {
+  getFixDevMetrics,
+  getIncompleteFixWarnings,
+} from "./utils/report-incomplete-fixes";
 import { formatCoreError } from "./utils/format-core-error";
 
 program
@@ -93,6 +97,21 @@ program
         try {
           const result = lintMarkdown(content, rules, true);
           process.stdout.write(result.fixedResult?.result ?? content);
+          const stdinItem = {
+            path: "(stdin)",
+            lintResult: result.lintResult,
+            fixedResult: result.fixedResult,
+            fixableErrorCount: result.fixableErrorCount,
+            fixableWarningCount: result.fixableWarningCount,
+          };
+          for (const warning of getIncompleteFixWarnings([stdinItem])) {
+            console.error(warning);
+          }
+          if (isDev) {
+            for (const line of getFixDevMetrics([stdinItem])) {
+              console.error(line);
+            }
+          }
           return;
         } catch (e) {
           const formatted = formatCoreError(e);
@@ -169,17 +188,16 @@ program
     }
 
     try {
-      const lintResult = await batchLint(
+      const { allResults, actionableResults } = await batchLint(
         effectiveThreads,
         mdFiles,
-        isDev,
         isFixMode,
         rules
       );
 
       if (!isFixMode) {
         const { consoleMessage, errorCount, warningCount } =
-          getReportData(lintResult);
+          getReportData(actionableResults);
 
         console.log(consoleMessage);
 
@@ -188,7 +206,7 @@ program
         }
       } else {
         await runTasksWithLimit(
-          lintResult
+          actionableResults
             .filter(({ fixedResult }) => fixedResult)
             .map(
               ({ path, fixedResult }) =>
@@ -198,8 +216,17 @@ program
           effectiveThreads
         );
 
-        for (const warning of getUnappliedFixesWarnings(lintResult)) {
+        for (const warning of getIncompleteFixWarnings(actionableResults)) {
           console.error(warning);
+        }
+        for (const warning of getUnappliedFixesWarnings(actionableResults)) {
+          console.error(warning);
+        }
+
+        if (isDev) {
+          for (const line of getFixDevMetrics(allResults)) {
+            console.log(line);
+          }
         }
       }
     } catch (e) {

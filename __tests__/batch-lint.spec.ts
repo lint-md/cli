@@ -71,9 +71,9 @@ describe("batchLint", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("returns empty array when no files are provided", async () => {
-    const result = await batchLint(2, [], false, false, RULES_NO_EMPTY_LIST);
-    expect(result).toEqual([]);
+  test("returns empty result when no files are provided", async () => {
+    const result = await batchLint(2, [], false, RULES_NO_EMPTY_LIST);
+    expect(result).toEqual({ allResults: [], actionableResults: [] });
   });
 
   describe("路径 payload", () => {
@@ -83,16 +83,18 @@ describe("batchLint", () => {
       await writeFile(fileA, TRIGGER_CONTENT, "utf8");
       await writeFile(fileB, TRIGGER_CONTENT, "utf8");
 
-      const result = await batchLint(
+      const { actionableResults } = await batchLint(
         2,
         [fileA, fileB],
-        false,
         false,
         RULES_NO_EMPTY_LIST
       );
 
-      expect(result.map((item) => item.path)).toEqual([fileA, fileB]);
-      result.forEach((item) => {
+      expect(actionableResults.map((item) => item.path)).toEqual([
+        fileA,
+        fileB,
+      ]);
+      actionableResults.forEach((item) => {
         expect(Array.isArray(item.lintResult)).toBe(true);
         expect(item.lintResult.length).toBeGreaterThan(0);
         expect(item.fixedResult == null).toBe(true);
@@ -103,17 +105,16 @@ describe("batchLint", () => {
       const file = path.join(tmpDir, "read-in-worker.md");
       await writeFile(file, TRIGGER_CONTENT, "utf8");
 
-      const result = await batchLint(
+      const { actionableResults } = await batchLint(
         1,
         [file],
-        false,
         false,
         RULES_NO_EMPTY_LIST
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].path).toBe(file);
-      expect(result[0].lintResult[0].name).toBe("no-empty-list");
+      expect(actionableResults).toHaveLength(1);
+      expect(actionableResults[0].path).toBe(file);
+      expect(actionableResults[0].lintResult[0].name).toBe("no-empty-list");
     });
   });
 
@@ -127,31 +128,29 @@ describe("batchLint", () => {
         })
       );
 
-      const result = await batchLint(
+      const { actionableResults } = await batchLint(
         3,
         files,
-        false,
         false,
         RULES_NO_EMPTY_LIST
       );
 
-      expect(result).toHaveLength(fileCount);
-      expect(result.map((item) => item.path)).toEqual(files);
+      expect(actionableResults).toHaveLength(fileCount);
+      expect(actionableResults.map((item) => item.path)).toEqual(files);
     });
 
     test("threads greater than files does not error", async () => {
       const file = path.join(tmpDir, "single.md");
       await writeFile(file, TRIGGER_CONTENT, "utf8");
 
-      const result = await batchLint(
+      const { actionableResults } = await batchLint(
         16,
         [file],
-        false,
         false,
         RULES_NO_EMPTY_LIST
       );
 
-      expect(result).toHaveLength(1);
+      expect(actionableResults).toHaveLength(1);
     });
   });
 
@@ -164,15 +163,18 @@ describe("batchLint", () => {
       await writeFile(fileB, TRIGGER_CONTENT, "utf8");
       await writeFile(fileC, TRIGGER_CONTENT, "utf8");
 
-      const result = await batchLint(
+      const { actionableResults } = await batchLint(
         2,
         [fileA, fileB, fileC],
-        false,
         false,
         RULES_NO_EMPTY_LIST
       );
 
-      expect(result.map((item) => item.path)).toEqual([fileA, fileB, fileC]);
+      expect(actionableResults.map((item) => item.path)).toEqual([
+        fileA,
+        fileB,
+        fileC,
+      ]);
     });
   });
 
@@ -182,7 +184,7 @@ describe("batchLint", () => {
       await writeFile(file, "# Clean content\n", "utf8");
 
       await expect(
-        batchLint(2, [file], false, false, RULES_NO_EMPTY_LIST)
+        batchLint(2, [file], false, RULES_NO_EMPTY_LIST)
       ).resolves.toBeDefined();
     });
 
@@ -192,7 +194,7 @@ describe("batchLint", () => {
 
       try {
         await expect(
-          batchLint(1, [file], false, false, RULES_NO_EMPTY_LIST)
+          batchLint(1, [file], false, RULES_NO_EMPTY_LIST)
         ).rejects.toThrow();
         expect(destroySpy).toHaveBeenCalled();
       } finally {
@@ -206,33 +208,31 @@ describe("batchLint", () => {
       const file = path.join(tmpDir, "fixable.md");
       await writeFile(file, TRIGGER_CONTENT, "utf8");
 
-      const result = await batchLint(
+      const { actionableResults } = await batchLint(
         1,
         [file],
-        false,
         true,
         RULES_NO_EMPTY_LIST
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].fixedResult).not.toBeNull();
-      expect(result[0].fixedResult?.result).toBeDefined();
+      expect(actionableResults).toHaveLength(1);
+      expect(actionableResults[0].fixedResult).not.toBeNull();
+      expect(actionableResults[0].fixedResult?.result).toBeDefined();
     });
 
     test("does not return fixedResult when fix mode is disabled", async () => {
       const file = path.join(tmpDir, "no-fix.md");
       await writeFile(file, TRIGGER_CONTENT, "utf8");
 
-      const result = await batchLint(
+      const { actionableResults } = await batchLint(
         1,
         [file],
-        false,
         false,
         RULES_NO_EMPTY_LIST
       );
 
-      expect(result).toHaveLength(1);
-      expect(result[0].fixedResult == null).toBe(true);
+      expect(actionableResults).toHaveLength(1);
+      expect(actionableResults[0].fixedResult == null).toBe(true);
     });
   });
 });
