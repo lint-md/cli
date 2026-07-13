@@ -23,7 +23,22 @@ describe("formatCoreError", () => {
     expect(result).toEqual({
       handled: true,
       message:
-        '[lint-md] Configuration error: duplicate rule alias "custom-rule".\nCheck the "rules" section in .lintmdrc.',
+        '[lint-md] Configuration error: duplicate rule alias "custom-rule".\nCheck the "rules" section in your lint-md configuration file.',
+    });
+  });
+
+  test("formats and sanitizes a multiline unknown rule name", () => {
+    const ruleName = "evil\n\r\u001B[31mred\u001B[0m\u001B]spoof\u0007name";
+    const result = formatCoreError(
+      new TypeError(
+        `[lint-md] 未知规则 ${ruleName} 的配置格式非法，第三方规则必须使用 [rule, severity, options] 形式`
+      )
+    );
+
+    expect(result).toEqual({
+      handled: true,
+      message:
+        '[lint-md] Configuration error: unknown rule "evil^J^Mredname" has an invalid configuration.\nThird-party rules must use [rule, severity, options].',
     });
   });
 

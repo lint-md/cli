@@ -4,10 +4,23 @@ type FormattedCoreError =
   | { handled: true; message: string }
   | { handled: false };
 
-const UNKNOWN_RULE_PATTERN =
-  /^\[lint-md\] 未知规则 (.+) 的配置格式非法，第三方规则必须使用 \[rule, severity, options\] 形式$/u;
-const DUPLICATE_ALIAS_PATTERN =
-  /^\[lint-md\] 规则别名冲突：(.+) 已被另一规则占用$/u;
+const UNKNOWN_RULE_PREFIX = "[lint-md] 未知规则 ";
+const UNKNOWN_RULE_SUFFIX =
+  " 的配置格式非法，第三方规则必须使用 [rule, severity, options] 形式";
+const DUPLICATE_ALIAS_PREFIX = "[lint-md] 规则别名冲突：";
+const DUPLICATE_ALIAS_SUFFIX = " 已被另一规则占用";
+
+const extractBetween = (
+  message: string,
+  prefix: string,
+  suffix: string
+): string | null => {
+  if (!message.startsWith(prefix) || !message.endsWith(suffix)) {
+    return null;
+  }
+
+  return message.slice(prefix.length, message.length - suffix.length);
+};
 
 /**
  * Converts the known configuration errors introduced by @lint-md/core 2.1.5
@@ -19,9 +32,13 @@ export const formatCoreError = (error: unknown): FormattedCoreError => {
     return { handled: false };
   }
 
-  const unknownRule = error.message.match(UNKNOWN_RULE_PATTERN);
-  if (unknownRule) {
-    const ruleName = sanitizeTerminalText(unknownRule[1]);
+  const unknownRule = extractBetween(
+    error.message,
+    UNKNOWN_RULE_PREFIX,
+    UNKNOWN_RULE_SUFFIX
+  );
+  if (unknownRule !== null) {
+    const ruleName = sanitizeTerminalText(unknownRule);
     return {
       handled: true,
       message: [
@@ -31,14 +48,18 @@ export const formatCoreError = (error: unknown): FormattedCoreError => {
     };
   }
 
-  const duplicateAlias = error.message.match(DUPLICATE_ALIAS_PATTERN);
-  if (duplicateAlias) {
-    const alias = sanitizeTerminalText(duplicateAlias[1]);
+  const duplicateAlias = extractBetween(
+    error.message,
+    DUPLICATE_ALIAS_PREFIX,
+    DUPLICATE_ALIAS_SUFFIX
+  );
+  if (duplicateAlias !== null) {
+    const alias = sanitizeTerminalText(duplicateAlias);
     return {
       handled: true,
       message: [
         `[lint-md] Configuration error: duplicate rule alias "${alias}".`,
-        'Check the "rules" section in .lintmdrc.',
+        'Check the "rules" section in your lint-md configuration file.',
       ].join("\n"),
     };
   }

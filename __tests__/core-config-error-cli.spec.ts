@@ -9,13 +9,17 @@ const CLI = path.resolve(__dirname, "../src/lint-md.ts");
 describe("core rule configuration errors", () => {
   let tmpDir: string;
 
-  beforeEach(() => {
-    tmpDir = mkdtempSync(path.join(tmpdir(), "lint-md-invalid-rule-"));
+  const writeConfig = (rules: Record<string, unknown>) => {
     writeFileSync(
       path.join(tmpDir, ".lintmdrc"),
-      JSON.stringify({ rules: { "unknown-rule": 2 } }),
+      JSON.stringify({ rules }),
       "utf8"
     );
+  };
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "lint-md-invalid-rule-"));
+    writeConfig({ "unknown-rule": 2 });
     writeFileSync(path.join(tmpDir, "fixture.md"), "# Title\n", "utf8");
   });
 
@@ -55,4 +59,30 @@ describe("core rule configuration errors", () => {
       expect(stderr).not.toContain("TypeError:");
     }
   );
+
+  test("formats a multiline unknown rule name without a stack", () => {
+    writeConfig({ "evil\n\r\u001B[31mred\u001B[0m\u001B]spoof\u0007name": 2 });
+
+    const { status, stderr } = runCli(["fixture.md"]);
+
+    expect(status).toBe(1);
+    expect(stderr).toContain('unknown rule "evil^J^Mredname"');
+    expect(stderr).not.toMatch(/^\s*at\s/m);
+    expect(stderr).not.toContain("TypeError:");
+  });
+
+  test("formats the duplicate-alias error thrown by core", () => {
+    writeConfig({
+      "alias-a": [{ meta: { name: "duplicate-name" } }, 2, {}],
+      "alias-b": [{ meta: { name: "duplicate-name" } }, 2, {}],
+    });
+
+    const { status, stderr } = runCli(["fixture.md"]);
+
+    expect(status).toBe(1);
+    expect(stderr).toContain('duplicate rule alias "duplicate-name"');
+    expect(stderr).toContain("your lint-md configuration file");
+    expect(stderr).not.toMatch(/^\s*at\s/m);
+    expect(stderr).not.toContain("TypeError:");
+  });
 });
