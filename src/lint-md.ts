@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
 import * as process from "process";
+
+const setExitCode = (code: number): void => {
+  (globalThis as { process?: NodeJS.Process }).process!.exitCode = code;
+};
 import { readFileSync } from "fs";
 import { availableParallelism } from "os";
 import { program } from "commander";
@@ -27,6 +31,7 @@ import {
   getFixDevMetrics,
   getIncompleteFixWarnings,
 } from "./utils/report-incomplete-fixes";
+import { emitExecutionErrorsAndSetExitCode } from "./utils/report-execution-errors";
 import { formatCoreError } from "./utils/format-core-error";
 
 program
@@ -103,10 +108,12 @@ program
             fixedResult: result.fixedResult,
             fixableErrorCount: result.fixableErrorCount,
             fixableWarningCount: result.fixableWarningCount,
+            executionErrors: result.executionErrors,
           };
           for (const warning of getIncompleteFixWarnings([stdinItem])) {
             console.error(warning);
           }
+          emitExecutionErrorsAndSetExitCode([stdinItem]);
           if (isDev) {
             for (const line of getFixDevMetrics([stdinItem])) {
               console.error(line);
@@ -127,19 +134,28 @@ program
 
       try {
         const result = lintMarkdown(content, rules, false);
+        const stdinItem = {
+          path: "(stdin)",
+          lintResult: result.lintResult,
+          fixableErrorCount: result.fixableErrorCount,
+          fixableWarningCount: result.fixableWarningCount,
+          executionErrors: result.executionErrors,
+        };
         const { consoleMessage, errorCount, warningCount } = getReportData([
-          {
-            path: "(stdin)",
-            lintResult: result.lintResult,
-            fixableErrorCount: result.fixableErrorCount,
-            fixableWarningCount: result.fixableWarningCount,
-          },
+          stdinItem,
         ]);
 
         console.log(consoleMessage);
 
-        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
-          process.exit(1);
+        const hasRuleFailures = emitExecutionErrorsAndSetExitCode([stdinItem]);
+
+        if (
+          errorCount > 0 ||
+          (!suppressWarnings && warningCount !== 0) ||
+          hasRuleFailures
+        ) {
+          setExitCode(1);
+          return;
         }
       } catch (e) {
         const formatted = formatCoreError(e);
@@ -201,8 +217,16 @@ program
 
         console.log(consoleMessage);
 
-        if (errorCount > 0 || (!suppressWarnings && warningCount !== 0)) {
-          process.exit(1);
+        const hasRuleFailures =
+          emitExecutionErrorsAndSetExitCode(actionableResults);
+
+        if (
+          errorCount > 0 ||
+          (!suppressWarnings && warningCount !== 0) ||
+          hasRuleFailures
+        ) {
+          setExitCode(1);
+          return;
         }
       } else {
         await runTasksWithLimit(
@@ -222,11 +246,23 @@ program
         for (const warning of getUnappliedFixesWarnings(actionableResults)) {
           console.error(warning);
         }
+        const hasRuleFailures =
+          emitExecutionErrorsAndSetExitCode(actionableResults);
 
         if (isDev) {
           for (const line of getFixDevMetrics(allResults)) {
             console.log(line);
           }
+        }
+
+        // Rule execution errors (core #185) are hard failures: emitted above
+        // (after the fixes are written) and failed the CI run regardless of
+        // --suppress-warnings. emitExecutionErrorsAndSetExitCode already set
+        // process.exitCode = 1 so the written files and diagnostics flush.
+        // Early-return so we don't print a trailing "Done in …" on failure,
+        // matching the previous process.exit(1) behaviour.
+        if (hasRuleFailures) {
+          return;
         }
       }
     } catch (e) {

@@ -3,6 +3,7 @@ import type {
   LintMdRulesConfig,
   LintReportItem,
   FixedResult,
+  RuleExecutionError,
 } from "@lint-md/core";
 
 export type ThreadCount = number | "auto";
@@ -49,4 +50,8 @@ export interface BatchLintItem {
   fixedResult?: FixedResult | null;
   fixableErrorCount?: number;
   fixableWarningCount?: number;
+  // Per-round, per-phase rule execution errors from @lint-md/core 2.1.5
+  // (core #185). CLI surfaces these as stderr warnings and exits 1
+  // regardless of --suppress-warnings.
+  executionErrors?: RuleExecutionError[];
 }

@@ -14,6 +14,7 @@ const lintWorker = async (options: LintWorkerOptions) => {
     fixedResult: result.fixedResult,
     fixableErrorCount: result.fixableErrorCount,
     fixableWarningCount: result.fixableWarningCount,
+    executionErrors: result.executionErrors,
   };
 };
 
