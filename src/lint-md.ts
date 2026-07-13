@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
 import * as process from "process";
+
+const setExitCode = (code: number): void => {
+  (globalThis as { process?: NodeJS.Process }).process!.exitCode = code;
+};
 import { readFileSync } from "fs";
 import { availableParallelism } from "os";
 import { program } from "commander";
@@ -28,7 +32,7 @@ import {
   getIncompleteFixWarnings,
 } from "./utils/report-incomplete-fixes";
 import {
-  getExecutionErrorWarnings,
+  emitExecutionErrorsAndSetExitCode,
   hasExecutionErrors,
 } from "./utils/report-execution-errors";
 import { formatCoreError } from "./utils/format-core-error";
@@ -112,16 +116,11 @@ program
           for (const warning of getIncompleteFixWarnings([stdinItem])) {
             console.error(warning);
           }
-          for (const warning of getExecutionErrorWarnings([stdinItem])) {
-            console.error(warning);
-          }
+          emitExecutionErrorsAndSetExitCode([stdinItem]);
           if (isDev) {
             for (const line of getFixDevMetrics([stdinItem])) {
               console.error(line);
             }
-          }
-          if (hasExecutionErrors([stdinItem])) {
-            process.exit(1);
           }
           return;
         } catch (e) {
@@ -151,16 +150,14 @@ program
 
         console.log(consoleMessage);
 
-        for (const warning of getExecutionErrorWarnings([stdinItem])) {
-          console.error(warning);
-        }
+        emitExecutionErrorsAndSetExitCode([stdinItem]);
 
         if (
           errorCount > 0 ||
           (!suppressWarnings && warningCount !== 0) ||
           hasExecutionErrors([stdinItem])
         ) {
-          process.exit(1);
+          setExitCode(1);
         }
       } catch (e) {
         const formatted = formatCoreError(e);
@@ -222,16 +219,14 @@ program
 
         console.log(consoleMessage);
 
-        for (const warning of getExecutionErrorWarnings(actionableResults)) {
-          console.error(warning);
-        }
+        emitExecutionErrorsAndSetExitCode(actionableResults);
 
         if (
           errorCount > 0 ||
           (!suppressWarnings && warningCount !== 0) ||
           hasExecutionErrors(actionableResults)
         ) {
-          process.exit(1);
+          setExitCode(1);
         }
       } else {
         await runTasksWithLimit(
@@ -251,9 +246,7 @@ program
         for (const warning of getUnappliedFixesWarnings(actionableResults)) {
           console.error(warning);
         }
-        for (const warning of getExecutionErrorWarnings(actionableResults)) {
-          console.error(warning);
-        }
+        emitExecutionErrorsAndSetExitCode(actionableResults);
 
         if (isDev) {
           for (const line of getFixDevMetrics(allResults)) {
@@ -261,12 +254,10 @@ program
           }
         }
 
-        // Rule execution errors (core #185) are hard failures: surface them
-        // after the fixes are written and fail the CI run regardless of
-        // --suppress-warnings.
-        if (hasExecutionErrors(actionableResults)) {
-          process.exit(1);
-        }
+        // Rule execution errors (core #185) are hard failures: emitted above
+        // (after the fixes are written) and failed the CI run regardless of
+        // --suppress-warnings. emitExecutionErrorsAndSetExitCode already set
+        // process.exitCode = 1 so the written files and diagnostics flush.
       }
     } catch (e) {
       const formatted = formatCoreError(e);
