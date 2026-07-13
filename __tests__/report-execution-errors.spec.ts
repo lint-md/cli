@@ -1,6 +1,8 @@
 import {
+  emitExecutionErrorsAndSetExitCode,
   getExecutionErrorWarnings,
   hasExecutionErrors,
+  reportExecutionErrors,
 } from "../src/utils/report-execution-errors";
 import type { RuleExecutionError } from "@lint-md/core";
 import type { BatchLintItem } from "../src/types";
@@ -112,6 +114,117 @@ describe("report-execution-errors", () => {
 
     test("returns no warnings when no item has execution errors", () => {
       expect(getExecutionErrorWarnings([makeItem("a.md")])).toEqual([]);
+    });
+  });
+
+  describe("reportExecutionErrors", () => {
+    const makeStream = () => {
+      const chunks: string[] = [];
+      const stream = {
+        write: (chunk: string) => {
+          chunks.push(chunk);
+          return true;
+        },
+      } as unknown as NodeJS.WritableStream;
+      return { stream, chunks };
+    };
+
+    test("writes one line per error to the given stream and returns true", () => {
+      const { stream, chunks } = makeStream();
+      const ok = reportExecutionErrors(
+        [
+          makeItem("a.md", [
+            { ruleName: "r", message: "boom", round: 1, phase: "fix" },
+          ]),
+        ],
+        stream
+      );
+
+      expect(ok).toBe(true);
+      expect(chunks).toEqual([
+        "[lint-md] a.md: r failed in fix (round 1): boom\n",
+      ]);
+    });
+
+    test("returns false and writes nothing when there are no errors", () => {
+      const { stream, chunks } = makeStream();
+      const ok = reportExecutionErrors([makeItem("a.md")], stream);
+
+      expect(ok).toBe(false);
+      expect(chunks).toEqual([]);
+    });
+
+    test("does not deduplicate errors from the same rule across rounds", () => {
+      const { stream, chunks } = makeStream();
+      reportExecutionErrors(
+        [
+          makeItem("d.md", [
+            { ruleName: "r", message: "x", round: 1, phase: "fix" },
+            { ruleName: "r", message: "x", round: 2, phase: "fix" },
+          ]),
+        ],
+        stream
+      );
+
+      expect(chunks).toEqual([
+        "[lint-md] d.md: r failed in fix (round 1): x\n",
+        "[lint-md] d.md: r failed in fix (round 2): x\n",
+      ]);
+    });
+  });
+
+  describe("emitExecutionErrorsAndSetExitCode", () => {
+    const baseError = {
+      ruleName: "boom",
+      message: "rule threw",
+      round: 1,
+      phase: "fix" as const,
+    };
+
+    let exitCodeBefore: number | undefined;
+    let stderrSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      exitCodeBefore = process.exitCode as number | undefined;
+      process.exitCode = undefined;
+      stderrSpy = jest
+        .spyOn(process.stderr, "write")
+        .mockImplementation(() => true);
+    });
+
+    afterEach(() => {
+      stderrSpy.mockRestore();
+      process.exitCode = exitCodeBefore;
+    });
+
+    test("writes diagnostics to stderr and sets process.exitCode = 1", () => {
+      const reported = emitExecutionErrorsAndSetExitCode([
+        makeItem("a.md", [baseError]),
+      ]);
+
+      expect(reported).toBe(true);
+      expect(process.exitCode).toBe(1);
+      expect(stderrSpy).toHaveBeenCalledWith(
+        expect.stringContaining("[lint-md] a.md: boom failed in fix")
+      );
+    });
+
+    test("does not set exitCode and returns false when there are no errors", () => {
+      const reported = emitExecutionErrorsAndSetExitCode([makeItem("a.md")]);
+
+      expect(reported).toBe(false);
+      expect(process.exitCode).toBeUndefined();
+      expect(stderrSpy).not.toHaveBeenCalled();
+    });
+
+    test("sets exitCode = 1 even when it is already 1 (idempotent)", () => {
+      process.exitCode = 1;
+      const reported = emitExecutionErrorsAndSetExitCode([
+        makeItem("a.md", [baseError]),
+      ]);
+
+      expect(reported).toBe(true);
+      expect(process.exitCode).toBe(1);
     });
   });
 });
