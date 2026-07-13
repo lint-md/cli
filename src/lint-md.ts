@@ -246,7 +246,8 @@ program
         for (const warning of getUnappliedFixesWarnings(actionableResults)) {
           console.error(warning);
         }
-        emitExecutionErrorsAndSetExitCode(actionableResults);
+        const hasRuleFailures =
+          emitExecutionErrorsAndSetExitCode(actionableResults);
 
         if (isDev) {
           for (const line of getFixDevMetrics(allResults)) {
@@ -258,6 +259,11 @@ program
         // (after the fixes are written) and failed the CI run regardless of
         // --suppress-warnings. emitExecutionErrorsAndSetExitCode already set
         // process.exitCode = 1 so the written files and diagnostics flush.
+        // Early-return so we don't print a trailing "Done in …" on failure,
+        // matching the previous process.exit(1) behaviour.
+        if (hasRuleFailures) {
+          return;
+        }
       }
     } catch (e) {
       const formatted = formatCoreError(e);
