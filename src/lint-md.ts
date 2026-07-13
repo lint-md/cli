@@ -23,6 +23,7 @@ import { loadMdFiles } from "./utils/load-md-files";
 import { getReportData } from "./utils/get-report-data";
 import { filterFilesByMaxSize } from "./utils/filter-by-max-size";
 import { getUnappliedFixesWarnings } from "./utils/report-unapplied-fixes";
+import { formatCoreError } from "./utils/format-core-error";
 
 program
   .version(
@@ -94,7 +95,8 @@ program
           process.stdout.write(result.fixedResult?.result ?? content);
           return;
         } catch (e) {
-          console.error(e);
+          const formatted = formatCoreError(e);
+          console.error(formatted.handled ? formatted.message : e);
           process.exit(1);
         }
       }
@@ -121,7 +123,8 @@ program
           process.exit(1);
         }
       } catch (e) {
-        console.error(e);
+        const formatted = formatCoreError(e);
+        console.error(formatted.handled ? formatted.message : e);
         process.exit(1);
       }
 
@@ -200,7 +203,8 @@ program
         }
       }
     } catch (e) {
-      console.error(e);
+      const formatted = formatCoreError(e);
+      console.error(formatted.handled ? formatted.message : e);
       process.exit(1);
     }
 
