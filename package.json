@@ -25,7 +25,9 @@
     "watch": "tsc -w",
     "cli-run": "node ./lib/src/lint-md.js examples/correct-title-trailing-punctuation.md",
     "benchmark:memory": "node scripts/benchmark-memory.mjs",
-    "test:benchmark-memory": "node scripts/benchmark-memory-smoke.mjs"
+    "test:benchmark-memory": "node scripts/benchmark-memory-smoke.mjs",
+    "test:package": "node scripts/test-package.mjs",
+    "prepublishOnly": "npm run lint && npm test && npm run test:package"
   },
   "files": [
     "esm/package.json",
@@ -58,7 +60,7 @@
     ]
   },
   "dependencies": {
-    "@lint-md/core": "^2.1.5",
+    "@lint-md/core": "^2.1.6",
     "chalk": "^4",
     "commander": "^9.4.1",
     "glob": "^13.0.6",

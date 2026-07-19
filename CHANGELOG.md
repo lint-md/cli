@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Tests
+
+- add npm tarball smoke test for the packed CLI and installed `lint-md`, with a dedicated Node 22 CI job ([#103](https://github.com/lint-md/cli/issues/103), [#104](https://github.com/lint-md/cli/pull/104))
+
+### Dependencies
+
+- upgrade `@lint-md/core` from `^2.1.5` to `^2.1.6` for parser 0.2.0 source-map fixes and accurate inline-code value ranges ([#104](https://github.com/lint-md/cli/pull/104))
+
 ## [2.2.2](https://github.com/lint-md/cli/compare/v2.1.1...v2.2.2) (2026-07-13)
 
 ### Features
