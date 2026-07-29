@@ -2,6 +2,7 @@ import { keepLintItem } from "../src/utils/batch-lint";
 import { FixConvergence } from "@lint-md/core";
 import type { FixedResult } from "@lint-md/core";
 import type { BatchLintItem } from "../src/types";
+import { makeNotAppliedFix } from "./helpers/not-applied-fix";
 
 const baseItem = (
   overrides: Partial<BatchLintItem> & {
@@ -52,7 +53,7 @@ describe("keepLintItem", () => {
         baseItem({
           fixedResult: {
             result: "",
-            notAppliedFixes: [{ range: [0, 1], text: "x" }],
+            notAppliedFixes: [makeNotAppliedFix([0, 1], "x")],
           },
         })
       )

@@ -12,6 +12,7 @@ import {
   runTasksWithLimit,
 } from "../src/utils/batch-lint";
 import type { BatchLintItem } from "../src/types";
+import { makeNotAppliedFix } from "./helpers/not-applied-fix";
 
 const makeItem = (overrides: Partial<BatchLintItem> = {}): BatchLintItem => ({
   path: "doc.md",
@@ -277,7 +278,7 @@ describe("keepLintItem", () => {
         makeItem({
           fixedResult: {
             result: "x",
-            notAppliedFixes: [{ range: [0, 1], text: "y" }],
+            notAppliedFixes: [makeNotAppliedFix([0, 1], "y")],
           },
         })
       )
