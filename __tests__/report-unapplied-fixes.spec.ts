@@ -1,5 +1,6 @@
 import { getUnappliedFixesWarnings } from "../src/utils/report-unapplied-fixes";
 import type { BatchLintItem } from "../src/types";
+import { makeNotAppliedFix } from "./helpers/not-applied-fix";
 
 const makeItem = (overrides: Partial<BatchLintItem> = {}): BatchLintItem => ({
   path: "doc.md",
@@ -30,7 +31,7 @@ describe("getUnappliedFixesWarnings", () => {
         path: "a.md",
         fixedResult: {
           result: "x",
-          notAppliedFixes: [{ range: [0, 1], text: "y" }],
+          notAppliedFixes: [makeNotAppliedFix([0, 1], "y")],
         },
       }),
     ];
@@ -46,9 +47,9 @@ describe("getUnappliedFixesWarnings", () => {
         fixedResult: {
           result: "x",
           notAppliedFixes: [
-            { range: [0, 1], text: "y" },
-            { range: [2, 3], text: "z" },
-            { range: [4, 5], text: "w" },
+            makeNotAppliedFix([0, 1], "y"),
+            makeNotAppliedFix([2, 3], "z"),
+            makeNotAppliedFix([4, 5], "w"),
           ],
         },
       }),
@@ -68,7 +69,7 @@ describe("getUnappliedFixesWarnings", () => {
         path: "bad.md",
         fixedResult: {
           result: "x",
-          notAppliedFixes: [{ range: [0, 1], text: "y" }],
+          notAppliedFixes: [makeNotAppliedFix([0, 1], "y")],
         },
       }),
     ];
@@ -83,7 +84,7 @@ describe("getUnappliedFixesWarnings", () => {
         path: "bad\u001B[31m.md\nnext-line",
         fixedResult: {
           result: "x",
-          notAppliedFixes: [{ range: [0, 1], text: "y" }],
+          notAppliedFixes: [makeNotAppliedFix([0, 1], "y")],
         },
       }),
     ];
