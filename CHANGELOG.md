@@ -16,6 +16,10 @@
 
 - add a CLI regression test for the Core 2.3 opt-in rules
 
+### Refactoring
+
+- use `fixMarkdown()` for CLI fix paths
+
 ## [2.2.3](https://github.com/lint-md/cli/compare/v2.2.2...v2.2.3) (2026-07-29)
 
 ### Tests

@@ -1,10 +1,11 @@
 import { jest } from "@jest/globals";
 
 jest.mock("@lint-md/core", () => ({
+  fixMarkdown: jest.fn(),
   lintMarkdown: jest.fn(),
 }));
 
-import { lintMarkdown } from "@lint-md/core";
+import { fixMarkdown, lintMarkdown } from "@lint-md/core";
 import lintWorker from "../src/utils/lint-worker";
 import { writeFile, mkdtemp, rm } from "fs/promises";
 import { tmpdir } from "os";
@@ -13,12 +14,16 @@ import * as path from "path";
 const mockedLintMarkdown = lintMarkdown as jest.MockedFunction<
   typeof lintMarkdown
 >;
+const mockedFixMarkdown = fixMarkdown as jest.MockedFunction<
+  typeof fixMarkdown
+>;
 
 describe("lintWorker executionErrors passthrough", () => {
   let tmpDir: string;
 
   beforeEach(async () => {
     tmpDir = await mkdtemp(path.join(tmpdir(), "lint-worker-exec-"));
+    mockedFixMarkdown.mockReset();
     mockedLintMarkdown.mockReset();
   });
 
@@ -75,5 +80,27 @@ describe("lintWorker executionErrors passthrough", () => {
     });
 
     expect(result.executionErrors).toBeUndefined();
+  });
+
+  test("uses fixMarkdown for fix mode", async () => {
+    const file = path.join(tmpDir, "fix.md");
+    const rules = { "space-around-link": 2 };
+    await writeFile(file, "甲[链接](https://example.com)乙\n", "utf8");
+
+    mockedFixMarkdown.mockReturnValue({
+      lintResult: [],
+      fixedResult: { result: "甲 [链接](https://example.com) 乙\n" },
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
+      executionErrors: [],
+    } as any);
+
+    await lintWorker({ filePath: file, rules, isFixMode: true });
+
+    expect(mockedFixMarkdown).toHaveBeenCalledWith(
+      "甲[链接](https://example.com)乙\n",
+      { rules }
+    );
+    expect(mockedLintMarkdown).not.toHaveBeenCalled();
   });
 });

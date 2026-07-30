@@ -8,7 +8,7 @@ const setExitCode = (code: number): void => {
 import { readFileSync } from "fs";
 import { availableParallelism } from "os";
 import { program } from "commander";
-import { lintMarkdown } from "@lint-md/core";
+import { fixMarkdown, lintMarkdown } from "@lint-md/core";
 import { version } from "../package.json";
 import { safeWriteFile } from "./utils/safe-write-file";
 import {
@@ -100,7 +100,7 @@ program
         }
 
         try {
-          const result = lintMarkdown(content, rules, true);
+          const result = fixMarkdown(content, { rules });
           process.stdout.write(result.fixedResult?.result ?? content);
           const stdinItem = {
             path: "(stdin)",
