@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [2.2.4](https://github.com/lint-md/cli/compare/v2.2.3...v2.2.4) (2026-07-30)
+
+### Dependencies
+
+- upgrade `@lint-md/core` from `^2.2.1` to `^2.3.0`
+
+### Documentation
+
+- document Core 2.3 opt-in rules in both README files
+
+### Tests
+
+- add a CLI regression test for the Core 2.3 opt-in rules
+
+### Refactoring
+
+- use `fixMarkdown()` for CLI fix paths
+- require an explicit fix mode for lint workers
+
 ## [2.2.3](https://github.com/lint-md/cli/compare/v2.2.2...v2.2.3) (2026-07-29)
 
 ### Tests

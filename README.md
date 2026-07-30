@@ -103,6 +103,55 @@ docker run --rm \
 | `extensions`   | `string[]` | `[".md", ".markdown", ".mdx"]`         | 要 lint 的文件扩展名                |
 | `rules`        | `object`   | `{}`                                   | 规则配置，详见 `@lint-md/core` 文档 |
 
+### Core 2.3 新规则
+
+以下规则默认关闭。请在项目根目录的 `./.lintmdrc` 中启用它们。
+
+```json
+{
+  "rules": {
+    "require-trailing-spaces": 2,
+    "space-around-link": 2,
+    "no-multiple-blank-lines": 2
+  }
+}
+```
+
+CLI 默认读取 `./.lintmdrc`。
+也可以使用 `lint-md --config <文件路径>` 指定配置文件。
+
+直接使用 Core API 时，请在 `fixMarkdown()` 的 `rules` 中配置规则。
+
+```ts
+import { fixMarkdown, RULE_SEVERITY } from "@lint-md/core";
+
+const markdown = "第一行\n第二行";
+const result = fixMarkdown(markdown, {
+  rules: {
+    "require-trailing-spaces": RULE_SEVERITY.ERROR,
+    "space-around-link": RULE_SEVERITY.ERROR,
+    "no-multiple-blank-lines": RULE_SEVERITY.ERROR,
+  },
+});
+
+console.log(result.fixedResult.result);
+```
+
+`RULE_SEVERITY.ERROR` 等同于规则级别 `2`。
+`fixMarkdown()` 始终执行自动修复。
+只检查时，请使用 `lintMarkdown(markdown, rules, false)`。
+
+`space-around-link` 处理普通链接、自动链接和引用链接。
+它不处理独立图片。
+全角标点、其他 Unicode 标点、已有空白和块边界不需要空格。
+连续链接之间只添加一个空格。
+
+`no-multiple-blank-lines` 将连续空白行修复为一个空白行。
+它删除文档开头的空白行。
+它保留文档末尾的一个换行。
+空格和 Tab 组成的行也算空白行。
+代码块内部内容不受影响。
+
 ## 退出码约定
 
 - `0`：无错误（或仅 warning 且启用了 `--suppress-warnings`）
