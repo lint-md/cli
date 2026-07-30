@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- upgrade `@lint-md/core` from `^2.2.1` to `^2.3.0`
+
 ## [2.2.3](https://github.com/lint-md/cli/compare/v2.2.2...v2.2.3) (2026-07-29)
 
 ### Tests
