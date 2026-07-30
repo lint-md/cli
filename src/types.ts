@@ -40,7 +40,7 @@ export interface CliErrorCount {
 export interface LintWorkerOptions {
   filePath: string;
   rules?: LintMdRulesConfig;
-  isFixMode?: boolean;
+  isFixMode: boolean;
 }
 
 /** batchLint 单个文件的 lint 结果 */
