@@ -103,6 +103,59 @@ The image runs as a non-root user by default. If the mounted directory has stric
 | `extensions`   | `string[]` | `[".md", ".markdown", ".mdx"]`         | File extensions to lint                                               |
 | `rules`        | `object`   | `{}`                                   | Rule configuration. See the `@lint-md/core` documentation for details |
 
+### Core 2.3 Rules
+
+The following rules are disabled by default.
+Enable them in `./.lintmdrc` at the project root.
+
+```json
+{
+  "rules": {
+    "require-trailing-spaces": 2,
+    "space-around-link": 2,
+    "no-multiple-blank-lines": 2
+  }
+}
+```
+
+The CLI reads `./.lintmdrc` by default.
+Use `lint-md --config <file-path>` to select another file.
+
+For direct Core API use, configure rules in `fixMarkdown()`.
+
+```ts
+import { fixMarkdown, RULE_SEVERITY } from "@lint-md/core";
+
+const markdown = "First line\nSecond line";
+const result = fixMarkdown(markdown, {
+  rules: {
+    "require-trailing-spaces": RULE_SEVERITY.ERROR,
+    "space-around-link": RULE_SEVERITY.ERROR,
+    "no-multiple-blank-lines": RULE_SEVERITY.ERROR,
+  },
+});
+
+console.log(result.fixedResult.result);
+```
+
+`RULE_SEVERITY.ERROR` equals rule level `2`.
+`fixMarkdown()` always applies fixes.
+Use `lintMarkdown(markdown, rules, false)` for lint-only checks.
+
+`space-around-link` handles normal, automatic, and reference links.
+It does not handle standalone images.
+Full-width punctuation needs no added spaces.
+Other Unicode punctuation needs no added spaces.
+Existing whitespace needs no added spaces.
+Block boundaries need no added spaces.
+Adjacent links receive only one space.
+
+`no-multiple-blank-lines` reduces consecutive blank lines to one blank line.
+It removes blank lines at the document start.
+It keeps one final newline at the document end.
+Lines that contain only spaces or tabs are blank lines.
+Content inside code blocks remains unchanged.
+
 ## Exit Codes
 
 - `0`: no errors were found, or only warnings were found while `--suppress-warnings` is enabled
