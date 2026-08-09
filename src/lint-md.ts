@@ -290,9 +290,9 @@ export const createProgram = (): Command => {
   return program;
 };
 
-export const main = (argv: string[] = process.argv): void => {
+export const main = async (argv: string[] = process.argv): Promise<void> => {
   const program = createProgram();
-  program.parse(argv);
+  await program.parseAsync(argv);
 
   const isStdin = argv.includes("--stdin") || argv.includes("-i");
   if (!program.args.length && !isStdin) {
@@ -300,6 +300,13 @@ export const main = (argv: string[] = process.argv): void => {
   }
 };
 
+export const runCli = (argv: string[] = process.argv): void => {
+  void main(argv).catch((error) => {
+    console.error(error);
+    setExitCode(1);
+  });
+};
+
 if (require.main === module) {
-  main();
+  runCli();
 }
