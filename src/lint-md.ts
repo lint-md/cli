@@ -8,29 +8,13 @@ const setExitCode = (code: number): void => {
 import { readFileSync } from "fs";
 import { Command } from "commander";
 import { version } from "../package.json";
-import { runStdinLint } from "./cli/run-lint";
-import { safeWriteFile } from "./utils/safe-write-file";
-import {
-  batchLint,
-  resolveAdaptiveConcurrency,
-  runTasksWithLimit,
-} from "./utils/batch-lint";
+import { runFileLint, runStdinLint } from "./cli/run-lint";
 import {
   getLintConfig,
   getMaxFileSizeOption,
   getThreadCount,
 } from "./utils/configure";
 import type { ThreadCount } from "./types";
-import { loadMdFiles } from "./utils/load-md-files";
-import { getReportData } from "./utils/get-report-data";
-import { filterFilesByMaxSize } from "./utils/filter-by-max-size";
-import { getUnappliedFixesWarnings } from "./utils/report-unapplied-fixes";
-import {
-  getFixDevMetrics,
-  getIncompleteFixWarnings,
-} from "./utils/report-incomplete-fixes";
-import { emitExecutionErrorsAndSetExitCode } from "./utils/report-execution-errors";
-import { formatCoreError } from "./utils/format-core-error";
 
 interface CLIOptions {
   fix?: boolean;
@@ -117,111 +101,18 @@ export const createProgram = (): Command => {
         return;
       }
 
-      if (!files.length) {
-        return;
-      }
-
-      let mdFiles = await loadMdFiles(files, excludeFiles, extensions);
-
-      // 过滤超大文件（stderr warning + 跳过），发生在 resolveAdaptiveConcurrency
-      // 之前，使 --threads auto 只基于剩余文件重算并发，两者互不感知。
-      if (maxFileSizeBytes !== null) {
-        mdFiles = await filterFilesByMaxSize(mdFiles, maxFileSizeBytes);
-      }
-
-      if (!mdFiles.length) {
-        console.log("🎉 No markdown files to lint 🎉");
-        process.exit(0);
-        return;
-      }
-
-      const concurrencyDecision = await resolveAdaptiveConcurrency(
+      await runFileLint({
+        excludeFiles,
+        extensions,
+        files,
+        isDev,
+        isFixMode,
+        maxFileSizeBytes,
+        rules,
+        startTime,
+        suppressWarnings,
         threadCount,
-        mdFiles
-      );
-      const effectiveThreads = concurrencyDecision.concurrency;
-
-      if (isDev && concurrencyDecision.maxFileSize !== null) {
-        const { maxFileSize, requestedConcurrency } = concurrencyDecision;
-        const adaptiveApplied = maxFileSize >= 1024 * 1024;
-        if (adaptiveApplied && effectiveThreads < requestedConcurrency) {
-          const maxMiB = (maxFileSize / (1024 * 1024)).toFixed(2);
-          console.log(
-            `[lint-md] Adaptive concurrency: requested auto, effective ${effectiveThreads}, max file ${maxMiB} MiB`
-          );
-        }
-      }
-
-      try {
-        const { allResults, actionableResults } = await batchLint(
-          effectiveThreads,
-          mdFiles,
-          isFixMode,
-          rules
-        );
-
-        if (!isFixMode) {
-          const { consoleMessage, errorCount, warningCount } =
-            getReportData(actionableResults);
-
-          console.log(consoleMessage);
-
-          const hasRuleFailures =
-            emitExecutionErrorsAndSetExitCode(actionableResults);
-
-          if (
-            errorCount > 0 ||
-            (!suppressWarnings && warningCount !== 0) ||
-            hasRuleFailures
-          ) {
-            setExitCode(1);
-            return;
-          }
-        } else {
-          await runTasksWithLimit(
-            actionableResults
-              .filter(({ fixedResult }) => fixedResult)
-              .map(
-                ({ path, fixedResult }) =>
-                  () =>
-                    safeWriteFile(path, fixedResult!.result)
-              ),
-            effectiveThreads
-          );
-
-          for (const warning of getIncompleteFixWarnings(actionableResults)) {
-            console.error(warning);
-          }
-          for (const warning of getUnappliedFixesWarnings(actionableResults)) {
-            console.error(warning);
-          }
-          const hasRuleFailures =
-            emitExecutionErrorsAndSetExitCode(actionableResults);
-
-          if (isDev) {
-            for (const line of getFixDevMetrics(allResults)) {
-              console.log(line);
-            }
-          }
-
-          // Rule execution errors (core #185) are hard failures: emitted above
-          // (after the fixes are written) and failed the CI run regardless of
-          // --suppress-warnings. emitExecutionErrorsAndSetExitCode already set
-          // process.exitCode = 1 so the written files and diagnostics flush.
-          // Early-return so we don't print a trailing "Done in …" on failure,
-          // matching the previous process.exit(1) behaviour.
-          if (hasRuleFailures) {
-            return;
-          }
-        }
-      } catch (e) {
-        const formatted = formatCoreError(e);
-        console.error(formatted.handled ? formatted.message : e);
-        process.exit(1);
-      }
-
-      const endTime = Date.now();
-      console.log(`⌛️Done in ${endTime - startTime}ms.`);
+      });
     });
 
   return program;
