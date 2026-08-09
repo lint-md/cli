@@ -7,7 +7,7 @@ import { parseSize } from "./parse-size";
 
 export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
   if (configFilePath && !fs.existsSync(configFilePath)) {
-    console.log(
+    console.error(
       chalk.red(`lint-md: Configure file '${configFilePath}' is not exist.`)
     );
     process.exit(1);
@@ -24,10 +24,10 @@ export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
     try {
       config = JSON.parse(fs.readFileSync(configPath).toString());
     } catch (e) {
-      console.log(
+      console.error(
         chalk.red(`[lint-md] Configure file '${configPath}' is invalid.`)
       );
-      console.log(e);
+      console.error(e);
       process.exit(1);
     }
   }
