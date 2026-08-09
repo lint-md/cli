@@ -22,7 +22,7 @@ import {
   getMaxFileSizeOption,
   getThreadCount,
 } from "./utils/configure";
-import type { CLIOptions, ThreadCount } from "./types";
+import type { ThreadCount } from "./types";
 import { loadMdFiles } from "./utils/load-md-files";
 import { getReportData } from "./utils/get-report-data";
 import { filterFilesByMaxSize } from "./utils/filter-by-max-size";
@@ -33,6 +33,16 @@ import {
 } from "./utils/report-incomplete-fixes";
 import { emitExecutionErrorsAndSetExitCode } from "./utils/report-execution-errors";
 import { formatCoreError } from "./utils/format-core-error";
+
+interface CLIOptions {
+  fix?: boolean;
+  dev?: boolean;
+  config?: string;
+  suppressWarnings: boolean;
+  threads?: string | boolean;
+  stdin?: boolean;
+  maxFileSize?: string;
+}
 
 export const createProgram = (): Command => {
   const program = new Command();

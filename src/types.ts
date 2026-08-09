@@ -14,29 +14,6 @@ export interface CLIConfig {
   extensions?: string[];
 }
 
-/** 用户传入的 CLI 选项 */
-export interface CLIOptions {
-  fix?: boolean;
-  dev?: boolean;
-  config?: string;
-  suppressWarnings: boolean;
-  threads?: string | boolean;
-  stdin?: boolean;
-  maxFileSize?: string;
-}
-
-/** CLI lint 结果选项 */
-export interface CLILintResult {
-  path: string;
-  file: string;
-}
-
-/** CLI lint 错误统计信息 */
-export interface CliErrorCount {
-  error: number;
-  warning: number;
-}
-
 export interface LintWorkerOptions {
   filePath: string;
   rules?: LintMdRulesConfig;
