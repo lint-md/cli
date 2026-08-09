@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "Dockerfile"
+      - ".dockerignore"
       - "package.json"
       - ".github/workflows/docker.yml"
   workflow_dispatch:
