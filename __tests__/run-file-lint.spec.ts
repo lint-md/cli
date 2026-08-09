@@ -41,6 +41,8 @@ const mockSafeWriteFile = safeWriteFile as jest.MockedFunction<
 >;
 
 describe("runFileLint", () => {
+  const originalExitCode = process.exitCode;
+
   const makeOptions = (
     overrides: Partial<Parameters<typeof runFileLint>[0]> = {}
   ): Parameters<typeof runFileLint>[0] => ({
@@ -59,6 +61,7 @@ describe("runFileLint", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    process.exitCode = undefined;
     mockLoadMdFiles.mockResolvedValue(["document.md"]);
     mockFilterFilesByMaxSize.mockImplementation(async (files) => files);
     mockResolveAdaptiveConcurrency.mockResolvedValue({
@@ -79,6 +82,7 @@ describe("runFileLint", () => {
   });
 
   afterEach(() => {
+    process.exitCode = originalExitCode;
     jest.restoreAllMocks();
   });
 
@@ -88,16 +92,17 @@ describe("runFileLint", () => {
     expect(mockLoadMdFiles).not.toHaveBeenCalled();
   });
 
-  test("exits successfully when file discovery returns no matches", async () => {
+  test("returns success when file discovery returns no matches", async () => {
     mockLoadMdFiles.mockResolvedValue([]);
     const exit = jest.spyOn(process, "exit").mockImplementation((() => {
       throw new Error("process.exit");
     }) as never);
 
-    await expect(runFileLint(makeOptions())).rejects.toThrow("process.exit");
+    const outcome = await runFileLint(makeOptions());
 
     expect(console.log).toHaveBeenCalledWith("🎉 No markdown files to lint 🎉");
-    expect(exit).toHaveBeenCalledWith(0);
+    expect(exit).not.toHaveBeenCalled();
+    expect(outcome).toEqual({ exitCode: 0 });
   });
 
   test("filters files before concurrency and batch decisions", async () => {
@@ -117,6 +122,53 @@ describe("runFileLint", () => {
     expect(mockFilterFilesByMaxSize.mock.invocationCallOrder[0]).toBeLessThan(
       mockResolveAdaptiveConcurrency.mock.invocationCallOrder[0]
     );
+  });
+
+  test("returns success and reports timing after a clean lint", async () => {
+    const outcome = await runFileLint(makeOptions());
+
+    expect(console.log).toHaveBeenCalledWith("");
+    expect(console.log).toHaveBeenCalledWith("⌛️Done in 25ms.");
+    expect(outcome).toEqual({ exitCode: 0 });
+  });
+
+  test("reports rule failures to stderr and returns failure without timing", async () => {
+    const failedResult: BatchLintItem = {
+      path: "failed.md",
+      lintResult: [],
+      executionErrors: [
+        {
+          ruleName: "broken-rule",
+          message: "rule threw",
+          round: 1,
+          phase: "selector",
+        },
+      ],
+    };
+    mockBatchLint.mockResolvedValue({
+      allResults: [failedResult],
+      actionableResults: [failedResult],
+    });
+    const stderr = jest.spyOn(console, "error").mockImplementation();
+    const exit = jest.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("process.exit");
+    }) as never);
+
+    const outcome = await runFileLint(makeOptions({ suppressWarnings: true }));
+
+    expect(console.log).toHaveBeenCalledWith("");
+    expect(stderr).toHaveBeenCalledWith(
+      "[lint-md] failed.md: broken-rule failed in selector (round 1): rule threw"
+    );
+    expect((console.log as jest.Mock).mock.invocationCallOrder[0]).toBeLessThan(
+      stderr.mock.invocationCallOrder[0]
+    );
+    expect(console.log).not.toHaveBeenCalledWith(
+      expect.stringContaining("Done in")
+    );
+    expect(exit).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
+    expect(outcome).toEqual({ exitCode: 1 });
   });
 
   test("writes actionable fixes and reports metrics for all results", async () => {

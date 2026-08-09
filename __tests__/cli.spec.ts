@@ -10,6 +10,7 @@ describe("cli tests", () => {
     process.argv = originalArgv;
     process.exitCode = originalExitCode;
     jest.dontMock("../src/utils/load-md-files");
+    jest.dontMock("../src/cli/run-lint");
     jest.restoreAllMocks();
   });
 
@@ -60,6 +61,7 @@ describe("cli tests", () => {
       .mockImplementation((() => undefined) as never);
     jest.spyOn(console, "log").mockImplementation();
     const { main } = require("../src/lint-md");
+    process.exitCode = undefined;
 
     let settled = false;
     const result = main(["node", "lint-md", "fixture.md"]).then(() => {
@@ -74,7 +76,23 @@ describe("cli tests", () => {
 
     expect(settled).toBe(true);
     expect(loadMdFiles).toHaveBeenCalledTimes(1);
-    expect(mockExit).toHaveBeenCalledWith(0);
+    expect(mockExit).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+  });
+
+  test("main applies the lint outcome at the CLI boundary", async () => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 1 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint: jest.fn(),
+    }));
+    const { main } = require("../src/lint-md");
+    process.exitCode = undefined;
+
+    await main(["node", "lint-md", "fixture.md"]);
+
+    expect(runFileLint).toHaveBeenCalledTimes(1);
+    expect(process.exitCode).toBe(1);
   });
 
   test("runCli handles rejected actions", async () => {

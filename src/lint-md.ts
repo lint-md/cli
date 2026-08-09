@@ -88,7 +88,7 @@ export const createProgram = (): Command => {
 
       if (stdin) {
         const content = readFileSync(process.stdin.fd, "utf8");
-        runStdinLint({
+        const outcome = runStdinLint({
           content,
           isDev,
           isFixMode,
@@ -96,10 +96,11 @@ export const createProgram = (): Command => {
           startTime,
           suppressWarnings,
         });
+        setExitCode(outcome.exitCode);
         return;
       }
 
-      await runFileLint({
+      const outcome = await runFileLint({
         excludeFiles,
         extensions,
         files,
@@ -111,6 +112,7 @@ export const createProgram = (): Command => {
         suppressWarnings,
         threadCount,
       });
+      setExitCode(outcome.exitCode);
     });
 
   return program;
