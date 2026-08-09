@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import * as path from "path";
 import { execFileSync } from "child_process";
 import { filterFilesByMaxSize } from "../src/utils/filter-by-max-size";
-import { STAT_CONCURRENCY_LIMIT } from "../src/utils/batch-lint";
+import { STAT_CONCURRENCY_LIMIT } from "../src/utils/file-stat";
 import { parseSize } from "../src/utils/parse-size";
 
 const TSX = path.resolve(__dirname, "../node_modules/tsx/dist/cli.mjs");

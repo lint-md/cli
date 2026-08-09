@@ -3,11 +3,8 @@ import { fixMarkdown, lintMarkdown } from "@lint-md/core";
 import type { LintMdRulesConfig } from "@lint-md/core";
 import type { BatchLintItem, ThreadCount } from "../types";
 import { safeWriteFile } from "../utils/safe-write-file";
-import {
-  batchLint,
-  resolveAdaptiveConcurrency,
-  runTasksWithLimit,
-} from "../utils/batch-lint";
+import { resolveAdaptiveConcurrency } from "../utils/adaptive-concurrency";
+import { batchLint } from "../utils/batch-lint";
 import { loadMdFiles } from "../utils/load-md-files";
 import { filterFilesByMaxSize } from "../utils/filter-by-max-size";
 import { formatCoreError } from "../utils/format-core-error";
@@ -18,6 +15,7 @@ import {
   getIncompleteFixWarnings,
 } from "../utils/report-incomplete-fixes";
 import { getExecutionErrorWarnings } from "../utils/report-execution-errors";
+import { runTasksWithLimit } from "../utils/run-tasks-with-limit";
 import {
   FAILURE_EXIT,
   SUCCESS_EXIT,
