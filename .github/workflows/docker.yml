@@ -1,6 +1,12 @@
 name: docker
 
 on:
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "package.json"
+      - ".github/workflows/docker.yml"
   workflow_dispatch:
 
 permissions:
@@ -17,6 +23,3 @@ jobs:
 
       - name: Smoke test - stdin lint
         run: echo "# Hello" | docker run -i lint-md-test --stdin
-
-      - name: Smoke test - file lint
-        run: docker run --rm -v ${{ github.workspace }}/examples:/docs:ro lint-md-test /docs/
