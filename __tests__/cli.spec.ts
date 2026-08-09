@@ -1,5 +1,6 @@
 describe("cli tests", () => {
   const originalArgv = process.argv;
+  const originalExitCode = process.exitCode;
 
   beforeEach(() => {
     jest.resetModules();
@@ -7,6 +8,7 @@ describe("cli tests", () => {
 
   afterEach(() => {
     process.argv = originalArgv;
+    process.exitCode = originalExitCode;
     jest.dontMock("../src/utils/load-md-files");
     jest.restoreAllMocks();
   });
@@ -73,6 +75,21 @@ describe("cli tests", () => {
     expect(settled).toBe(true);
     expect(loadMdFiles).toHaveBeenCalledTimes(1);
     expect(mockExit).toHaveBeenCalledWith(0);
+  });
+
+  test("runCli handles rejected actions", async () => {
+    const error = new Error("load failed");
+    const loadMdFiles = jest.fn(() => Promise.reject(error));
+    jest.doMock("../src/utils/load-md-files", () => ({ loadMdFiles }));
+    const mockError = jest.spyOn(console, "error").mockImplementation();
+    const { runCli } = require("../src/lint-md");
+
+    process.exitCode = undefined;
+    runCli(["node", "lint-md", "fixture.md"]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(mockError).toHaveBeenCalledWith(error);
+    expect(process.exitCode).toBe(1);
   });
 
   test("main shows help when no input is provided", async () => {

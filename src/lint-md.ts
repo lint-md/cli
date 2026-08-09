@@ -300,6 +300,13 @@ export const main = async (argv: string[] = process.argv): Promise<void> => {
   }
 };
 
+export const runCli = (argv: string[] = process.argv): void => {
+  void main(argv).catch((error) => {
+    console.error(error);
+    setExitCode(1);
+  });
+};
+
 if (require.main === module) {
-  void main();
+  runCli();
 }
