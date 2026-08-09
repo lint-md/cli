@@ -7,8 +7,8 @@ const setExitCode = (code: number): void => {
 };
 import { readFileSync } from "fs";
 import { Command } from "commander";
-import { fixMarkdown, lintMarkdown } from "@lint-md/core";
 import { version } from "../package.json";
+import { runStdinLint } from "./cli/run-lint";
 import { safeWriteFile } from "./utils/safe-write-file";
 import {
   batchLint,
@@ -106,85 +106,14 @@ export const createProgram = (): Command => {
       // Handle stdin mode
       if (stdin) {
         const content = readFileSync(process.stdin.fd, "utf8");
-
-        if (isFixMode) {
-          if (content.length === 0) {
-            return;
-          }
-
-          if (!content.trim()) {
-            process.stdout.write(content);
-            return;
-          }
-
-          try {
-            const result = fixMarkdown(content, { rules });
-            process.stdout.write(result.fixedResult?.result ?? content);
-            const stdinItem = {
-              path: "(stdin)",
-              lintResult: result.lintResult,
-              fixedResult: result.fixedResult,
-              fixableErrorCount: result.fixableErrorCount,
-              fixableWarningCount: result.fixableWarningCount,
-              executionErrors: result.executionErrors,
-            };
-            for (const warning of getIncompleteFixWarnings([stdinItem])) {
-              console.error(warning);
-            }
-            emitExecutionErrorsAndSetExitCode([stdinItem]);
-            if (isDev) {
-              for (const line of getFixDevMetrics([stdinItem])) {
-                console.error(line);
-              }
-            }
-            return;
-          } catch (e) {
-            const formatted = formatCoreError(e);
-            console.error(formatted.handled ? formatted.message : e);
-            process.exit(1);
-          }
-        }
-
-        if (!content.trim()) {
-          console.error("No content to lint");
-          process.exit(0);
-        }
-
-        try {
-          const result = lintMarkdown(content, rules, false);
-          const stdinItem = {
-            path: "(stdin)",
-            lintResult: result.lintResult,
-            fixableErrorCount: result.fixableErrorCount,
-            fixableWarningCount: result.fixableWarningCount,
-            executionErrors: result.executionErrors,
-          };
-          const { consoleMessage, errorCount, warningCount } = getReportData([
-            stdinItem,
-          ]);
-
-          console.log(consoleMessage);
-
-          const hasRuleFailures = emitExecutionErrorsAndSetExitCode([
-            stdinItem,
-          ]);
-
-          if (
-            errorCount > 0 ||
-            (!suppressWarnings && warningCount !== 0) ||
-            hasRuleFailures
-          ) {
-            setExitCode(1);
-            return;
-          }
-        } catch (e) {
-          const formatted = formatCoreError(e);
-          console.error(formatted.handled ? formatted.message : e);
-          process.exit(1);
-        }
-
-        const endTime = new Date().getTime();
-        console.log(`⌛️Done in ${endTime - startTime}ms.`);
+        runStdinLint({
+          content,
+          isDev,
+          isFixMode,
+          rules,
+          startTime,
+          suppressWarnings,
+        });
         return;
       }
 
