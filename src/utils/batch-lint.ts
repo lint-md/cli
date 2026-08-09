@@ -65,29 +65,49 @@ export const getMaxFileSize = async (filePaths: string[]): Promise<number> => {
   return sizes.reduce((max, current) => (current > max ? current : max), 0);
 };
 
+export interface AdaptiveConcurrencyDecision {
+  concurrency: number;
+  maxFileSize: number | null;
+  requestedConcurrency: number;
+}
+
 export const resolveAdaptiveConcurrency = async (
   threadCount: ThreadCount,
   mdFilePaths: string[]
-): Promise<number> => {
+): Promise<AdaptiveConcurrencyDecision> => {
+  const requestedConcurrency =
+    typeof threadCount === "number" ? threadCount : availableParallelism();
+
   if (mdFilePaths.length === 0) {
-    return 0;
+    return {
+      concurrency: 0,
+      maxFileSize: threadCount === "auto" ? 0 : null,
+      requestedConcurrency,
+    };
   }
 
   if (typeof threadCount === "number") {
-    return Math.min(Math.max(threadCount, 1), mdFilePaths.length);
+    return {
+      concurrency: Math.min(Math.max(threadCount, 1), mdFilePaths.length),
+      maxFileSize: null,
+      requestedConcurrency,
+    };
   }
 
   const maxFileSize = await getMaxFileSize(mdFilePaths);
-  const cpuLimit = availableParallelism();
 
-  let limit = cpuLimit;
+  let limit = requestedConcurrency;
   if (maxFileSize >= ADAPTIVE_HUGE_FILE_THRESHOLD) {
     limit = 1;
   } else if (maxFileSize >= ADAPTIVE_LARGE_FILE_THRESHOLD) {
     limit = Math.min(limit, ADAPTIVE_MEDIUM_CAP);
   }
 
-  return Math.min(Math.max(limit, 1), mdFilePaths.length);
+  return {
+    concurrency: Math.min(Math.max(limit, 1), mdFilePaths.length),
+    maxFileSize,
+    requestedConcurrency,
+  };
 };
 
 // Keep a file's result when it has lint findings, or — in fix mode — when
