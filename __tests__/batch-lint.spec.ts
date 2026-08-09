@@ -420,12 +420,18 @@ describe("resolveAdaptiveConcurrency", () => {
           writeSizedFile(`huge-${index}.md`, 10 * 1024 * 1024)
         )
       );
+      const statSpy = jest.spyOn(require("fs/promises"), "stat");
 
-      expect(await resolveAdaptiveConcurrency(8, files)).toEqual({
-        concurrency: 8,
-        maxFileSize: null,
-        requestedConcurrency: 8,
-      });
+      try {
+        expect(await resolveAdaptiveConcurrency(8, files)).toEqual({
+          concurrency: 8,
+          maxFileSize: null,
+          requestedConcurrency: 8,
+        });
+        expect(statSpy).not.toHaveBeenCalled();
+      } finally {
+        statSpy.mockRestore();
+      }
     });
   });
 
@@ -445,11 +451,18 @@ describe("resolveAdaptiveConcurrency", () => {
         writeSizedFile("c.md", 4096),
       ]);
       const cpuLimit = availableParallelism();
-      expect(await resolveAdaptiveConcurrency("auto", files)).toEqual({
-        concurrency: Math.min(cpuLimit, files.length),
-        maxFileSize: 4096,
-        requestedConcurrency: cpuLimit,
-      });
+      const statSpy = jest.spyOn(require("fs/promises"), "stat");
+
+      try {
+        expect(await resolveAdaptiveConcurrency("auto", files)).toEqual({
+          concurrency: Math.min(cpuLimit, files.length),
+          maxFileSize: 4096,
+          requestedConcurrency: cpuLimit,
+        });
+        expect(statSpy).toHaveBeenCalledTimes(files.length);
+      } finally {
+        statSpy.mockRestore();
+      }
     });
 
     test("max file exactly 1 MiB caps at 2", async () => {
