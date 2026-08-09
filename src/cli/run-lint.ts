@@ -18,6 +18,7 @@ import {
   getIncompleteFixWarnings,
 } from "../utils/report-incomplete-fixes";
 import { emitExecutionErrorsAndSetExitCode } from "../utils/report-execution-errors";
+import { shouldFailLint } from "./should-fail-lint";
 
 interface RunStdinLintOptions {
   content: string;
@@ -114,9 +115,12 @@ export const runStdinLint = ({
     const hasRuleFailures = emitExecutionErrorsAndSetExitCode([stdinItem]);
 
     if (
-      errorCount > 0 ||
-      (!suppressWarnings && warningCount !== 0) ||
-      hasRuleFailures
+      shouldFailLint({
+        errorCount,
+        hasRuleFailures,
+        suppressWarnings,
+        warningCount,
+      })
     ) {
       setExitCode(1);
       return;
@@ -194,9 +198,12 @@ export const runFileLint = async ({
         emitExecutionErrorsAndSetExitCode(actionableResults);
 
       if (
-        errorCount > 0 ||
-        (!suppressWarnings && warningCount !== 0) ||
-        hasRuleFailures
+        shouldFailLint({
+          errorCount,
+          hasRuleFailures,
+          suppressWarnings,
+          warningCount,
+        })
       ) {
         setExitCode(1);
         return;
