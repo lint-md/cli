@@ -54,7 +54,6 @@ try {
     "CHANGELOG.md",
     "lib/src/lint-md.js",
     "lib/src/utils/lint-worker.js",
-    "esm/src/lint-md.js",
   ]) {
     assert(packedFiles.has(expectedFile), `tarball is missing ${expectedFile}`);
   }

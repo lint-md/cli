@@ -2,8 +2,6 @@
   "name": "@lint-md/cli",
   "version": "2.2.4",
   "description": "CLI tool to lint your markdown file for Chinese.",
-  "main": "lib/index.js",
-  "module": "esm/index.js",
   "bin": {
     "lint-md": "lib/src/lint-md.js"
   },
@@ -16,11 +14,10 @@
     "test": "jest --no-cache",
     "pretest": "npm run build",
     "build:cjs": "tsc -p tsconfig.json --target ESNext --module commonjs --outDir lib",
-    "build:esm": "tsc -p tsconfig.json --target ESNext --module ESNext --outDir esm",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "lint": "npm run typecheck && prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
-    "build": "rm -rf esm lib && run-p build:*",
+    "build": "rm -rf esm lib && npm run build:cjs",
     "clean": "rm -rf lib esm",
     "watch": "tsc -w",
     "cli-run": "node ./lib/src/lint-md.js examples/correct-title-trailing-punctuation.md",
@@ -30,8 +27,6 @@
     "prepublishOnly": "npm run lint && npm test && npm run test:package"
   },
   "files": [
-    "esm/package.json",
-    "esm/src",
     "lib/package.json",
     "lib/src",
     "CHANGELOG.md"
@@ -46,7 +41,6 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "modulePathIgnorePatterns": [
-      "<rootDir>/esm/",
       "<rootDir>/lib/"
     ],
     "collectCoverage": true,
@@ -72,7 +66,6 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^22.9.3",
     "jest": "^30.0.0",
-    "npm-run-all": "^4.1.5",
     "prettier": "^2.7.1",
     "ts-jest": "^29.0.3",
     "tsx": "^4.22.4",
