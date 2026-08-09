@@ -38,7 +38,7 @@ export const createProgram = (): Command => {
     .usage("<lint-md> [files...]")
     .description("lint your markdown files")
     .option(
-      "-c, --config [configure-file]",
+      "-c, --config <configure-file>",
       "use the configure file, default .lintmdrc（使用配置文件，默认为 .lintmdrc）"
     )
     .option("-f, --fix", "fix the errors automatically（开启修复模式）")
