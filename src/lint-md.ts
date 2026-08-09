@@ -8,6 +8,7 @@ const setExitCode = (code: number): void => {
 import { readFileSync } from "fs";
 import { Command } from "commander";
 import { version } from "../package.json";
+import { CliError, formatCliError } from "./cli/cli-error";
 import { runFileLint, runStdinLint } from "./cli/run-lint";
 import {
   getLintConfig,
@@ -81,13 +82,10 @@ export const createProgram = (): Command => {
 
       const { rules, excludeFiles, extensions } = getLintConfig(config);
 
-      // --threads 参数校验，所有分支共用
       const threadCount: ThreadCount = getThreadCount(threads);
 
-      // --max-file-size 校验（未传 = null = 不过滤），失败早退，与 --threads 一致
       const maxFileSizeBytes = getMaxFileSizeOption(maxFileSize);
 
-      // Handle stdin mode
       if (stdin) {
         const content = readFileSync(process.stdin.fd, "utf8");
         runStdinLint({
@@ -130,7 +128,14 @@ export const main = async (argv: string[] = process.argv): Promise<void> => {
 
 export const runCli = (argv: string[] = process.argv): void => {
   void main(argv).catch((error) => {
-    console.error(error);
+    if (error instanceof CliError) {
+      for (const output of formatCliError(error)) {
+        console.error(output);
+      }
+    } else {
+      console.error(error);
+    }
+
     setExitCode(1);
   });
 };
