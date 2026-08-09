@@ -17,7 +17,12 @@ import {
   getFixDevMetrics,
   getIncompleteFixWarnings,
 } from "../utils/report-incomplete-fixes";
-import { emitExecutionErrorsAndSetExitCode } from "../utils/report-execution-errors";
+import { getExecutionErrorWarnings } from "../utils/report-execution-errors";
+import {
+  FAILURE_EXIT,
+  SUCCESS_EXIT,
+  type CliExitOutcome,
+} from "./exit-outcome";
 import { shouldFailLint } from "./should-fail-lint";
 
 interface RunStdinLintOptions {
@@ -42,10 +47,6 @@ interface RunFileLintOptions {
   threadCount: ThreadCount;
 }
 
-const setExitCode = (code: number): void => {
-  (globalThis as { process?: NodeJS.Process }).process!.exitCode = code;
-};
-
 export const runStdinLint = ({
   content,
   isDev,
@@ -53,15 +54,15 @@ export const runStdinLint = ({
   rules,
   startTime,
   suppressWarnings,
-}: RunStdinLintOptions): void => {
+}: RunStdinLintOptions): CliExitOutcome => {
   if (isFixMode) {
     if (content.length === 0) {
-      return;
+      return SUCCESS_EXIT;
     }
 
     if (!content.trim()) {
       process.stdout.write(content);
-      return;
+      return SUCCESS_EXIT;
     }
 
     try {
@@ -78,23 +79,26 @@ export const runStdinLint = ({
       for (const warning of getIncompleteFixWarnings([stdinItem])) {
         console.error(warning);
       }
-      emitExecutionErrorsAndSetExitCode([stdinItem]);
+      const executionErrorWarnings = getExecutionErrorWarnings([stdinItem]);
+      for (const warning of executionErrorWarnings) {
+        console.error(warning);
+      }
       if (isDev) {
         for (const line of getFixDevMetrics([stdinItem])) {
           console.error(line);
         }
       }
-      return;
+      return executionErrorWarnings.length > 0 ? FAILURE_EXIT : SUCCESS_EXIT;
     } catch (error) {
       const formatted = formatCoreError(error);
       console.error(formatted.handled ? formatted.message : error);
-      process.exit(1);
+      return FAILURE_EXIT;
     }
   }
 
   if (!content.trim()) {
     console.error("No content to lint");
-    process.exit(0);
+    return SUCCESS_EXIT;
   }
 
   try {
@@ -112,7 +116,11 @@ export const runStdinLint = ({
 
     console.log(consoleMessage);
 
-    const hasRuleFailures = emitExecutionErrorsAndSetExitCode([stdinItem]);
+    const executionErrorWarnings = getExecutionErrorWarnings([stdinItem]);
+    for (const warning of executionErrorWarnings) {
+      console.error(warning);
+    }
+    const hasRuleFailures = executionErrorWarnings.length > 0;
 
     if (
       shouldFailLint({
@@ -122,17 +130,17 @@ export const runStdinLint = ({
         warningCount,
       })
     ) {
-      setExitCode(1);
-      return;
+      return FAILURE_EXIT;
     }
   } catch (error) {
     const formatted = formatCoreError(error);
     console.error(formatted.handled ? formatted.message : error);
-    process.exit(1);
+    return FAILURE_EXIT;
   }
 
   const endTime = Date.now();
   console.log(`⌛️Done in ${endTime - startTime}ms.`);
+  return SUCCESS_EXIT;
 };
 
 export const runFileLint = async ({
@@ -146,9 +154,9 @@ export const runFileLint = async ({
   startTime,
   suppressWarnings,
   threadCount,
-}: RunFileLintOptions): Promise<void> => {
+}: RunFileLintOptions): Promise<CliExitOutcome> => {
   if (!files.length) {
-    return;
+    return SUCCESS_EXIT;
   }
 
   let mdFiles = await loadMdFiles(files, excludeFiles, extensions);
@@ -159,8 +167,7 @@ export const runFileLint = async ({
 
   if (!mdFiles.length) {
     console.log("🎉 No markdown files to lint 🎉");
-    process.exit(0);
-    return;
+    return SUCCESS_EXIT;
   }
 
   const concurrencyDecision = await resolveAdaptiveConcurrency(
@@ -194,8 +201,12 @@ export const runFileLint = async ({
 
       console.log(consoleMessage);
 
-      const hasRuleFailures =
-        emitExecutionErrorsAndSetExitCode(actionableResults);
+      const executionErrorWarnings =
+        getExecutionErrorWarnings(actionableResults);
+      for (const warning of executionErrorWarnings) {
+        console.error(warning);
+      }
+      const hasRuleFailures = executionErrorWarnings.length > 0;
 
       if (
         shouldFailLint({
@@ -205,8 +216,7 @@ export const runFileLint = async ({
           warningCount,
         })
       ) {
-        setExitCode(1);
-        return;
+        return FAILURE_EXIT;
       }
     } else {
       await runTasksWithLimit(
@@ -226,8 +236,12 @@ export const runFileLint = async ({
       for (const warning of getUnappliedFixesWarnings(actionableResults)) {
         console.error(warning);
       }
-      const hasRuleFailures =
-        emitExecutionErrorsAndSetExitCode(actionableResults);
+      const executionErrorWarnings =
+        getExecutionErrorWarnings(actionableResults);
+      for (const warning of executionErrorWarnings) {
+        console.error(warning);
+      }
+      const hasRuleFailures = executionErrorWarnings.length > 0;
 
       if (isDev) {
         for (const line of getFixDevMetrics(allResults)) {
@@ -236,15 +250,16 @@ export const runFileLint = async ({
       }
 
       if (hasRuleFailures) {
-        return;
+        return FAILURE_EXIT;
       }
     }
   } catch (error) {
     const formatted = formatCoreError(error);
     console.error(formatted.handled ? formatted.message : error);
-    process.exit(1);
+    return FAILURE_EXIT;
   }
 
   const endTime = Date.now();
   console.log(`⌛️Done in ${endTime - startTime}ms.`);
+  return SUCCESS_EXIT;
 };
