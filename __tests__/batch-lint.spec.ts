@@ -386,12 +386,20 @@ describe("resolveAdaptiveConcurrency", () => {
         writeSizedFile("b.md", 100),
         writeSizedFile("c.md", 100),
       ]);
-      expect(await resolveAdaptiveConcurrency(2, files)).toBe(2);
+      expect(await resolveAdaptiveConcurrency(2, files)).toEqual({
+        concurrency: 2,
+        maxFileSize: null,
+        requestedConcurrency: 2,
+      });
     });
 
     test("numeric threads > fileCount is clamped to fileCount", async () => {
       const file = await writeSizedFile("only.md", 100);
-      expect(await resolveAdaptiveConcurrency(100, [file])).toBe(1);
+      expect(await resolveAdaptiveConcurrency(100, [file])).toEqual({
+        concurrency: 1,
+        maxFileSize: null,
+        requestedConcurrency: 100,
+      });
     });
 
     test("numeric 0 is clamped to 1 (matches existing min clamp)", async () => {
@@ -399,7 +407,11 @@ describe("resolveAdaptiveConcurrency", () => {
         writeSizedFile("a.md", 100),
         writeSizedFile("b.md", 100),
       ]);
-      expect(await resolveAdaptiveConcurrency(0, files)).toBe(1);
+      expect(await resolveAdaptiveConcurrency(0, files)).toEqual({
+        concurrency: 1,
+        maxFileSize: null,
+        requestedConcurrency: 0,
+      });
     });
 
     test("numeric threads ignores file size", async () => {
@@ -408,14 +420,28 @@ describe("resolveAdaptiveConcurrency", () => {
           writeSizedFile(`huge-${index}.md`, 10 * 1024 * 1024)
         )
       );
+      const statSpy = jest.spyOn(require("fs/promises"), "stat");
 
-      expect(await resolveAdaptiveConcurrency(8, files)).toBe(8);
+      try {
+        expect(await resolveAdaptiveConcurrency(8, files)).toEqual({
+          concurrency: 8,
+          maxFileSize: null,
+          requestedConcurrency: 8,
+        });
+        expect(statSpy).not.toHaveBeenCalled();
+      } finally {
+        statSpy.mockRestore();
+      }
     });
   });
 
   describe("auto threadCount", () => {
     test("empty file list → 0", async () => {
-      expect(await resolveAdaptiveConcurrency("auto", [])).toBe(0);
+      expect(await resolveAdaptiveConcurrency("auto", [])).toEqual({
+        concurrency: 0,
+        maxFileSize: 0,
+        requestedConcurrency: availableParallelism(),
+      });
     });
 
     test("small files (< 1 MiB) use cpuLimit clamped to fileCount", async () => {
@@ -425,9 +451,18 @@ describe("resolveAdaptiveConcurrency", () => {
         writeSizedFile("c.md", 4096),
       ]);
       const cpuLimit = availableParallelism();
-      expect(await resolveAdaptiveConcurrency("auto", files)).toBe(
-        Math.min(cpuLimit, files.length)
-      );
+      const statSpy = jest.spyOn(require("fs/promises"), "stat");
+
+      try {
+        expect(await resolveAdaptiveConcurrency("auto", files)).toEqual({
+          concurrency: Math.min(cpuLimit, files.length),
+          maxFileSize: 4096,
+          requestedConcurrency: cpuLimit,
+        });
+        expect(statSpy).toHaveBeenCalledTimes(files.length);
+      } finally {
+        statSpy.mockRestore();
+      }
     });
 
     test("max file exactly 1 MiB caps at 2", async () => {
@@ -435,36 +470,57 @@ describe("resolveAdaptiveConcurrency", () => {
         writeSizedFile("small.md", 1024),
         writeSizedFile("one-mib.md", 1024 * 1024),
       ]);
-      expect(
-        await resolveAdaptiveConcurrency("auto", files)
-      ).toBeLessThanOrEqual(2);
+      const cpuLimit = availableParallelism();
+      expect(await resolveAdaptiveConcurrency("auto", files)).toEqual({
+        concurrency: Math.min(cpuLimit, 2, files.length),
+        maxFileSize: 1024 * 1024,
+        requestedConcurrency: cpuLimit,
+      });
     });
 
     test("max file 1.5 MiB caps at 2", async () => {
       const file = await writeSizedFile("medium.md", 1.5 * 1024 * 1024);
-      expect(
-        await resolveAdaptiveConcurrency("auto", [file])
-      ).toBeLessThanOrEqual(2);
+      expect(await resolveAdaptiveConcurrency("auto", [file])).toEqual({
+        concurrency: 1,
+        maxFileSize: 1.5 * 1024 * 1024,
+        requestedConcurrency: availableParallelism(),
+      });
     });
 
     test("max file exactly 5 MiB forces 1", async () => {
       const file = await writeSizedFile("five-mib.md", 5 * 1024 * 1024);
-      expect(await resolveAdaptiveConcurrency("auto", [file])).toBe(1);
+      expect(await resolveAdaptiveConcurrency("auto", [file])).toEqual({
+        concurrency: 1,
+        maxFileSize: 5 * 1024 * 1024,
+        requestedConcurrency: availableParallelism(),
+      });
     });
 
     test("max file 6 MiB forces 1", async () => {
       const file = await writeSizedFile("six-mib.md", 6 * 1024 * 1024);
-      expect(await resolveAdaptiveConcurrency("auto", [file])).toBe(1);
+      expect(await resolveAdaptiveConcurrency("auto", [file])).toEqual({
+        concurrency: 1,
+        maxFileSize: 6 * 1024 * 1024,
+        requestedConcurrency: availableParallelism(),
+      });
     });
 
     test("single small file → 1", async () => {
       const file = await writeSizedFile("only.md", 100);
-      expect(await resolveAdaptiveConcurrency("auto", [file])).toBe(1);
+      expect(await resolveAdaptiveConcurrency("auto", [file])).toEqual({
+        concurrency: 1,
+        maxFileSize: 100,
+        requestedConcurrency: availableParallelism(),
+      });
     });
 
     test("medium cap respects fileCount when files < 2", async () => {
       const file = await writeSizedFile("one-mib.md", 1.2 * 1024 * 1024);
-      expect(await resolveAdaptiveConcurrency("auto", [file])).toBe(1);
+      expect(await resolveAdaptiveConcurrency("auto", [file])).toEqual({
+        concurrency: 1,
+        maxFileSize: Math.floor(1.2 * 1024 * 1024),
+        requestedConcurrency: availableParallelism(),
+      });
     });
   });
 });

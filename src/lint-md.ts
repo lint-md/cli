@@ -6,14 +6,12 @@ const setExitCode = (code: number): void => {
   (globalThis as { process?: NodeJS.Process }).process!.exitCode = code;
 };
 import { readFileSync } from "fs";
-import { availableParallelism } from "os";
 import { Command } from "commander";
 import { fixMarkdown, lintMarkdown } from "@lint-md/core";
 import { version } from "../package.json";
 import { safeWriteFile } from "./utils/safe-write-file";
 import {
   batchLint,
-  getMaxFileSize,
   resolveAdaptiveConcurrency,
   runTasksWithLimit,
 } from "./utils/batch-lint";
@@ -208,16 +206,16 @@ export const createProgram = (): Command => {
         return;
       }
 
-      const effectiveThreads = await resolveAdaptiveConcurrency(
+      const concurrencyDecision = await resolveAdaptiveConcurrency(
         threadCount,
         mdFiles
       );
+      const effectiveThreads = concurrencyDecision.concurrency;
 
-      if (isDev && threadCount === "auto") {
-        const maxFileSize = await getMaxFileSize(mdFiles);
+      if (isDev && concurrencyDecision.maxFileSize !== null) {
+        const { maxFileSize, requestedConcurrency } = concurrencyDecision;
         const adaptiveApplied = maxFileSize >= 1024 * 1024;
-        const requested = availableParallelism();
-        if (adaptiveApplied && effectiveThreads < requested) {
+        if (adaptiveApplied && effectiveThreads < requestedConcurrency) {
           const maxMiB = (maxFileSize / (1024 * 1024)).toFixed(2);
           console.log(
             `[lint-md] Adaptive concurrency: requested auto, effective ${effectiveThreads}, max file ${maxMiB} MiB`
