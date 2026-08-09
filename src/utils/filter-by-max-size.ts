@@ -1,12 +1,10 @@
 import { stat } from "fs/promises";
-import { STAT_CONCURRENCY_LIMIT, runTasksWithLimit } from "./batch-lint";
+import { STAT_CONCURRENCY_LIMIT } from "./file-stat";
 import { formatBytes } from "./parse-size";
+import { runTasksWithLimit } from "./run-tasks-with-limit";
 
-// Drops Markdown files larger than limitBytes, emitting a stderr warning for
-// each skipped file. Stat concurrency is bounded by STAT_CONCURRENCY_LIMIT
-// (reused from batch-lint) so this does not reintroduce the N-fd stat burst
-// that #80 removed. A stat failure propagates upward, matching the existing
-// error boundary.
+// Keep the stat limit aligned with getMaxFileSize() to prevent fd bursts.
+// A stat failure propagates to the CLI error handler.
 export const filterFilesByMaxSize = async (
   mdFiles: string[],
   limitBytes: number

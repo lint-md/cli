@@ -1,17 +1,19 @@
-import {
-  batchLint,
-  resolveAdaptiveConcurrency,
-  runTasksWithLimit,
-} from "../src/utils/batch-lint";
+import { resolveAdaptiveConcurrency } from "../src/utils/adaptive-concurrency";
+import { batchLint } from "../src/utils/batch-lint";
 import { filterFilesByMaxSize } from "../src/utils/filter-by-max-size";
 import { loadMdFiles } from "../src/utils/load-md-files";
+import { runTasksWithLimit } from "../src/utils/run-tasks-with-limit";
 import { safeWriteFile } from "../src/utils/safe-write-file";
 import { runFileLint } from "../src/cli/run-lint";
 import type { BatchLintItem } from "../src/types";
 
 jest.mock("../src/utils/batch-lint", () => ({
   batchLint: jest.fn(),
+}));
+jest.mock("../src/utils/adaptive-concurrency", () => ({
   resolveAdaptiveConcurrency: jest.fn(),
+}));
+jest.mock("../src/utils/run-tasks-with-limit", () => ({
   runTasksWithLimit: jest.fn(),
 }));
 jest.mock("../src/utils/filter-by-max-size", () => ({
