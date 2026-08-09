@@ -27,6 +27,17 @@ describe("configuration diagnostics", () => {
       }
     );
 
+  test("requires a path after --config", () => {
+    const result = spawnSync(process.execPath, [TSX, CLI, "--config"], {
+      encoding: "utf8",
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("--config <configure-file>");
+    expect(result.stderr).toContain("argument missing");
+  });
+
   test("writes a missing configuration error only to stderr", () => {
     const result = runStdinFix(path.join(tmpDir, "missing.json"));
 
