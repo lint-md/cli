@@ -1,7 +1,7 @@
 import * as process from "process";
 import { fixMarkdown, lintMarkdown } from "@lint-md/core";
 import type { LintMdRulesConfig } from "@lint-md/core";
-import type { BatchLintItem, ThreadCount } from "../types";
+import type { ThreadCount } from "../types";
 import { safeWriteFile } from "../utils/safe-write-file";
 import { resolveAdaptiveConcurrency } from "../utils/adaptive-concurrency";
 import { batchLint } from "../utils/batch-lint";
@@ -16,6 +16,7 @@ import {
 } from "../utils/report-incomplete-fixes";
 import { getExecutionErrorWarnings } from "../utils/report-execution-errors";
 import { runTasksWithLimit } from "../utils/run-tasks-with-limit";
+import { toBatchLintItem } from "../utils/to-batch-lint-item";
 import {
   FAILURE_EXIT,
   SUCCESS_EXIT,
@@ -66,14 +67,7 @@ export const runStdinLint = ({
     try {
       const result = fixMarkdown(content, { rules });
       process.stdout.write(result.fixedResult?.result ?? content);
-      const stdinItem: BatchLintItem = {
-        path: "(stdin)",
-        lintResult: result.lintResult,
-        fixedResult: result.fixedResult,
-        fixableErrorCount: result.fixableErrorCount,
-        fixableWarningCount: result.fixableWarningCount,
-        executionErrors: result.executionErrors,
-      };
+      const stdinItem = toBatchLintItem("(stdin)", result);
       for (const warning of getIncompleteFixWarnings([stdinItem])) {
         console.error(warning);
       }
@@ -101,13 +95,7 @@ export const runStdinLint = ({
 
   try {
     const result = lintMarkdown(content, rules, false);
-    const stdinItem: BatchLintItem = {
-      path: "(stdin)",
-      lintResult: result.lintResult,
-      fixableErrorCount: result.fixableErrorCount,
-      fixableWarningCount: result.fixableWarningCount,
-      executionErrors: result.executionErrors,
-    };
+    const stdinItem = toBatchLintItem("(stdin)", result);
     const { consoleMessage, errorCount, warningCount } = getReportData([
       stdinItem,
     ]);
