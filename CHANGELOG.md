@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.2.5](https://github.com/lint-md/cli/compare/v2.2.4...v2.2.5) (2026-08-10)
 
 ### Dependencies
 
