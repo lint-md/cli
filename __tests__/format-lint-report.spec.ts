@@ -1,3 +1,4 @@
+import stripAnsi from "strip-ansi";
 import type { LintSummary } from "../src/utils/summarize-lint-results";
 import { formatLintReport } from "../src/utils/format-lint-report";
 
@@ -28,6 +29,53 @@ const makeSummary = (overrides: Partial<LintSummary> = {}): LintSummary => ({
 });
 
 describe("formatLintReport", () => {
+  test("preserves the complete terminal report layout", () => {
+    const output = formatLintReport({
+      errorCount: 1,
+      files: [
+        {
+          errorCount: 1,
+          filePath: "docs/example.md",
+          fixableErrorCount: 1,
+          fixableWarningCount: 0,
+          messages: [
+            {
+              column: 3,
+              line: 2,
+              message: "error message.",
+              ruleId: "error-rule",
+              severity: 2,
+            },
+            {
+              column: 5,
+              line: 12,
+              message: "warning message.",
+              ruleId: "warning-rule",
+              severity: 1,
+            },
+          ],
+          warningCount: 1,
+        },
+      ],
+      fixableErrorCount: 1,
+      fixableWarningCount: 0,
+      warningCount: 1,
+    });
+
+    expect(stripAnsi(output)).toBe(
+      [
+        "",
+        "docs/example.md",
+        "   2:3  error    error message    error-rule",
+        "  12:5  warning  warning message  warning-rule",
+        "",
+        "✖ 2 problems (1 error, 1 warning)",
+        "  1 error and 0 warnings potentially fixable with the `--fix` option.",
+        "",
+      ].join("\n")
+    );
+  });
+
   test("formats the problem summary", () => {
     const output = formatLintReport(
       makeSummary({ errorCount: 2, warningCount: 1 })
