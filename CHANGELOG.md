@@ -1,10 +1,36 @@
 # Changelog
 
-## [Unreleased]
+## [2.2.5](https://github.com/lint-md/cli/compare/v2.2.4...v2.2.5) (2026-08-10)
+
+### Bug Fixes
+
+- define the CLI-only package contract ([#115](https://github.com/lint-md/cli/pull/115))
+- build the Docker image without a lockfile ([#116](https://github.com/lint-md/cli/pull/116))
+- await asynchronous CLI actions ([#120](https://github.com/lint-md/cli/pull/120))
+- write configuration errors to stderr ([#129](https://github.com/lint-md/cli/pull/129))
+- require a configuration path ([#130](https://github.com/lint-md/cli/pull/130))
 
 ### Dependencies
 
 - upgrade `@lint-md/core` from `^2.3.0` to `^2.3.1`
+
+### Refactoring
+
+- separate CLI startup ([#119](https://github.com/lint-md/cli/pull/119))
+- remove unsupported library type exports ([#122](https://github.com/lint-md/cli/pull/122))
+- reuse adaptive concurrency diagnostics ([#124](https://github.com/lint-md/cli/pull/124))
+- extract stdin lint flow ([#126](https://github.com/lint-md/cli/pull/126))
+- extract file lint flow ([#128](https://github.com/lint-md/cli/pull/128))
+- make configuration validation side-effect free ([#132](https://github.com/lint-md/cli/pull/132))
+- centralize lint failure decisions ([#133](https://github.com/lint-md/cli/pull/133))
+- centralize diagnostics and exit handling ([#134](https://github.com/lint-md/cli/pull/134))
+- separate concurrency and file-size policies ([#136](https://github.com/lint-md/cli/pull/136))
+- centralize core result adaptation ([#138](https://github.com/lint-md/cli/pull/138))
+- separate lint summary from terminal rendering ([#140](https://github.com/lint-md/cli/pull/140))
+
+### CI/CD
+
+- run Docker smoke tests on related pull requests ([#117](https://github.com/lint-md/cli/pull/117))
 
 ## [2.2.4](https://github.com/lint-md/cli/compare/v2.2.3...v2.2.4) (2026-07-30)
 
