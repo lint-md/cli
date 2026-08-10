@@ -1,11 +1,11 @@
 import type { BatchLintItem } from "../types";
 import { sanitizeTerminalText } from "./sanitize-terminal";
 
-// @lint-md/core 2.1.5 (core #185) returns rule execution errors as a
-// structured list instead of throwing or logging implicitly. CLI surfaces
-// them on a dedicated stderr channel (not mixed into getReportData's
-// lint/warning counts) and exits 1 regardless of --suppress-warnings, since
-// a rule crashing is a hard failure, not a document-level lint finding.
+// Core returns rule execution errors as structured data.
+// The CLI writes these errors to stderr.
+// These errors do not change lint counts.
+// A rule crash always causes exit 1.
+// --suppress-warnings does not suppress rule crashes.
 
 export const hasExecutionErrors = (items: BatchLintItem[]): boolean =>
   items.some((item) => (item.executionErrors?.length ?? 0) > 0);

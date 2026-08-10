@@ -8,7 +8,7 @@ import { batchLint } from "../utils/batch-lint";
 import { loadMdFiles } from "../utils/load-md-files";
 import { filterFilesByMaxSize } from "../utils/filter-by-max-size";
 import { formatCoreError } from "../utils/format-core-error";
-import { getReportData } from "../utils/get-report-data";
+import { formatLintReport } from "../utils/format-lint-report";
 import { getUnappliedFixesWarnings } from "../utils/report-unapplied-fixes";
 import {
   getFixDevMetrics,
@@ -16,6 +16,7 @@ import {
 } from "../utils/report-incomplete-fixes";
 import { getExecutionErrorWarnings } from "../utils/report-execution-errors";
 import { runTasksWithLimit } from "../utils/run-tasks-with-limit";
+import { summarizeLintResults } from "../utils/summarize-lint-results";
 import { toBatchLintItem } from "../utils/to-batch-lint-item";
 import {
   FAILURE_EXIT,
@@ -96,11 +97,9 @@ export const runStdinLint = ({
   try {
     const result = lintMarkdown(content, rules, false);
     const stdinItem = toBatchLintItem("(stdin)", result);
-    const { consoleMessage, errorCount, warningCount } = getReportData([
-      stdinItem,
-    ]);
+    const summary = summarizeLintResults([stdinItem]);
 
-    console.log(consoleMessage);
+    console.log(formatLintReport(summary));
 
     const executionErrorWarnings = getExecutionErrorWarnings([stdinItem]);
     for (const warning of executionErrorWarnings) {
@@ -110,10 +109,10 @@ export const runStdinLint = ({
 
     if (
       shouldFailLint({
-        errorCount,
+        errorCount: summary.errorCount,
         hasRuleFailures,
         suppressWarnings,
-        warningCount,
+        warningCount: summary.warningCount,
       })
     ) {
       return FAILURE_EXIT;
@@ -182,10 +181,9 @@ export const runFileLint = async ({
     );
 
     if (!isFixMode) {
-      const { consoleMessage, errorCount, warningCount } =
-        getReportData(actionableResults);
+      const summary = summarizeLintResults(actionableResults);
 
-      console.log(consoleMessage);
+      console.log(formatLintReport(summary));
 
       const executionErrorWarnings =
         getExecutionErrorWarnings(actionableResults);
@@ -196,10 +194,10 @@ export const runFileLint = async ({
 
       if (
         shouldFailLint({
-          errorCount,
+          errorCount: summary.errorCount,
           hasRuleFailures,
           suppressWarnings,
-          warningCount,
+          warningCount: summary.warningCount,
         })
       ) {
         return FAILURE_EXIT;
