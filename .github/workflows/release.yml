@@ -1,0 +1,53 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+
+      - name: Verify tag version
+        shell: bash
+        run: |
+          package_version="$(node --print "require('./package.json').version")"
+          if [[ "${GITHUB_REF_NAME}" != "v${package_version}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version v${package_version}." >&2
+            exit 1
+          fi
+
+      - name: Install modules
+        run: npm install
+
+      - name: Validate package
+        run: npm run prepublishOnly
+
+      - name: Pack package
+        id: pack
+        shell: bash
+        run: echo "file=$(npm pack)" >> "${GITHUB_OUTPUT}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_FILE: ${{ steps.pack.outputs.file }}
+        run: >-
+          gh release create "${GITHUB_REF_NAME}" "${PACKAGE_FILE}"
+          --verify-tag
+          --generate-notes
+          --title "${GITHUB_REF_NAME}"
