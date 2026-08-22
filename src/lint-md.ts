@@ -50,7 +50,7 @@ export const createProgram = (): Command => {
     )
     .option(
       "-s, --suppress-warnings",
-      "suppress all warnings, that means warnings will not block CI（抑制所有警告，这意味着警告不会阻止 CI）"
+      "do not let warnings affect the exit code（忽略 warning 对退出码的影响）"
     )
     .option(
       "-i, --stdin",
