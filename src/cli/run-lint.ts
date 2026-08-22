@@ -151,7 +151,7 @@ export const runFileLint = async ({
   // The message names the cause instead of a generic "no files" note.
   if (!mdFiles.length) {
     const patterns = files
-      .map((file) => `"${sanitizeTerminalText(file)}"`)
+      .map((file) => JSON.stringify(sanitizeTerminalText(file)))
       .join(", ");
     console.error(`[lint-md] No Markdown files matched: ${patterns}`);
     return SUCCESS_EXIT;

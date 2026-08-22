@@ -107,6 +107,17 @@ describe("runFileLint", () => {
     expect(mockFilterFilesByMaxSize).not.toHaveBeenCalled();
   });
 
+  test("escapes quotes inside unmatched patterns", async () => {
+    mockLoadMdFiles.mockResolvedValue([]);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    await runFileLint(makeOptions({ files: ['docs/"draft".md'] }));
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[lint-md] No Markdown files matched: "docs/\\"draft\\".md"'
+    );
+  });
+
   test("reports size filtering when all discovered files are skipped", async () => {
     mockLoadMdFiles.mockResolvedValue(["large.md"]);
     mockFilterFilesByMaxSize.mockResolvedValue([]);
