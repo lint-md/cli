@@ -176,4 +176,84 @@ describe("cli tests", () => {
     expect(runFileLint).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
   });
+
+  test("rejects --threads combined with --stdin before validating its value", async () => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
+    const runStdinLint = jest.fn().mockReturnValue({ exitCode: 0 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint,
+    }));
+    const mockError = jest.spyOn(console, "error").mockImplementation();
+    const { runCli } = require("../src/lint-md");
+
+    process.exitCode = undefined;
+    runCli(["node", "lint-md", "--stdin", "--threads", "abc"]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(mockError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "[lint-md] --threads cannot be used with --stdin."
+      )
+    );
+    expect(mockError).not.toHaveBeenCalledWith(
+      expect.stringContaining("INVALID_THREADS")
+    );
+    expect(runStdinLint).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  test("rejects --max-file-size combined with --stdin", async () => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
+    const runStdinLint = jest.fn().mockReturnValue({ exitCode: 0 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint,
+    }));
+    const mockError = jest.spyOn(console, "error").mockImplementation();
+    const { runCli } = require("../src/lint-md");
+
+    process.exitCode = undefined;
+    runCli(["node", "lint-md", "--stdin", "--max-file-size", "5mb"]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(mockError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "[lint-md] --max-file-size cannot be used with --stdin."
+      )
+    );
+    expect(runStdinLint).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  test("aggregates all file-only options rejected with --stdin", async () => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
+    const runStdinLint = jest.fn().mockReturnValue({ exitCode: 0 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint,
+    }));
+    const mockError = jest.spyOn(console, "error").mockImplementation();
+    const { runCli } = require("../src/lint-md");
+
+    process.exitCode = undefined;
+    runCli([
+      "node",
+      "lint-md",
+      "--stdin",
+      "--threads",
+      "4",
+      "--max-file-size",
+      "5mb",
+    ]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(mockError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "[lint-md] The following options cannot be used with --stdin:\n--threads\n--max-file-size"
+      )
+    );
+    expect(runStdinLint).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
 });

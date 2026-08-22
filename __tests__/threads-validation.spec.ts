@@ -7,7 +7,7 @@ const TSX = path.resolve(__dirname, "../node_modules/tsx/dist/cli.mjs");
 const CLI = path.resolve(__dirname, "../src/lint-md.ts");
 
 describe("--threads validation across CLI paths", () => {
-  test("stdin + --threads abc → exit 1 + stderr", () => {
+  test("stdin + --threads abc → rejected as a conflicting option, exit 1", () => {
     try {
       execFileSync(
         process.execPath,
@@ -21,7 +21,9 @@ describe("--threads validation across CLI paths", () => {
       throw new Error("should have thrown");
     } catch (e: any) {
       expect(e.status).toBe(1);
-      expect(e.stderr).toContain("--threads must be a positive integer");
+      expect(e.stderr).toContain(
+        "[lint-md] --threads cannot be used with --stdin."
+      );
     }
   });
 
@@ -42,17 +44,24 @@ describe("--threads validation across CLI paths", () => {
     }
   });
 
-  test("stdin + --threads auto → does not exit 1 (numeric validation skipped)", () => {
-    const result = execFileSync(
-      process.execPath,
-      [TSX, CLI, "--stdin", "--threads", "auto"],
-      {
-        input: "# title\n",
-        encoding: "utf8",
-        stdio: ["pipe", "pipe", "pipe"],
-      }
-    );
-    expect(result).toContain("Done in");
+  test("stdin + --threads auto → rejected as a conflicting option, exit 1", () => {
+    try {
+      execFileSync(
+        process.execPath,
+        [TSX, CLI, "--stdin", "--threads", "auto"],
+        {
+          input: "# title\n",
+          encoding: "utf8",
+          stdio: ["pipe", "pipe", "pipe"],
+        }
+      );
+      throw new Error("should have thrown");
+    } catch (e: any) {
+      expect(e.status).toBe(1);
+      expect(e.stderr).toContain(
+        "[lint-md] --threads cannot be used with --stdin."
+      );
+    }
   });
 
   test("files + --threads auto → exit 0 on a small markdown file", () => {

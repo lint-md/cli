@@ -92,6 +92,31 @@ export const createProgram = (): Command => {
         );
       }
 
+      // --threads and --max-file-size only affect file linting. Reject them
+      // here instead of silently accepting options that would do nothing.
+      const conflictingOptions = [
+        [threads !== undefined, "--threads"],
+        [maxFileSize !== undefined, "--max-file-size"],
+      ]
+        .filter(([present]) => present)
+        .map(([, name]) => name);
+
+      if (stdin && conflictingOptions.length === 1) {
+        throw new CliError(
+          "CONFLICTING_INPUT",
+          `[lint-md] ${conflictingOptions[0]} cannot be used with --stdin.`
+        );
+      }
+
+      if (stdin && conflictingOptions.length > 1) {
+        throw new CliError(
+          "CONFLICTING_INPUT",
+          `[lint-md] The following options cannot be used with --stdin:\n${conflictingOptions.join(
+            "\n"
+          )}`
+        );
+      }
+
       if (isDev) {
         console.log(`dev -- version: ${version}, ${new Date().toString()}`);
       }
