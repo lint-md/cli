@@ -42,7 +42,8 @@ export const formatLintReport = (summary: LintSummary): string => {
         ];
       }),
       {
-        align: ["", "r", "l"],
+        // text-table treats undefined like "" (default alignment).
+        align: [undefined, "r", "l"],
         stringLength(value) {
           return stripAnsi(value).length;
         },

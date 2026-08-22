@@ -11,10 +11,6 @@
     // import of ../package.json makes the effective root the project
     // directory, which preserves the lib/src/** emit layout.
     "rootDir": "./",
-    // TS 6 flips the effective noImplicitAny default to true. Pinned to keep
-    // the upgrade diff behavior-preserving; see format-lint-report.ts for the
-    // known implicit-any sites awaiting cleanup.
-    "noImplicitAny": false,
     "types": [
       "jest",
       "node"
