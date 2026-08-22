@@ -76,6 +76,15 @@ export const createProgram = (): Command => {
       const isFixMode = Boolean(fix);
       const isDev = Boolean(dev);
 
+      // Fail before touching stdin or the file list so neither input mode
+      // starts on a command that mixes both.
+      if (stdin && files.length > 0) {
+        throw new CliError(
+          "CONFLICTING_INPUT",
+          "[lint-md] --stdin cannot be used with file arguments."
+        );
+      }
+
       if (isDev) {
         console.log(`dev -- version: ${version}, ${new Date().toString()}`);
       }

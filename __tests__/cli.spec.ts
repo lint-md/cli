@@ -119,4 +119,47 @@ describe("cli tests", () => {
     await expect(main(["node", "lint-md"])).rejects.toThrow("process.exit");
     expect(mockExit).toHaveBeenCalledWith(0);
   });
+
+  test("rejects file arguments combined with --stdin", async () => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
+    const runStdinLint = jest.fn().mockReturnValue({ exitCode: 0 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint,
+    }));
+    const mockError = jest.spyOn(console, "error").mockImplementation();
+    const { runCli } = require("../src/lint-md");
+
+    process.exitCode = undefined;
+    runCli(["node", "lint-md", "fixture.md", "--stdin"]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(mockError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "[lint-md] --stdin cannot be used with file arguments."
+      )
+    );
+    expect(runStdinLint).not.toHaveBeenCalled();
+    expect(runFileLint).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  test("rejects the -i short form combined with file arguments", async () => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
+    const runStdinLint = jest.fn().mockReturnValue({ exitCode: 0 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint,
+    }));
+    const mockError = jest.spyOn(console, "error").mockImplementation();
+    const { runCli } = require("../src/lint-md");
+
+    process.exitCode = undefined;
+    runCli(["node", "lint-md", "-i", "fixture.md"]);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(runStdinLint).not.toHaveBeenCalled();
+    expect(runFileLint).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
 });
