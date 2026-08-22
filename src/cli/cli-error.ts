@@ -4,7 +4,8 @@ export type CliErrorCode =
   | "CONFIG_NOT_FOUND"
   | "CONFIG_INVALID"
   | "INVALID_THREADS"
-  | "INVALID_MAX_FILE_SIZE";
+  | "INVALID_MAX_FILE_SIZE"
+  | "CONFLICTING_INPUT";
 
 export class CliError extends Error {
   constructor(
