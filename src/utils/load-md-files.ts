@@ -28,5 +28,7 @@ export const loadMdFiles = async (
     if (extensions.some((ext) => fullPath.endsWith(ext))) files.add(fullPath);
   }
 
-  return [...files];
+  // Sort so lint report order stays stable across OS, filesystem, and
+  // future glob traversal changes.
+  return [...files].sort();
 };
