@@ -44,6 +44,9 @@ try {
   const packOutput = run("npm", [
     "pack",
     "--json",
+    // The outer `npm publish --dry-run` propagates npm_config_dry_run into
+    // this script; force a real tarball for the local smoke test.
+    "--dry-run=false",
     "--pack-destination",
     temporaryDirectory,
   ]);
@@ -70,6 +73,8 @@ try {
     "--omit=dev",
     "--no-audit",
     "--no-fund",
+    // Same npm_config_dry_run propagation; force a real installation.
+    "--dry-run=false",
     tarball,
   ]);
 
