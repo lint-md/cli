@@ -95,6 +95,20 @@ describe("symlink security", () => {
     expect(result).toEqual([]);
   });
 
+  test("loadMdFiles returns files in sorted order", async () => {
+    fs.writeFileSync(path.join(tmpDir, "b.md"), "# b");
+    fs.writeFileSync(path.join(tmpDir, "a.md"), "# a");
+    fs.writeFileSync(path.join(tmpDir, "c.md"), "# c");
+
+    const result = await loadMdFiles([path.join(tmpDir, "*.md")], []);
+
+    expect(result).toEqual([
+      path.join(tmpDir, "a.md"),
+      path.join(tmpDir, "b.md"),
+      path.join(tmpDir, "c.md"),
+    ]);
+  });
+
   test("loadMdFiles respects extensions filter", async () => {
     fs.writeFileSync(path.join(tmpDir, "a.md"), "# a");
     fs.writeFileSync(path.join(tmpDir, "b.txt"), "text");
