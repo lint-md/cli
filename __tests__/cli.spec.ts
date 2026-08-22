@@ -1,3 +1,5 @@
+import stripAnsi from "strip-ansi";
+
 describe("cli tests", () => {
   const originalArgv = process.argv;
   const originalExitCode = process.exitCode;
@@ -248,10 +250,10 @@ describe("cli tests", () => {
     ]);
     await new Promise<void>((resolve) => setImmediate(resolve));
 
-    expect(mockError).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "[lint-md] The following options cannot be used with --stdin:\n--threads\n--max-file-size"
-      )
+    // chalk wraps each line of a multiline message in ANSI codes, so
+    // compare against the stripped text.
+    expect(stripAnsi(String(mockError.mock.calls[0][0]))).toBe(
+      "[lint-md] The following options cannot be used with --stdin:\n--threads\n--max-file-size"
     );
     expect(runStdinLint).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
