@@ -165,6 +165,94 @@ describe("configuration validation", () => {
     );
   });
 
+  test("rejects an unknown configuration field", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(configPath, JSON.stringify({ extensons: [".md"] }), "utf8");
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.code).toBe("CONFIG_INVALID");
+    expect(error.detail).toContain('Unknown configuration field "extensons".');
+  });
+
+  test("rejects unknown fields without fuzzy suggestions", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ excludeFile: ["dist/**"] }),
+      "utf8"
+    );
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.detail).toContain(
+      'Unknown configuration field "excludeFile".'
+    );
+    expect(error.detail).not.toContain("Did you mean");
+  });
+
+  test("reports all unknown fields", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ threads: 2, extensionsX: [], extra: true }),
+      "utf8"
+    );
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.detail).toBe(
+      [
+        'Unknown configuration field "threads".',
+        'Unknown configuration field "extensionsX".',
+        'Unknown configuration field "extra".',
+      ].join("\n")
+    );
+  });
+
+  test("aggregates unknown-field and type errors", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ extensons: [".md"], excludeFiles: "node_modules" }),
+      "utf8"
+    );
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.detail).toBe(
+      [
+        '"excludeFiles" must be an array of strings.',
+        'Unknown configuration field "extensons".',
+      ].join("\n")
+    );
+  });
+
+  test("sanitizes control characters in unknown field names", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(configPath, '{"evil\\u001B[31mfield": 1}', "utf8");
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.detail).toContain('Unknown configuration field "evil');
+    expect(error.detail).not.toContain("\u001B");
+  });
+
+  test("does not reject fields inside rules", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({
+        rules: { "some-future-core-rule": { option: true } },
+      }),
+      "utf8"
+    );
+
+    expect(getLintConfig(configPath)).toMatchObject({
+      rules: { "some-future-core-rule": { option: true } },
+    });
+  });
+
   test("accepts a well-shaped configuration and keeps defaults for absent fields", () => {
     const configPath = path.join(tmpDir, ".lintmdrc");
     writeFileSync(
