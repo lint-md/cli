@@ -4,6 +4,13 @@ import * as path from "path";
 import { CliError } from "../cli/cli-error";
 import type { CLIConfig, ThreadCount } from "../types";
 import { parseSize } from "./parse-size";
+import { sanitizeTerminalText } from "./sanitize-terminal";
+
+const KNOWN_CONFIG_FIELDS: ReadonlySet<string> = new Set([
+  "excludeFiles",
+  "extensions",
+  "rules",
+]);
 
 const collectStringArrayErrors = (field: string, value: unknown): string[] => {
   if (!Array.isArray(value)) {
@@ -51,6 +58,18 @@ export const validateConfigShape = (
       Array.isArray(config.rules))
   ) {
     errors.push('"rules" must be an object.');
+  }
+
+  // Unknown root fields are rejected, not ignored: a typo like "extensons"
+  // would otherwise silently fall back to defaults. Field names come from
+  // user JSON, so sanitize before embedding in terminal output.
+  for (const field of Object.keys(config)) {
+    if (KNOWN_CONFIG_FIELDS.has(field)) continue;
+    errors.push(
+      `Unknown configuration field ${JSON.stringify(
+        sanitizeTerminalText(field)
+      )}.`
+    );
   }
 
   if (errors.length > 0) {
