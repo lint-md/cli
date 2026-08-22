@@ -20,6 +20,11 @@
 
 - enable `noImplicitAny` ([#162](https://github.com/lint-md/cli/pull/162))
 
+### Tests
+
+- make CLI error assertions ANSI-safe ([#176](https://github.com/lint-md/cli/pull/176))
+- run the package smoke test during `npm publish --dry-run` ([#178](https://github.com/lint-md/cli/pull/178))
+
 ### Tooling
 
 - align ts-jest with Jest 30 support ([#154](https://github.com/lint-md/cli/pull/154))
