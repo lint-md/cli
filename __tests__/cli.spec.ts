@@ -120,6 +120,20 @@ describe("cli tests", () => {
     expect(mockExit).toHaveBeenCalledWith(0);
   });
 
+  test("skips lint setup when no input is provided", async () => {
+    const getLintConfig = jest.fn();
+    jest.doMock("../src/utils/configure", () => ({ getLintConfig }));
+    const mockExit = jest.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("process.exit");
+    }) as never);
+    const { main } = require("../src/lint-md");
+
+    await expect(main(["node", "lint-md"])).rejects.toThrow("process.exit");
+
+    expect(getLintConfig).not.toHaveBeenCalled();
+    expect(mockExit).toHaveBeenCalledWith(0);
+  });
+
   test("rejects file arguments combined with --stdin", async () => {
     const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
     const runStdinLint = jest.fn().mockReturnValue({ exitCode: 0 });
