@@ -68,6 +68,118 @@ describe("configuration validation", () => {
     expect(exitSpy).not.toHaveBeenCalled();
   });
 
+  test.each([
+    ["a string", '"lint-md"'],
+    ["an array", "[1, 2]"],
+    ["a number", "42"],
+    ["null", "null"],
+  ])("rejects a configuration whose root is %s", (_, content) => {
+    const configPath = path.join(tmpDir, "root.json");
+    writeFileSync(configPath, content, "utf8");
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error).toMatchObject({
+      code: "CONFIG_INVALID",
+      message: `[lint-md] Configure file '${configPath}' is invalid.`,
+    });
+    expect(error.detail).toBe("The configuration root must be a JSON object.");
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  test("rejects a non-array excludeFiles", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ excludeFiles: "node_modules" }),
+      "utf8"
+    );
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.code).toBe("CONFIG_INVALID");
+    expect(error.detail).toContain(
+      '"excludeFiles" must be an array of strings.'
+    );
+  });
+
+  test("rejects a non-string element inside excludeFiles", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ excludeFiles: ["**/node_modules/**", 42] }),
+      "utf8"
+    );
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.code).toBe("CONFIG_INVALID");
+    expect(error.detail).toContain('"excludeFiles[1]" must be a string.');
+  });
+
+  test("rejects a non-array extensions", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(configPath, JSON.stringify({ extensions: ".md" }), "utf8");
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.code).toBe("CONFIG_INVALID");
+    expect(error.detail).toContain('"extensions" must be an array of strings.');
+  });
+
+  test.each([
+    ["an array", []],
+    ["a string", "strict"],
+    ["null", null],
+  ])("rejects rules that are %s", (_, rules) => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(configPath, JSON.stringify({ rules }), "utf8");
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.code).toBe("CONFIG_INVALID");
+    expect(error.detail).toContain('"rules" must be an object.');
+  });
+
+  test("reports all shape errors in one error", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({
+        excludeFiles: "node_modules",
+        extensions: ".md",
+        rules: [],
+      }),
+      "utf8"
+    );
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.detail).toBe(
+      [
+        '"excludeFiles" must be an array of strings.',
+        '"extensions" must be an array of strings.',
+        '"rules" must be an object.',
+      ].join("\n")
+    );
+  });
+
+  test("accepts a well-shaped configuration and keeps defaults for absent fields", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ excludeFiles: ["dist/**"], extensions: [".md"] }),
+      "utf8"
+    );
+
+    expect(getLintConfig(configPath)).toEqual({
+      excludeFiles: ["dist/**"],
+      extensions: [".md"],
+      rules: {},
+    });
+  });
+
   test("uses the CPU count when threads are not specified", () => {
     expect(getThreadCount(undefined)).toBe(cpus().length);
     expect(getThreadCount(false)).toBe(cpus().length);
