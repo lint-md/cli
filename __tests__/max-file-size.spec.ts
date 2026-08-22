@@ -2,7 +2,7 @@ import { writeFileSync } from "fs";
 import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import * as path from "path";
-import { execFileSync } from "child_process";
+import { spawnSync } from "child_process";
 import { filterFilesByMaxSize } from "../src/utils/filter-by-max-size";
 import { STAT_CONCURRENCY_LIMIT } from "../src/utils/file-stat";
 import { parseSize } from "../src/utils/parse-size";
@@ -120,20 +120,18 @@ describe("--max-file-size CLI behavior", () => {
   const runCli = (
     args: string[]
   ): { stdout: string; stderr: string; status: number } => {
-    try {
-      const stdout = execFileSync(process.execPath, [TSX, CLI, ...args], {
-        cwd: tmpDir,
-        encoding: "utf8",
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-      return { stdout, stderr: "", status: 0 };
-    } catch (e: any) {
-      return {
-        stdout: e.stdout ?? "",
-        stderr: e.stderr ?? "",
-        status: e.status ?? 1,
-      };
-    }
+    // spawnSync captures both streams for success and failure exits alike;
+    // execFileSync only exposes stderr through the thrown error.
+    const result = spawnSync(process.execPath, [TSX, CLI, ...args], {
+      cwd: tmpDir,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    return {
+      stdout: result.stdout ?? "",
+      stderr: result.stderr ?? "",
+      status: result.status ?? 1,
+    };
   };
 
   test("invalid size (1.5mb) -> exit 1 + stderr", () => {
@@ -194,15 +192,17 @@ describe("--max-file-size CLI behavior", () => {
     expect(after).toBe(largeOriginal);
   });
 
-  test("all files filtered out -> No markdown files message", () => {
+  test("all files filtered out -> size-filter message, exit 0", () => {
     const large = path.join(tmpDir, "large.md");
     writeFileSyncHelper(
       large,
       `${Buffer.alloc(200 * 1024, "a")}\n${VIOLATION}`
     );
-    const { status, stdout } = runCli([large, "--max-file-size", "100kb"]);
+    const { status, stderr } = runCli([large, "--max-file-size", "100kb"]);
     expect(status).toBe(0);
-    expect(stdout).toContain("🎉 No markdown files to lint 🎉");
+    expect(stderr).toContain(
+      "[lint-md] No Markdown files remain after file-size filtering."
+    );
   });
 
   test("works together with --threads auto on remaining files", () => {

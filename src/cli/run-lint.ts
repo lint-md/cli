@@ -17,6 +17,7 @@ import {
 import { getExecutionErrorWarnings } from "../utils/report-execution-errors";
 import { runTasksWithLimit } from "../utils/run-tasks-with-limit";
 import { summarizeLintResults } from "../utils/summarize-lint-results";
+import { sanitizeTerminalText } from "../utils/sanitize-terminal";
 import { toBatchLintItem } from "../utils/to-batch-lint-item";
 import {
   FAILURE_EXIT,
@@ -146,13 +147,25 @@ export const runFileLint = async ({
 
   let mdFiles = await loadMdFiles(files, excludeFiles, extensions);
 
-  if (maxFileSizeBytes !== null) {
-    mdFiles = await filterFilesByMaxSize(mdFiles, maxFileSizeBytes);
+  // Empty discovery stays a success so local usage keeps exit 0.
+  // The message names the cause instead of a generic "no files" note.
+  if (!mdFiles.length) {
+    const patterns = files
+      .map((file) => JSON.stringify(sanitizeTerminalText(file)))
+      .join(", ");
+    console.error(`[lint-md] No Markdown files matched: ${patterns}`);
+    return SUCCESS_EXIT;
   }
 
-  if (!mdFiles.length) {
-    console.log("🎉 No markdown files to lint 🎉");
-    return SUCCESS_EXIT;
+  if (maxFileSizeBytes !== null) {
+    mdFiles = await filterFilesByMaxSize(mdFiles, maxFileSizeBytes);
+
+    if (!mdFiles.length) {
+      console.error(
+        "[lint-md] No Markdown files remain after file-size filtering."
+      );
+      return SUCCESS_EXIT;
+    }
   }
 
   const concurrencyDecision = await resolveAdaptiveConcurrency(
