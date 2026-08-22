@@ -75,11 +75,12 @@ The image runs as a non-root user by default. If the mounted directory has stric
 
 ## Common Options
 
-- `-c, --config [configure-file]`: use a configuration file, defaults to `./.lintmdrc`
+- `-c, --config <configure-file>`: use a configuration file, defaults to `./.lintmdrc`
 - `-f, --fix`: automatically fix fixable issues
-- `-t, --threads [thread-count]`: set the number of worker threads
+- `-t, --threads [thread-count]`: set the number of worker threads; use `auto` to adapt to file sizes, defaults to the CPU count
 - `-s, --suppress-warnings`: ignore warnings when deciding the exit code, which helps with gradual CI adoption
 - `-i, --stdin`: read Markdown content from standard input
+- `--max-file-size <size>`: skip Markdown files larger than `<size>` (e.g. `5mb`, `500kb`, `1gb`), with a warning to stderr
 - `-d, --dev`: enable development debug mode
 - `-v, --version`: print the current version
 
