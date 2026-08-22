@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.3.0](https://github.com/lint-md/cli/compare/v2.2.5...v2.3.0) (2026-08-22)
+
+### Features
+
+- validate CLI configuration shape ([#146](https://github.com/lint-md/cli/pull/146))
+- reject unknown configuration fields ([#164](https://github.com/lint-md/cli/pull/164))
+
+### Bug Fixes
+
+- make lint result ordering deterministic ([#148](https://github.com/lint-md/cli/pull/148))
+- clarify empty file discovery output ([#152](https://github.com/lint-md/cli/pull/152))
+- reject file arguments with `--stdin` ([#166](https://github.com/lint-md/cli/pull/166))
+- avoid lint setup when no input is provided ([#168](https://github.com/lint-md/cli/pull/168))
+- reject file-only options with `--stdin` ([#170](https://github.com/lint-md/cli/pull/170))
+- clarify the `--suppress-warnings` help text ([#172](https://github.com/lint-md/cli/pull/172))
+
+### Refactoring
+
+- enable `noImplicitAny` ([#162](https://github.com/lint-md/cli/pull/162))
+
+### Tooling
+
+- align ts-jest with Jest 30 support ([#154](https://github.com/lint-md/cli/pull/154))
+- upgrade TypeScript from `^4.8.4` to `^6.0.3` in two steps ([#156](https://github.com/lint-md/cli/pull/156), [#160](https://github.com/lint-md/cli/pull/160))
+- modernize the tsconfig to NodeNext resolution ([#158](https://github.com/lint-md/cli/pull/158))
+
+### Documentation
+
+- sync CLI options with current behavior ([#150](https://github.com/lint-md/cli/pull/150))
+
+### CI/CD
+
+- release on version tags ([#144](https://github.com/lint-md/cli/pull/144))
+
 ## [2.2.5](https://github.com/lint-md/cli/compare/v2.2.4...v2.2.5) (2026-08-10)
 
 ### Bug Fixes
