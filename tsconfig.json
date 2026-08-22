@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "removeComments": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "isolatedModules": true,
     "types": [
       "jest",
       "node"
@@ -13,7 +14,6 @@
     "allowJs": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "baseUrl": "./",
     "outDir": "lib"
   },
   "include": [

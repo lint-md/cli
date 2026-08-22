@@ -13,7 +13,7 @@
   "scripts": {
     "test": "jest --no-cache",
     "pretest": "npm run build",
-    "build:cjs": "tsc -p tsconfig.json --target ESNext --module commonjs --outDir lib",
+    "build:cjs": "tsc -p tsconfig.json --target ESNext --outDir lib",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "lint": "npm run typecheck && prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
