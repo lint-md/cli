@@ -94,17 +94,32 @@ describe("runFileLint", () => {
     expect(mockLoadMdFiles).not.toHaveBeenCalled();
   });
 
-  test("returns success when file discovery returns no matches", async () => {
+  test("reports unmatched patterns and returns success when discovery finds no files", async () => {
     mockLoadMdFiles.mockResolvedValue([]);
-    const exit = jest.spyOn(process, "exit").mockImplementation((() => {
-      throw new Error("process.exit");
-    }) as never);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
-    const outcome = await runFileLint(makeOptions());
+    const outcome = await runFileLint(makeOptions({ files: ["docs/*.md"] }));
 
-    expect(console.log).toHaveBeenCalledWith("🎉 No markdown files to lint 🎉");
-    expect(exit).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[lint-md] No Markdown files matched: "docs/*.md"'
+    );
     expect(outcome).toEqual({ exitCode: 0 });
+    expect(mockFilterFilesByMaxSize).not.toHaveBeenCalled();
+  });
+
+  test("reports size filtering when all discovered files are skipped", async () => {
+    mockLoadMdFiles.mockResolvedValue(["large.md"]);
+    mockFilterFilesByMaxSize.mockResolvedValue([]);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    const outcome = await runFileLint(makeOptions({ maxFileSizeBytes: 100 }));
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "[lint-md] No Markdown files remain after file-size filtering."
+    );
+    expect(outcome).toEqual({ exitCode: 0 });
+    expect(mockResolveAdaptiveConcurrency).not.toHaveBeenCalled();
+    expect(mockBatchLint).not.toHaveBeenCalled();
   });
 
   test("filters files before concurrency and batch decisions", async () => {
