@@ -2,7 +2,7 @@ import { writeFileSync } from "fs";
 import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import * as path from "path";
-import { execFileSync, spawnSync } from "child_process";
+import { spawnSync } from "child_process";
 import { filterFilesByMaxSize } from "../src/utils/filter-by-max-size";
 import { STAT_CONCURRENCY_LIMIT } from "../src/utils/file-stat";
 import { parseSize } from "../src/utils/parse-size";
