@@ -76,6 +76,13 @@ export const createProgram = (): Command => {
       const isFixMode = Boolean(fix);
       const isDev = Boolean(dev);
 
+      // No input at all: show help before touching config, threads, or
+      // stdin. A broken .lintmdrc must not turn bare "lint-md" into a
+      // config error.
+      if (!files.length && !stdin) {
+        program.help();
+      }
+
       // Fail before touching stdin or the file list so neither input mode
       // starts on a command that mixes both.
       if (stdin && files.length > 0) {
@@ -130,11 +137,6 @@ export const createProgram = (): Command => {
 export const main = async (argv: string[] = process.argv): Promise<void> => {
   const program = createProgram();
   await program.parseAsync(argv);
-
-  const isStdin = argv.includes("--stdin") || argv.includes("-i");
-  if (!program.args.length && !isStdin) {
-    program.help();
-  }
 };
 
 export const runCli = (argv: string[] = process.argv): void => {
