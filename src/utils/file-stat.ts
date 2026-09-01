@@ -4,18 +4,19 @@ import { runTasksWithLimit } from "./run-tasks-with-limit";
 // Bound stat calls to prevent file descriptor bursts in large repositories.
 export const STAT_CONCURRENCY_LIMIT = 128;
 
-export const getMaxFileSize = async (filePaths: string[]): Promise<number> => {
-  if (filePaths.length === 0) {
-    return 0;
-  }
+export interface FileStat {
+  path: string;
+  size: number;
+}
 
-  // Scan all files because dev output reports the true maximum size.
-  const sizes = await runTasksWithLimit(
-    filePaths.map(
-      (filePath) => () => stat(filePath).then((stats) => stats.size)
-    ),
+export const statFiles = async (filePaths: string[]): Promise<FileStat[]> =>
+  runTasksWithLimit(
+    filePaths.map((filePath) => async () => ({
+      path: filePath,
+      size: (await stat(filePath)).size,
+    })),
     STAT_CONCURRENCY_LIMIT
   );
 
-  return sizes.reduce((max, current) => (current > max ? current : max), 0);
-};
+export const getMaxFileSize = (fileStats: FileStat[]): number =>
+  fileStats.reduce((max, current) => Math.max(max, current.size), 0);

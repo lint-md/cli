@@ -7,6 +7,7 @@ import { resolveAdaptiveConcurrency } from "../utils/adaptive-concurrency";
 import { batchLint } from "../utils/batch-lint";
 import { loadMdFiles } from "../utils/load-md-files";
 import { filterFilesByMaxSize } from "../utils/filter-by-max-size";
+import { getMaxFileSize, statFiles, type FileStat } from "../utils/file-stat";
 import { formatCoreError } from "../utils/format-core-error";
 import { formatLintReport } from "../utils/format-lint-report";
 import { getUnappliedFixesWarnings } from "../utils/report-unapplied-fixes";
@@ -157,8 +158,14 @@ export const runFileLint = async ({
     return SUCCESS_EXIT;
   }
 
+  let fileStats: FileStat[] = [];
+  if (maxFileSizeBytes !== null || threadCount === "auto") {
+    fileStats = await statFiles(mdFiles);
+  }
+
   if (maxFileSizeBytes !== null) {
-    mdFiles = await filterFilesByMaxSize(mdFiles, maxFileSizeBytes);
+    fileStats = filterFilesByMaxSize(fileStats, maxFileSizeBytes);
+    mdFiles = fileStats.map(({ path }) => path);
 
     if (!mdFiles.length) {
       console.error(
@@ -170,7 +177,8 @@ export const runFileLint = async ({
 
   const concurrencyDecision = await resolveAdaptiveConcurrency(
     threadCount,
-    mdFiles
+    mdFiles,
+    getMaxFileSize(fileStats)
   );
   const effectiveThreads = concurrencyDecision.concurrency;
 
