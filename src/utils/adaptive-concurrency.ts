@@ -3,6 +3,7 @@ import type { ThreadCount } from "../types";
 
 const ONE_MIB = 1024 * 1024;
 const FIVE_MIB = 5 * ONE_MIB;
+const ADAPTIVE_SMALL_CAP = 4;
 const ADAPTIVE_MEDIUM_CAP = 2;
 const ADAPTIVE_LARGE_FILE_THRESHOLD = ONE_MIB;
 const ADAPTIVE_HUGE_FILE_THRESHOLD = FIVE_MIB;
@@ -37,7 +38,7 @@ export const resolveAdaptiveConcurrency = async (
     };
   }
 
-  let limit = requestedConcurrency;
+  let limit = Math.min(requestedConcurrency, ADAPTIVE_SMALL_CAP);
   if (maxFileSize >= ADAPTIVE_HUGE_FILE_THRESHOLD) {
     limit = 1;
   } else if (maxFileSize >= ADAPTIVE_LARGE_FILE_THRESHOLD) {

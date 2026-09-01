@@ -174,6 +174,37 @@ describe("runFileLint", () => {
     expect(outcome).toEqual({ exitCode: 0 });
   });
 
+  test("reports the small-file auto cap in development mode", async () => {
+    const fileStats = Array.from({ length: 8 }, (_, index) => ({
+      path: `small-${index}.md`,
+      size: 512 * 1024,
+    }));
+    mockLoadMdFiles.mockResolvedValue(fileStats.map(({ path }) => path));
+    mockStatFiles.mockResolvedValue(fileStats);
+    mockResolveAdaptiveConcurrency.mockResolvedValue({
+      concurrency: 4,
+      maxFileSize: 512 * 1024,
+      requestedConcurrency: 16,
+    });
+
+    await runFileLint(
+      makeOptions({
+        isDev: true,
+        threadCount: "auto",
+      })
+    );
+
+    expect(console.log).toHaveBeenCalledWith(
+      "[lint-md] Adaptive concurrency: requested auto, effective 4, max file 0.50 MiB"
+    );
+    expect(mockBatchLint).toHaveBeenCalledWith(
+      4,
+      fileStats.map(({ path }) => path),
+      false,
+      {}
+    );
+  });
+
   test("reports rule failures to stderr and returns failure without timing", async () => {
     const failedResult: BatchLintItem = {
       path: "failed.md",

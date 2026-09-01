@@ -407,18 +407,18 @@ describe("resolveAdaptiveConcurrency", () => {
       });
     });
 
-    test("small files (< 1 MiB) use cpuLimit clamped to fileCount", async () => {
-      const files = await Promise.all([
-        writeSizedFile("a.md", 1024),
-        writeSizedFile("b.md", 2048),
-        writeSizedFile("c.md", 4096),
-      ]);
+    test("small files (< 1 MiB) cap concurrency at 4", async () => {
+      const files = await Promise.all(
+        Array.from({ length: 8 }, (_, index) =>
+          writeSizedFile(`small-${index}.md`, 4096)
+        )
+      );
       const cpuLimit = availableParallelism();
       const statSpy = jest.spyOn(require("fs/promises"), "stat");
 
       try {
         expect(await resolveAdaptiveConcurrency("auto", files, 4096)).toEqual({
-          concurrency: Math.min(cpuLimit, files.length),
+          concurrency: Math.min(cpuLimit, 4, files.length),
           maxFileSize: 4096,
           requestedConcurrency: cpuLimit,
         });
