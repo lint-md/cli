@@ -1,6 +1,14 @@
 name: docker
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "package.json"
+      - ".github/workflows/docker.yml"
   pull_request:
     paths:
       - "Dockerfile"
