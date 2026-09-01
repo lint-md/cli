@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import * as path from "path";
 import { spawnSync } from "child_process";
 import { filterFilesByMaxSize } from "../src/utils/filter-by-max-size";
-import { STAT_CONCURRENCY_LIMIT } from "../src/utils/file-stat";
+import { STAT_CONCURRENCY_LIMIT, statFiles } from "../src/utils/file-stat";
 import { parseSize } from "../src/utils/parse-size";
 
 const TSX = path.resolve(__dirname, "../node_modules/tsx/dist/cli.mjs");
@@ -35,8 +35,11 @@ describe("filterFilesByMaxSize (unit)", () => {
 
     const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     try {
-      const kept = await filterFilesByMaxSize([small, large], parseSize("1kb"));
-      expect(kept).toEqual([small]);
+      const kept = filterFilesByMaxSize(
+        await statFiles([small, large]),
+        parseSize("1kb")
+      );
+      expect(kept.map(({ path }) => path)).toEqual([small]);
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining("warning: skipped large Markdown file")
       );
@@ -52,8 +55,11 @@ describe("filterFilesByMaxSize (unit)", () => {
     await writeFile(a, VIOLATION, "utf8");
     await writeFile(b, VIOLATION, "utf8");
 
-    const kept = await filterFilesByMaxSize([a, b], parseSize("10mb"));
-    expect(kept.sort()).toEqual([a, b].sort());
+    const kept = filterFilesByMaxSize(
+      await statFiles([a, b]),
+      parseSize("10mb")
+    );
+    expect(kept.map(({ path }) => path).sort()).toEqual([a, b].sort());
   });
 
   test("bounds stat concurrency to STAT_CONCURRENCY_LIMIT", async () => {
@@ -82,7 +88,10 @@ describe("filterFilesByMaxSize (unit)", () => {
       });
 
     try {
-      const kept = await filterFilesByMaxSize(filePaths, parseSize("10mb"));
+      const kept = filterFilesByMaxSize(
+        await statFiles(filePaths),
+        parseSize("10mb")
+      );
       expect(kept).toHaveLength(fileCount);
       expect(statSpy).toHaveBeenCalledTimes(fileCount);
       expect(maxInFlight).toBeGreaterThan(1);
@@ -94,9 +103,7 @@ describe("filterFilesByMaxSize (unit)", () => {
 
   test("propagates stat failures", async () => {
     const missing = path.join(tmpDir, "missing.md");
-    await expect(
-      filterFilesByMaxSize([missing], parseSize("10mb"))
-    ).rejects.toThrow();
+    await expect(statFiles([missing])).rejects.toThrow();
   });
 });
 

@@ -1,6 +1,7 @@
 import { resolveAdaptiveConcurrency } from "../src/utils/adaptive-concurrency";
 import { batchLint } from "../src/utils/batch-lint";
 import { filterFilesByMaxSize } from "../src/utils/filter-by-max-size";
+import { statFiles, type FileStat } from "../src/utils/file-stat";
 import { loadMdFiles } from "../src/utils/load-md-files";
 import { runTasksWithLimit } from "../src/utils/run-tasks-with-limit";
 import { safeWriteFile } from "../src/utils/safe-write-file";
@@ -19,6 +20,10 @@ jest.mock("../src/utils/run-tasks-with-limit", () => ({
 jest.mock("../src/utils/filter-by-max-size", () => ({
   filterFilesByMaxSize: jest.fn(),
 }));
+jest.mock("../src/utils/file-stat", () => ({
+  ...jest.requireActual("../src/utils/file-stat"),
+  statFiles: jest.fn(),
+}));
 jest.mock("../src/utils/load-md-files", () => ({
   loadMdFiles: jest.fn(),
 }));
@@ -31,6 +36,7 @@ const mockFilterFilesByMaxSize = filterFilesByMaxSize as jest.MockedFunction<
   typeof filterFilesByMaxSize
 >;
 const mockLoadMdFiles = loadMdFiles as jest.MockedFunction<typeof loadMdFiles>;
+const mockStatFiles = statFiles as jest.MockedFunction<typeof statFiles>;
 const mockResolveAdaptiveConcurrency =
   resolveAdaptiveConcurrency as jest.MockedFunction<
     typeof resolveAdaptiveConcurrency
@@ -65,7 +71,8 @@ describe("runFileLint", () => {
     jest.resetAllMocks();
     process.exitCode = undefined;
     mockLoadMdFiles.mockResolvedValue(["document.md"]);
-    mockFilterFilesByMaxSize.mockImplementation(async (files) => files);
+    mockStatFiles.mockResolvedValue([{ path: "document.md", size: 0 }]);
+    mockFilterFilesByMaxSize.mockImplementation((files) => files);
     mockResolveAdaptiveConcurrency.mockResolvedValue({
       concurrency: 1,
       maxFileSize: null,
@@ -120,7 +127,8 @@ describe("runFileLint", () => {
 
   test("reports size filtering when all discovered files are skipped", async () => {
     mockLoadMdFiles.mockResolvedValue(["large.md"]);
-    mockFilterFilesByMaxSize.mockResolvedValue([]);
+    mockStatFiles.mockResolvedValue([{ path: "large.md", size: 200 }]);
+    mockFilterFilesByMaxSize.mockReturnValue([]);
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
     const outcome = await runFileLint(makeOptions({ maxFileSizeBytes: 100 }));
@@ -135,17 +143,22 @@ describe("runFileLint", () => {
 
   test("filters files before concurrency and batch decisions", async () => {
     mockLoadMdFiles.mockResolvedValue(["small.md", "large.md"]);
-    mockFilterFilesByMaxSize.mockResolvedValue(["small.md"]);
+    const fileStats: FileStat[] = [
+      { path: "small.md", size: 50 },
+      { path: "large.md", size: 200 },
+    ];
+    mockStatFiles.mockResolvedValue(fileStats);
+    mockFilterFilesByMaxSize.mockReturnValue([fileStats[0]]);
 
     await runFileLint(makeOptions({ maxFileSizeBytes: 100 }));
 
-    expect(mockFilterFilesByMaxSize).toHaveBeenCalledWith(
-      ["small.md", "large.md"],
-      100
+    expect(mockStatFiles).toHaveBeenCalledWith(["small.md", "large.md"]);
+    expect(mockFilterFilesByMaxSize).toHaveBeenCalledWith(fileStats, 100);
+    expect(mockResolveAdaptiveConcurrency).toHaveBeenCalledWith(
+      2,
+      ["small.md"],
+      50
     );
-    expect(mockResolveAdaptiveConcurrency).toHaveBeenCalledWith(2, [
-      "small.md",
-    ]);
     expect(mockBatchLint).toHaveBeenCalledWith(1, ["small.md"], false, {});
     expect(mockFilterFilesByMaxSize.mock.invocationCallOrder[0]).toBeLessThan(
       mockResolveAdaptiveConcurrency.mock.invocationCallOrder[0]
@@ -155,6 +168,7 @@ describe("runFileLint", () => {
   test("returns success and reports timing after a clean lint", async () => {
     const outcome = await runFileLint(makeOptions());
 
+    expect(mockStatFiles).not.toHaveBeenCalled();
     expect(console.log).toHaveBeenCalledWith("");
     expect(console.log).toHaveBeenCalledWith("⌛️Done in 25ms.");
     expect(outcome).toEqual({ exitCode: 0 });
