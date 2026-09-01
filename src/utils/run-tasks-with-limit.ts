@@ -4,11 +4,18 @@ export async function runTasksWithLimit<T>(
 ): Promise<T[]> {
   const results: T[] = [];
   let index = 0;
+  let failed = false;
 
   async function runNext(): Promise<void> {
-    while (index < tasks.length) {
+    while (!failed && index < tasks.length) {
       const currentIndex = index++;
-      results[currentIndex] = await tasks[currentIndex]();
+
+      try {
+        results[currentIndex] = await tasks[currentIndex]();
+      } catch (error) {
+        failed = true;
+        throw error;
+      }
     }
   }
 

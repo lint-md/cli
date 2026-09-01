@@ -40,4 +40,46 @@ describe("runTasksWithLimit", () => {
       runTasksWithLimit([async () => 1, async () => Promise.reject(failure)], 2)
     ).rejects.toBe(failure);
   });
+
+  test("stops scheduling new tasks after the first rejection", async () => {
+    const failure = new Error("task failed");
+    const started: number[] = [];
+    let markSecondStarted!: () => void;
+    let releaseSecond!: () => void;
+    const secondStarted = new Promise<void>((resolve) => {
+      markSecondStarted = resolve;
+    });
+    const secondRelease = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+    const tasks = [
+      async () => {
+        started.push(0);
+        await secondStarted;
+        throw failure;
+      },
+      async () => {
+        started.push(1);
+        markSecondStarted();
+        await secondRelease;
+        return 1;
+      },
+      async () => {
+        started.push(2);
+        return 2;
+      },
+      async () => {
+        started.push(3);
+        return 3;
+      },
+    ];
+
+    const run = runTasksWithLimit(tasks, 2);
+
+    await expect(run).rejects.toBe(failure);
+    releaseSecond();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(started).toEqual([0, 1]);
+  });
 });
