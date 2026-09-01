@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.1](https://github.com/lint-md/cli/compare/v2.3.0...v2.3.1) (2026-09-01)
+
+### Performance Improvements
+
+- use safe auto worker limits by default ([#184](https://github.com/lint-md/cli/pull/184))
+- reuse file stats for filtering and concurrency ([#182](https://github.com/lint-md/cli/pull/182))
+
+### Bug Fixes
+
+- stop scheduling after failure ([#181](https://github.com/lint-md/cli/pull/181))
+
 ## [2.3.0](https://github.com/lint-md/cli/compare/v2.2.5...v2.3.0) (2026-08-22)
 
 ### Features
