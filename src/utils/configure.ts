@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import { availableParallelism } from "os";
 import * as path from "path";
 import { CliError } from "../cli/cli-error";
 import type { CLIConfig, ThreadCount } from "../types";
@@ -129,7 +128,7 @@ export const getThreadCount = (
   }
 
   if (typeof threadCount !== "number" && typeof threadCount !== "string") {
-    return availableParallelism();
+    return "auto";
   }
 
   if (typeof threadCount === "string" && !/^[1-9]\d*$/.test(threadCount)) {

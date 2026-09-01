@@ -46,7 +46,7 @@ export const createProgram = (): Command => {
     .option("-d, --dev", "open dev mode（开启开发者模式）")
     .option(
       "-t, --threads [thread-count]",
-      'Number of worker threads, or "auto" to cap concurrency for large files. Default: CPU count.（执行 Lint / Fix 的线程数，传 "auto" 时根据文件大小自适应）'
+      'Worker threads, or "auto" for conservative file-size limits. Default: auto.（执行 Lint / Fix 的线程数。默认 auto；传数字可显式覆盖自动限制）'
     )
     .option(
       "-s, --suppress-warnings",

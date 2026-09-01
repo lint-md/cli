@@ -1,5 +1,5 @@
 import { mkdtempSync, rmSync, writeFileSync } from "fs";
-import { cpus, tmpdir } from "os";
+import { tmpdir } from "os";
 import * as path from "path";
 import { CliError } from "../src/cli/cli-error";
 import {
@@ -268,10 +268,10 @@ describe("configuration validation", () => {
     });
   });
 
-  test("uses the CPU count when threads are not specified", () => {
-    expect(getThreadCount(undefined)).toBe(cpus().length);
-    expect(getThreadCount(false)).toBe(cpus().length);
-    expect(getThreadCount(true)).toBe(cpus().length);
+  test("uses auto when threads are not specified", () => {
+    expect(getThreadCount(undefined)).toBe("auto");
+    expect(getThreadCount(false)).toBe("auto");
+    expect(getThreadCount(true)).toBe("auto");
   });
 
   test("accepts positive integer thread counts", () => {

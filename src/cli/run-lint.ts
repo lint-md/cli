@@ -184,8 +184,7 @@ export const runFileLint = async ({
 
   if (isDev && concurrencyDecision.maxFileSize !== null) {
     const { maxFileSize, requestedConcurrency } = concurrencyDecision;
-    const adaptiveApplied = maxFileSize >= 1024 * 1024;
-    if (adaptiveApplied && effectiveThreads < requestedConcurrency) {
+    if (effectiveThreads < requestedConcurrency) {
       const maxMiB = (maxFileSize / (1024 * 1024)).toFixed(2);
       console.log(
         `[lint-md] Adaptive concurrency: requested auto, effective ${effectiveThreads}, max file ${maxMiB} MiB`

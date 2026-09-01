@@ -77,12 +77,22 @@ docker run --rm \
 
 - `-c, --config <configure-file>`：指定配置文件（默认 `./.lintmdrc`）
 - `-f, --fix`：自动修复可修复问题
-- `-t, --threads [thread-count]`：设置并发线程数；传 `auto` 时按文件大小自适应，默认取 CPU 核数
+- `-t, --threads [thread-count]`：设置并发线程数；默认 `auto` 按文件大小使用保守上限，传数字可显式覆盖自动限制
 - `-s, --suppress-warnings`：忽略 warning 对退出码的影响（便于 CI 渐进接入）
 - `-i, --stdin`：从标准输入读取 Markdown 内容
 - `--max-file-size <size>`：跳过超过指定大小的 Markdown 文件（如 `5mb`、`500kb`、`1gb`），并向 stderr 输出警告
 - `-d, --dev`：开发调试模式
 - `-v, --version`：查看版本
+
+未指定 `--threads` 时，程序等同于使用 `--threads auto`。`auto` 根据过滤后最大文件的大小设置 worker 上限：
+
+| 过滤后最大文件大小 | worker 上限 |
+| --- | ---: |
+| 小于 `1 MiB` | 4 |
+| 大于或等于 `1 MiB`，且小于 `5 MiB` | 2 |
+| 大于或等于 `5 MiB` | 1 |
+
+实际 worker 数不会超过 CPU 并行度或文件数量。显式传入 `--threads N` 可覆盖上述自动上限。
 
 ## 配置示例（`.lintmdrc`）
 
