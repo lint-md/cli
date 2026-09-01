@@ -62,6 +62,7 @@ describe("cli tests", () => {
       .spyOn(process, "exit")
       .mockImplementation((() => undefined) as never);
     jest.spyOn(console, "log").mockImplementation();
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
     const { main } = require("../src/lint-md");
     process.exitCode = undefined;
 
@@ -78,6 +79,9 @@ describe("cli tests", () => {
 
     expect(settled).toBe(true);
     expect(loadMdFiles).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[lint-md] No Markdown files matched: "fixture.md"'
+    );
     expect(mockExit).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(0);
   });
