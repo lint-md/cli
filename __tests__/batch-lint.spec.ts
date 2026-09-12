@@ -15,7 +15,13 @@ import { makeNotAppliedFix } from "./helpers/not-applied-fix";
 
 const makeItem = (overrides: Partial<BatchLintItem> = {}): BatchLintItem => ({
   path: "doc.md",
-  lintResult: [],
+  diagnostics: [],
+  summary: {
+    errorCount: 0,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+  },
   ...overrides,
 });
 
@@ -60,8 +66,8 @@ describe("batchLint", () => {
         fileB,
       ]);
       actionableResults.forEach((item) => {
-        expect(Array.isArray(item.lintResult)).toBe(true);
-        expect(item.lintResult.length).toBeGreaterThan(0);
+        expect(Array.isArray(item.diagnostics)).toBe(true);
+        expect(item.diagnostics.length).toBeGreaterThan(0);
         expect(item.fixedResult == null).toBe(true);
       });
     });
@@ -79,7 +85,7 @@ describe("batchLint", () => {
 
       expect(actionableResults).toHaveLength(1);
       expect(actionableResults[0].path).toBe(file);
-      expect(actionableResults[0].lintResult[0].name).toBe("no-empty-list");
+      expect(actionableResults[0].diagnostics[0].ruleId).toBe("no-empty-list");
     });
   });
 
@@ -207,13 +213,14 @@ describe("keepLintItem", () => {
     expect(
       keepLintItem(
         makeItem({
-          lintResult: [
+          diagnostics: [
             {
               message: "x",
-              name: "y",
-              content: "z",
+              ruleId: "y",
+              line: 1,
+              column: 1,
               severity: 2,
-              loc: {
+              range: {
                 start: { line: 1, column: 1 },
                 end: { line: 1, column: 1 },
               },

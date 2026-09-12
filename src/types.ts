@@ -1,7 +1,8 @@
 /** CLI 配置 */
 import type {
   LintMdRulesConfig,
-  LintReportItem,
+  LintDiagnostic,
+  LintSummary,
   FixedResult,
   RuleExecutionError,
 } from "@lint-md/core";
@@ -23,10 +24,9 @@ export interface LintWorkerOptions {
 /** batchLint 单个文件的 lint 结果 */
 export interface BatchLintItem {
   path: string;
-  lintResult: LintReportItem[];
+  diagnostics: LintDiagnostic[];
+  summary: LintSummary;
   fixedResult?: FixedResult | null;
-  fixableErrorCount?: number;
-  fixableWarningCount?: number;
   // Per-round, per-phase rule execution errors from @lint-md/core 2.1.5
   // (core #185). CLI surfaces these as stderr warnings and exits 1
   // regardless of --suppress-warnings.

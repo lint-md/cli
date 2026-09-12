@@ -47,9 +47,14 @@ describe("lintWorker executionErrors passthrough", () => {
 
     mockedLintMarkdown.mockReturnValue({
       lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: null,
-      fixableErrorCount: 0,
-      fixableWarningCount: 0,
       executionErrors,
     } as any);
 
@@ -68,9 +73,14 @@ describe("lintWorker executionErrors passthrough", () => {
 
     mockedLintMarkdown.mockReturnValue({
       lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: null,
-      fixableErrorCount: 0,
-      fixableWarningCount: 0,
     } as any);
 
     const result = await lintWorker({
@@ -89,9 +99,14 @@ describe("lintWorker executionErrors passthrough", () => {
 
     mockedFixMarkdown.mockReturnValue({
       lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: { result: "甲 [链接](https://example.com) 乙\n" },
-      fixableErrorCount: 0,
-      fixableWarningCount: 0,
       executionErrors: [],
     } as any);
 

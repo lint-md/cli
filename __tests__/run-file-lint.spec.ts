@@ -208,7 +208,13 @@ describe("runFileLint", () => {
   test("reports rule failures to stderr and returns failure without timing", async () => {
     const failedResult: BatchLintItem = {
       path: "failed.md",
-      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       executionErrors: [
         {
           ruleName: "broken-rule",
@@ -247,12 +253,24 @@ describe("runFileLint", () => {
   test("writes actionable fixes and reports metrics for all results", async () => {
     const cleanResult: BatchLintItem = {
       path: "clean.md",
-      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: { result: "clean", notAppliedFixes: [] },
     };
     const actionableResult: BatchLintItem = {
       path: "actionable.md",
-      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: { result: "fixed", notAppliedFixes: [] },
     };
     const allResults = [cleanResult, actionableResult];
