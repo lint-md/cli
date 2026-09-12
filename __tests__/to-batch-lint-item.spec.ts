@@ -13,6 +13,8 @@ describe("toBatchLintItem", () => {
         fixableErrorCount: 1,
         fixableWarningCount: 2,
       },
+      fixableErrorCount: 1,
+      fixableWarningCount: 2,
       fixedResult: null,
       executionErrors: [],
     };
