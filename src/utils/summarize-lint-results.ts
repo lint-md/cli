@@ -49,9 +49,9 @@ export const summarizeLintResults = (items: BatchLintItem[]): LintSummary => {
       fixableErrorCount,
       fixableWarningCount,
       messages: item.diagnostics.map(
-        ({ range, message, ruleId, severity }) => ({
-          column: range!.start.column,
-          line: range!.start.line,
+        ({ line, column, message, ruleId, severity }) => ({
+          column,
+          line,
           message,
           ruleId,
           severity,

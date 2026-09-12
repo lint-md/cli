@@ -37,6 +37,7 @@ describe("toBatchLintItem", () => {
       notAppliedFixes: [],
     };
     const result: LintMdFixResult = {
+      lintResult: [],
       diagnostics: [],
       summary: {
         errorCount: 0,
@@ -44,6 +45,8 @@ describe("toBatchLintItem", () => {
         fixableErrorCount: 0,
         fixableWarningCount: 0,
       },
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
       fixedResult,
       executionErrors: [],
     };

@@ -82,6 +82,8 @@ describe("summarizeLintResults", () => {
         path: "doc\u0007.md",
         diagnostics: [
           makeDiagnostic(2, {
+            line: 3,
+            column: 5,
             range: {
               start: { line: 3, column: 5 },
               end: { line: 3, column: 6 },
