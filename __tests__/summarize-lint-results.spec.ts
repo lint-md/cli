@@ -1,22 +1,32 @@
-import type { LintReportItem } from "@lint-md/core";
+import type { LintDiagnostic, LintSummary } from "@lint-md/core";
 import type { BatchLintItem } from "../src/types";
 import { summarizeLintResults } from "../src/utils/summarize-lint-results";
 
-const makeReportItem = (
+const makeDiagnostic = (
   severity: number,
-  overrides: Partial<LintReportItem> = {}
-): LintReportItem => ({
-  name: "rule-x",
+  overrides: Partial<LintDiagnostic> = {}
+): LintDiagnostic => ({
+  ruleId: "rule-x",
   message: "some problem",
-  content: "x",
   severity,
-  loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
+  line: 1,
+  column: 1,
+  range: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
+  ...overrides,
+});
+
+const makeSummary = (overrides: Partial<LintSummary> = {}): LintSummary => ({
+  errorCount: 0,
+  warningCount: 0,
+  fixableErrorCount: 0,
+  fixableWarningCount: 0,
   ...overrides,
 });
 
 const makeItem = (overrides: Partial<BatchLintItem> = {}): BatchLintItem => ({
   path: "doc.md",
-  lintResult: [],
+  diagnostics: [],
+  summary: makeSummary(),
   ...overrides,
 });
 
@@ -24,7 +34,8 @@ describe("summarizeLintResults", () => {
   test("counts errors and warnings separately", () => {
     const summary = summarizeLintResults([
       makeItem({
-        lintResult: [makeReportItem(2), makeReportItem(2), makeReportItem(1)],
+        diagnostics: [makeDiagnostic(2), makeDiagnostic(2), makeDiagnostic(1)],
+        summary: makeSummary({ errorCount: 2, warningCount: 1 }),
       }),
     ]);
 
@@ -38,14 +49,22 @@ describe("summarizeLintResults", () => {
     const summary = summarizeLintResults([
       makeItem({
         path: "a.md",
-        lintResult: [makeReportItem(2), makeReportItem(1)],
-        fixableErrorCount: 3,
+        diagnostics: [makeDiagnostic(2), makeDiagnostic(1)],
+        summary: makeSummary({
+          errorCount: 1,
+          warningCount: 1,
+          fixableErrorCount: 3,
+        }),
       }),
       makeItem({
         path: "b.md",
-        lintResult: [makeReportItem(2), makeReportItem(2), makeReportItem(1)],
-        fixableErrorCount: 1,
-        fixableWarningCount: 4,
+        diagnostics: [makeDiagnostic(2), makeDiagnostic(2), makeDiagnostic(1)],
+        summary: makeSummary({
+          errorCount: 2,
+          warningCount: 1,
+          fixableErrorCount: 1,
+          fixableWarningCount: 4,
+        }),
       }),
     ]);
 
@@ -61,16 +80,19 @@ describe("summarizeLintResults", () => {
     const summary = summarizeLintResults([
       makeItem({
         path: "doc\u0007.md",
-        lintResult: [
-          makeReportItem(2, {
-            loc: {
+        diagnostics: [
+          makeDiagnostic(2, {
+            line: 3,
+            column: 5,
+            range: {
               start: { line: 3, column: 5 },
               end: { line: 3, column: 6 },
             },
             message: "bad\nmessage",
-            name: "rule\tid",
+            ruleId: "rule\tid",
           }),
         ],
+        summary: makeSummary({ errorCount: 1 }),
       }),
     ]);
 
@@ -91,8 +113,7 @@ describe("summarizeLintResults", () => {
   test("drops files without lint problems", () => {
     const summary = summarizeLintResults([
       makeItem({
-        fixableErrorCount: 3,
-        fixableWarningCount: 4,
+        summary: makeSummary({ fixableErrorCount: 3, fixableWarningCount: 4 }),
       }),
     ]);
 

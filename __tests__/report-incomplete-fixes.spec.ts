@@ -26,7 +26,13 @@ const makeItem = (
   }
   return {
     path: "docs/example.md",
-    lintResult: [],
+    diagnostics: [],
+    summary: {
+      errorCount: 0,
+      warningCount: 0,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
+    },
     fixedResult,
     ...rest,
   };

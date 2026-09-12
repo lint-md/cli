@@ -4,7 +4,13 @@ import { makeNotAppliedFix } from "./helpers/not-applied-fix";
 
 const makeItem = (overrides: Partial<BatchLintItem> = {}): BatchLintItem => ({
   path: "doc.md",
-  lintResult: [],
+  diagnostics: [],
+  summary: {
+    errorCount: 0,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+  },
   ...overrides,
 });
 

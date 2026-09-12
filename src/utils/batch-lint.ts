@@ -23,7 +23,7 @@ const resolveWorkerFilename = (): string => {
 // errors so the #96 stderr warning + exit(1) have a target. Older cores
 // that predate these fields leave them undefined and are filtered as before.
 export const keepLintItem = (item: BatchLintItem): boolean =>
-  item.lintResult.length > 0 ||
+  item.diagnostics.length > 0 ||
   Boolean(item.fixedResult?.notAppliedFixes?.length) ||
   isIncompleteFix(item) ||
   (item.executionErrors?.length ?? 0) > 0;

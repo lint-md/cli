@@ -68,9 +68,14 @@ describe("runStdinLint", () => {
   test("reports rule failures to stderr and returns failure without timing", () => {
     jest.spyOn(lintCore, "lintMarkdown").mockReturnValue({
       lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: null,
-      fixableErrorCount: 0,
-      fixableWarningCount: 0,
       executionErrors: [
         {
           ruleName: "broken-rule",
@@ -112,9 +117,14 @@ describe("runStdinLint", () => {
   test("keeps fix output pipe-safe when a rule fails", () => {
     jest.spyOn(lintCore, "fixMarkdown").mockReturnValue({
       lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: null,
-      fixableErrorCount: 0,
-      fixableWarningCount: 0,
       executionErrors: [
         {
           ruleName: "broken-rule",

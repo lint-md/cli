@@ -10,7 +10,13 @@ const makeItem = (
   executionErrors?: RuleExecutionError[]
 ): BatchLintItem => ({
   path,
-  lintResult: [],
+  diagnostics: [],
+  summary: {
+    errorCount: 0,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+  },
   ...(executionErrors ? { executionErrors } : {}),
 });
 

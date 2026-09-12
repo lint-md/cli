@@ -19,7 +19,13 @@ const baseItem = (
   }
   return {
     path: "a.md",
-    lintResult: [],
+    diagnostics: [],
+    summary: {
+      errorCount: 0,
+      warningCount: 0,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
+    },
     fixedResult,
     ...rest,
   };
@@ -30,15 +36,16 @@ describe("keepLintItem", () => {
     expect(
       keepLintItem(
         baseItem({
-          lintResult: [
+          diagnostics: [
             {
-              loc: {
+              range: {
                 start: { line: 1, column: 1 },
                 end: { line: 1, column: 2 },
               },
               message: "x",
-              name: "r",
-              content: "x",
+              ruleId: "r",
+              line: 1,
+              column: 1,
               severity: 2 as any,
             },
           ],

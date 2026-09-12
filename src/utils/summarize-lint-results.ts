@@ -1,4 +1,4 @@
-import type { LintReportItem } from "@lint-md/core";
+import type { LintDiagnostic } from "@lint-md/core";
 import type { BatchLintItem } from "../types";
 
 export interface LintMessageSummary {
@@ -6,7 +6,7 @@ export interface LintMessageSummary {
   line: number;
   message: string;
   ruleId: string;
-  severity: LintReportItem["severity"];
+  severity: LintDiagnostic["severity"];
 }
 
 export interface FileLintSummary {
@@ -36,32 +36,27 @@ export const summarizeLintResults = (items: BatchLintItem[]): LintSummary => {
   };
 
   for (const item of items) {
-    const errorCount = item.lintResult.filter(
-      ({ severity }) => severity === 2
-    ).length;
-    const warningCount = item.lintResult.filter(
-      ({ severity }) => severity === 1
-    ).length;
+    const { errorCount, warningCount, fixableErrorCount, fixableWarningCount } =
+      item.summary;
 
     if (errorCount + warningCount === 0) {
       continue;
     }
-
-    const fixableErrorCount = item.fixableErrorCount ?? 0;
-    const fixableWarningCount = item.fixableWarningCount ?? 0;
 
     summary.files.push({
       errorCount,
       filePath: item.path,
       fixableErrorCount,
       fixableWarningCount,
-      messages: item.lintResult.map(({ loc, message, name, severity }) => ({
-        column: loc.start.column,
-        line: loc.start.line,
-        message,
-        ruleId: name,
-        severity,
-      })),
+      messages: item.diagnostics.map(
+        ({ line, column, message, ruleId, severity }) => ({
+          column,
+          line,
+          message,
+          ruleId,
+          severity,
+        })
+      ),
       warningCount,
     });
     summary.errorCount += errorCount;

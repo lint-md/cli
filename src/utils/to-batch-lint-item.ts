@@ -6,9 +6,8 @@ export const toBatchLintItem = (
   result: LintMdResult
 ): BatchLintItem => ({
   path,
-  lintResult: result.lintResult,
+  diagnostics: result.diagnostics,
+  summary: result.summary,
   fixedResult: result.fixedResult,
-  fixableErrorCount: result.fixableErrorCount,
-  fixableWarningCount: result.fixableWarningCount,
   executionErrors: result.executionErrors,
 });
