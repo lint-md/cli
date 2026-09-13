@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 concurrency:
   group: release-${{ github.ref }}
@@ -22,7 +21,6 @@ jobs:
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
 
       - name: Verify tag version
         shell: bash
@@ -43,9 +41,6 @@ jobs:
         id: pack
         shell: bash
         run: echo "file=$(npm pack)" >> "${GITHUB_OUTPUT}"
-
-      - name: Publish package
-        run: npm publish --provenance --access public
 
       - name: Create GitHub Release
         env:
