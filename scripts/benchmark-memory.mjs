@@ -18,6 +18,8 @@ const usage = `Usage: node scripts/benchmark-memory.mjs [options]
 
 Linux only: requires GNU /usr/bin/time -v.
 
+Runs the built CLI (lib/src/lint-md.js). Run \`npm run build\` first.
+
 Options:
   --files <count>            Number of generated Markdown files (default: 8)
   --bytes-per-file <bytes>   Approximate bytes per file (default: 65536)
@@ -118,12 +120,15 @@ try {
     filePaths.push(filePath);
   }
 
-  const tsx = path.join(rootDir, 'node_modules/tsx/dist/cli.mjs');
-  const cli = path.join(rootDir, 'src/lint-md.ts');
+  const cli = path.join(rootDir, 'lib/src/lint-md.js');
+  if (!existsSync(cli)) {
+    throw new Error(
+      `Built CLI not found at ${cli}. Run \`npm run build\` first.`
+    );
+  }
+
   const cliArgs = [
-    '-v',
     process.execPath,
-    tsx,
     cli,
     '--threads',
     String(options.threads),
@@ -172,10 +177,10 @@ try {
 
     const rssMatch = result.stderr.match(
       /Maximum resident set size \(kbytes\): (\d+)/
-    );
+    ) || result.stderr.match(/(\d+)maxresident\)k/);
     const elapsedMatch = result.stderr.match(
       /Elapsed \(wall clock\) time \(h:mm:ss or m:ss\): ([\d:.]+)/
-    );
+    ) || result.stderr.match(/([\d:.]+)elapsed/);
 
     measurements.push({
       run,
