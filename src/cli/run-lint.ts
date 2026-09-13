@@ -97,7 +97,7 @@ export const runStdinLint = ({
   }
 
   try {
-    const result = lintMarkdown(content, rules, false);
+    const result = lintMarkdown(content, { rules });
     const stdinItem = toBatchLintItem("(stdin)", result);
     const summary = summarizeLintResults([stdinItem]);
 

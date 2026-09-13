@@ -150,7 +150,7 @@ console.log(result.fixedResult.result);
 
 `RULE_SEVERITY.ERROR` 等同于规则级别 `2`。
 `fixMarkdown()` 始终执行自动修复。
-只检查时，请使用 `lintMarkdown(markdown, rules, false)`。
+只检查时，请使用 `lintMarkdown(markdown, { rules })`。
 
 `space-around-link` 处理普通链接、自动链接和引用链接。
 它不处理独立图片。

@@ -9,7 +9,7 @@ const lintWorker = async (options: LintWorkerOptions) => {
   const content = await readFile(filePath, "utf8");
   const result = isFixMode
     ? fixMarkdown(content, { rules })
-    : lintMarkdown(content, rules, false);
+    : lintMarkdown(content, { rules: rules ?? {} });
 
   return toBatchLintItem(filePath, result);
 };
