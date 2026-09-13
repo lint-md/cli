@@ -39,7 +39,7 @@ describe("--stdin --fix output", () => {
       }
     );
 
-    const result = lintMarkdown(stdout, {}, false);
+    const result = lintMarkdown(stdout, { rules: {} });
     expect(result.lintResult).toHaveLength(0);
   });
 

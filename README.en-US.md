@@ -141,7 +141,7 @@ console.log(result.fixedResult.result);
 
 `RULE_SEVERITY.ERROR` equals rule level `2`.
 `fixMarkdown()` always applies fixes.
-Use `lintMarkdown(markdown, rules, false)` for lint-only checks.
+Use `lintMarkdown(markdown, { rules })` for lint-only checks.
 
 `space-around-link` handles normal, automatic, and reference links.
 It does not handle standalone images.
