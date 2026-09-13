@@ -29,10 +29,12 @@ export const validateConfigShape = (
   value: unknown,
   configPath: string
 ): CLIConfig => {
+  const safePath = sanitizeTerminalText(configPath);
+
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new CliError(
       "CONFIG_INVALID",
-      `[lint-md] Configure file '${configPath}' is invalid.`,
+      `[lint-md] Configure file '${safePath}' is invalid.`,
       "The configuration root must be a JSON object."
     );
   }
@@ -74,7 +76,7 @@ export const validateConfigShape = (
   if (errors.length > 0) {
     throw new CliError(
       "CONFIG_INVALID",
-      `[lint-md] Configure file '${configPath}' is invalid.`,
+      `[lint-md] Configure file '${safePath}' is invalid.`,
       errors.join("\n")
     );
   }
@@ -86,7 +88,9 @@ export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
   if (configFilePath && !fs.existsSync(configFilePath)) {
     throw new CliError(
       "CONFIG_NOT_FOUND",
-      `lint-md: Configure file '${configFilePath}' is not exist.`
+      `lint-md: Configure file '${sanitizeTerminalText(
+        configFilePath
+      )}' is not exist.`
     );
   }
 
@@ -104,7 +108,9 @@ export const getLintConfig = (configFilePath?: string): Required<CLIConfig> => {
     } catch (error) {
       throw new CliError(
         "CONFIG_INVALID",
-        `[lint-md] Configure file '${configPath}' is invalid.`,
+        `[lint-md] Configure file '${sanitizeTerminalText(
+          configPath
+        )}' is invalid.`,
         error
       );
     }

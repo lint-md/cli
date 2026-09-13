@@ -53,6 +53,14 @@ describe("configuration validation", () => {
     expect(exitSpy).not.toHaveBeenCalled();
   });
 
+  test("sanitizes control characters in missing config paths", () => {
+    const configPath = path.join(tmpDir, "evil\u001B[31m.json");
+
+    const error = captureCliError(() => getLintConfig(configPath));
+
+    expect(error.message).not.toContain("\u001B");
+  });
+
   test("keeps the JSON parse error for an invalid configuration file", () => {
     const configPath = path.join(tmpDir, "invalid.json");
     writeFileSync(configPath, "{ invalid", "utf8");

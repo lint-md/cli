@@ -14,15 +14,15 @@ export interface AdaptiveConcurrencyDecision {
   requestedConcurrency: number;
 }
 
-export const resolveAdaptiveConcurrency = async (
+export const resolveAdaptiveConcurrency = (
   threadCount: ThreadCount,
-  mdFilePaths: string[],
+  fileCount: number,
   maxFileSize: number
-): Promise<AdaptiveConcurrencyDecision> => {
+): AdaptiveConcurrencyDecision => {
   const requestedConcurrency =
     typeof threadCount === "number" ? threadCount : availableParallelism();
 
-  if (mdFilePaths.length === 0) {
+  if (fileCount === 0) {
     return {
       concurrency: 0,
       maxFileSize: threadCount === "auto" ? 0 : null,
@@ -32,7 +32,7 @@ export const resolveAdaptiveConcurrency = async (
 
   if (typeof threadCount === "number") {
     return {
-      concurrency: Math.min(Math.max(threadCount, 1), mdFilePaths.length),
+      concurrency: Math.min(Math.max(threadCount, 1), fileCount),
       maxFileSize: null,
       requestedConcurrency,
     };
@@ -46,7 +46,7 @@ export const resolveAdaptiveConcurrency = async (
   }
 
   return {
-    concurrency: Math.min(Math.max(limit, 1), mdFilePaths.length),
+    concurrency: Math.min(Math.max(limit, 1), fileCount),
     maxFileSize,
     requestedConcurrency,
   };

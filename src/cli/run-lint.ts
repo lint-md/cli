@@ -175,9 +175,9 @@ export const runFileLint = async ({
     }
   }
 
-  const concurrencyDecision = await resolveAdaptiveConcurrency(
+  const concurrencyDecision = resolveAdaptiveConcurrency(
     threadCount,
-    mdFiles,
+    mdFiles.length,
     getMaxFileSize(fileStats)
   );
   const effectiveThreads = concurrencyDecision.concurrency;
