@@ -84,9 +84,8 @@ const runBenchmark = (label) => {
     }
 
     const cliArgs = [
-      '-v', process.execPath,
-      path.join(rootDir, 'node_modules/tsx/dist/cli.mjs'),
-      path.join(rootDir, 'src/lint-md.ts'),
+      process.execPath,
+      path.join(rootDir, 'lib/src/lint-md.js'),
       '--fix',
       '--threads', String(options.threads),
       ...filePaths,
@@ -107,8 +106,10 @@ const runBenchmark = (label) => {
         throw new Error(`${label} run ${run} exited with code ${result.status}`);
       }
 
-      const rssMatch = result.stderr.match(/Maximum resident set size \(kbytes\): (\d+)/);
-      const elapsedMatch = result.stderr.match(/Elapsed \(wall clock\) time.*?: ([\d:.]+)/);
+      const rssMatch = result.stderr.match(/Maximum resident set size \(kbytes\): (\d+)/)
+        || result.stderr.match(/(\d+)maxresident\)k/);
+      const elapsedMatch = result.stderr.match(/Elapsed \(wall clock\) time.*?: ([\d:.]+)/)
+        || result.stderr.match(/([\d:.]+)elapsed/);
       measurements.push({
         run,
         maxRssKiB: rssMatch ? Number(rssMatch[1]) : null,
