@@ -3,6 +3,11 @@ import { jest } from "@jest/globals";
 jest.mock("@lint-md/core", () => ({
   fixMarkdown: jest.fn(),
   lintMarkdown: jest.fn(),
+  FixConvergence: {
+    STABLE: "stable",
+    CYCLE_DETECTED: "cycle",
+    MAX_ROUNDS: "max",
+  },
 }));
 
 import { fixMarkdown, lintMarkdown } from "@lint-md/core";
@@ -117,5 +122,153 @@ describe("lintWorker executionErrors passthrough", () => {
       { rules }
     );
     expect(mockedLintMarkdown).not.toHaveBeenCalled();
+  });
+
+  test("returns compact fixedResult for clean fix items", async () => {
+    const file = path.join(tmpDir, "clean-fix.md");
+    await writeFile(file, "# Clean\n", "utf8");
+
+    mockedFixMarkdown.mockReturnValue({
+      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: {
+        result: "# Clean\n",
+        notAppliedFixes: [],
+        convergence: "stable",
+        metrics: { rounds: 1, wallTime: 0.5, perRound: [0.5] },
+      },
+      executionErrors: [],
+    } as any);
+
+    const result = await lintWorker({
+      filePath: file,
+      rules: {},
+      isFixMode: true,
+    });
+
+    // Compact form: convergence and metrics preserved, result and notAppliedFixes dropped
+    expect(result.fixedResult).toEqual({
+      convergence: "stable",
+      metrics: { rounds: 1, wallTime: 0.5, perRound: [0.5] },
+    });
+    expect(result.fixedResult).not.toHaveProperty("result");
+    expect(result.fixedResult).not.toHaveProperty("notAppliedFixes");
+  });
+
+  test("returns full fixedResult for actionable fix items (diagnostics)", async () => {
+    const file = path.join(tmpDir, "actionable-fix.md");
+    await writeFile(file, "1. hello\n2.\n", "utf8");
+
+    mockedFixMarkdown.mockReturnValue({
+      lintResult: [],
+      diagnostics: [
+        {
+          ruleId: "no-empty-list",
+          message: "empty list item",
+          line: 2,
+          column: 1,
+          severity: 2,
+        },
+      ],
+      summary: {
+        errorCount: 1,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: {
+        result: "1. hello\n2. item\n",
+        notAppliedFixes: [],
+        convergence: "stable",
+      },
+      executionErrors: [],
+    } as any);
+
+    const result = await lintWorker({
+      filePath: file,
+      rules: {},
+      isFixMode: true,
+    });
+
+    // Full form preserved because item has diagnostics
+    expect(result.fixedResult).toHaveProperty("result", "1. hello\n2. item\n");
+    expect(result.fixedResult).toHaveProperty("notAppliedFixes");
+  });
+
+  test("returns full fixedResult when convergence is cycle", async () => {
+    const file = path.join(tmpDir, "cycle-fix.md");
+    await writeFile(file, "# Title\n", "utf8");
+
+    mockedFixMarkdown.mockReturnValue({
+      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: {
+        result: "# Title\n",
+        notAppliedFixes: [],
+        convergence: "cycle",
+        metrics: {
+          rounds: 5,
+          wallTime: 1.0,
+          perRound: [0.2, 0.2, 0.2, 0.2, 0.2],
+        },
+      },
+      executionErrors: [],
+    } as any);
+
+    const result = await lintWorker({
+      filePath: file,
+      rules: {},
+      isFixMode: true,
+    });
+
+    // Full form preserved because isIncompleteFix(item) is true
+    expect(result.fixedResult).toHaveProperty("result", "# Title\n");
+    expect(result.fixedResult).toHaveProperty("notAppliedFixes");
+  });
+
+  test("returns full fixedResult when notAppliedFixes is non-empty", async () => {
+    const file = path.join(tmpDir, "unapplied-fix.md");
+    await writeFile(file, "# Title\n", "utf8");
+
+    mockedFixMarkdown.mockReturnValue({
+      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: {
+        result: "# Title\n",
+        notAppliedFixes: [
+          { targetRule: "r", range: [0, 1], text: "x", reason: "overlap" },
+        ],
+        convergence: "stable",
+      },
+      executionErrors: [],
+    } as any);
+
+    const result = await lintWorker({
+      filePath: file,
+      rules: {},
+      isFixMode: true,
+    });
+
+    // Full form preserved because notAppliedFixes is non-empty
+    expect(result.fixedResult).toHaveProperty("result", "# Title\n");
+    expect(result.fixedResult).toHaveProperty("notAppliedFixes");
   });
 });

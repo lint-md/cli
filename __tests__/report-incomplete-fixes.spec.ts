@@ -67,6 +67,38 @@ describe("report-incomplete-fixes", () => {
     test("returns false when fixedResult is null", () => {
       expect(isIncompleteFix(makeItem({ fixedResult: null }))).toBe(false);
     });
+
+    test("works with compact fixedResult (convergence only)", () => {
+      expect(
+        isIncompleteFix({
+          path: "compact.md",
+          diagnostics: [],
+          summary: {
+            errorCount: 0,
+            warningCount: 0,
+            fixableErrorCount: 0,
+            fixableWarningCount: 0,
+          },
+          fixedResult: { convergence: FixConvergence.CYCLE_DETECTED },
+        })
+      ).toBe(true);
+    });
+
+    test("returns false for compact fixedResult with stable convergence", () => {
+      expect(
+        isIncompleteFix({
+          path: "compact-stable.md",
+          diagnostics: [],
+          summary: {
+            errorCount: 0,
+            warningCount: 0,
+            fixableErrorCount: 0,
+            fixableWarningCount: 0,
+          },
+          fixedResult: { convergence: FixConvergence.STABLE },
+        })
+      ).toBe(false);
+    });
   });
 
   describe("getIncompleteFixWarnings", () => {
