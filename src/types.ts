@@ -21,25 +21,12 @@ export interface LintWorkerOptions {
   isFixMode: boolean;
 }
 
-/** Compact fixed-result for clean files (no diagnostics, no unapplied fixes).
- *  Only carries the fields getFixDevMetrics needs. The full FixedResult.result
- *  (repair Markdown text) is intentionally absent to avoid structured-cloning
- *  large strings across the worker thread boundary. */
-export type CompactFixedResult = Pick<FixedResult, "metrics" | "convergence">;
-
-/** Type guard: true when fixedResult carries the full Markdown text
- *  (result + notAppliedFixes). Compact results from the worker have
- *  these fields absent at runtime. */
-export const isFullFixedResult = (
-  fixedResult: FixedResult | CompactFixedResult
-): fixedResult is FixedResult => "result" in fixedResult;
-
 /** batchLint 单个文件的 lint 结果 */
 export interface BatchLintItem {
   path: string;
   diagnostics: LintDiagnostic[];
   summary: LintSummary;
-  fixedResult?: FixedResult | CompactFixedResult | null;
+  fixedResult?: FixedResult | null;
   // Per-round, per-phase rule execution errors from @lint-md/core 2.1.5
   // (core #185). CLI surfaces these as stderr warnings and exits 1
   // regardless of --suppress-warnings.

@@ -2,7 +2,6 @@ import * as process from "process";
 import { fixMarkdown, lintMarkdown } from "@lint-md/core";
 import type { LintMdRulesConfig } from "@lint-md/core";
 import type { ThreadCount } from "../types";
-import { isFullFixedResult } from "../types";
 import { safeWriteFile } from "../utils/safe-write-file";
 import { resolveAdaptiveConcurrency } from "../utils/adaptive-concurrency";
 import { batchLint } from "../utils/batch-lint";
@@ -224,22 +223,16 @@ export const runFileLint = async ({
         return FAILURE_EXIT;
       }
     } else {
-      const writeTasks = actionableResults
-        .filter(
-          ({ fixedResult }) =>
-            fixedResult != null && isFullFixedResult(fixedResult)
-        )
-        .map(
-          ({ path, fixedResult }) =>
-            () =>
-              safeWriteFile(
-                path,
-                (fixedResult as Extract<typeof fixedResult, { result: string }>)
-                  .result
-              )
-        );
-
-      await runTasksWithLimit(writeTasks, effectiveThreads);
+      await runTasksWithLimit(
+        actionableResults
+          .filter(({ fixedResult }) => fixedResult)
+          .map(
+            ({ path, fixedResult }) =>
+              () =>
+                safeWriteFile(path, fixedResult!.result)
+          ),
+        effectiveThreads
+      );
 
       for (const warning of getIncompleteFixWarnings(actionableResults)) {
         console.error(warning);

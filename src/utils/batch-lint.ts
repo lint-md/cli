@@ -3,7 +3,6 @@ import { existsSync } from "fs";
 import { Piscina } from "piscina";
 import type { LintMdRulesConfig } from "@lint-md/core";
 import type { BatchLintItem, LintWorkerOptions } from "../types";
-import { isFullFixedResult } from "../types";
 import { isIncompleteFix } from "./report-incomplete-fixes";
 import { runTasksWithLimit } from "./run-tasks-with-limit";
 
@@ -25,9 +24,7 @@ const resolveWorkerFilename = (): string => {
 // that predate these fields leave them undefined and are filtered as before.
 export const keepLintItem = (item: BatchLintItem): boolean =>
   item.diagnostics.length > 0 ||
-  (item.fixedResult != null &&
-    isFullFixedResult(item.fixedResult) &&
-    item.fixedResult.notAppliedFixes.length > 0) ||
+  Boolean(item.fixedResult?.notAppliedFixes?.length) ||
   isIncompleteFix(item) ||
   (item.executionErrors?.length ?? 0) > 0;
 

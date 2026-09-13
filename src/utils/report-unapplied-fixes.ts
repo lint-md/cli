@@ -1,5 +1,4 @@
 import type { BatchLintItem } from "../types";
-import { isFullFixedResult } from "../types";
 import { sanitizeTerminalText } from "./sanitize-terminal";
 
 // Returns stderr warning lines for files whose --fix pass left fixes
@@ -13,10 +12,7 @@ export const getUnappliedFixesWarnings = (
   const warnings: string[] = [];
 
   for (const item of lintResult) {
-    const count =
-      item.fixedResult != null && isFullFixedResult(item.fixedResult)
-        ? item.fixedResult.notAppliedFixes.length
-        : 0;
+    const count = item.fixedResult?.notAppliedFixes?.length ?? 0;
     if (count > 0) {
       warnings.push(
         `[lint-md] ${sanitizeTerminalText(
