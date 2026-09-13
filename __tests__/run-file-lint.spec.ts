@@ -73,7 +73,7 @@ describe("runFileLint", () => {
     mockLoadMdFiles.mockResolvedValue(["document.md"]);
     mockStatFiles.mockResolvedValue([{ path: "document.md", size: 0 }]);
     mockFilterFilesByMaxSize.mockImplementation((files) => files);
-    mockResolveAdaptiveConcurrency.mockResolvedValue({
+    mockResolveAdaptiveConcurrency.mockReturnValue({
       concurrency: 1,
       maxFileSize: null,
       requestedConcurrency: 2,
@@ -154,11 +154,7 @@ describe("runFileLint", () => {
 
     expect(mockStatFiles).toHaveBeenCalledWith(["small.md", "large.md"]);
     expect(mockFilterFilesByMaxSize).toHaveBeenCalledWith(fileStats, 100);
-    expect(mockResolveAdaptiveConcurrency).toHaveBeenCalledWith(
-      2,
-      ["small.md"],
-      50
-    );
+    expect(mockResolveAdaptiveConcurrency).toHaveBeenCalledWith(2, 1, 50);
     expect(mockBatchLint).toHaveBeenCalledWith(1, ["small.md"], false, {});
     expect(mockFilterFilesByMaxSize.mock.invocationCallOrder[0]).toBeLessThan(
       mockResolveAdaptiveConcurrency.mock.invocationCallOrder[0]
@@ -181,7 +177,7 @@ describe("runFileLint", () => {
     }));
     mockLoadMdFiles.mockResolvedValue(fileStats.map(({ path }) => path));
     mockStatFiles.mockResolvedValue(fileStats);
-    mockResolveAdaptiveConcurrency.mockResolvedValue({
+    mockResolveAdaptiveConcurrency.mockReturnValue({
       concurrency: 4,
       maxFileSize: 512 * 1024,
       requestedConcurrency: 16,
