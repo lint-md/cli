@@ -118,4 +118,36 @@ describe("keepLintItem", () => {
     expect(keepLintItem(baseItem({ executionErrors: [] }))).toBe(false);
     expect(keepLintItem(baseItem({ executionErrors: undefined }))).toBe(false);
   });
+
+  test("drops compact fixedResult items (no notAppliedFixes)", () => {
+    expect(
+      keepLintItem({
+        path: "clean.md",
+        diagnostics: [],
+        summary: {
+          errorCount: 0,
+          warningCount: 0,
+          fixableErrorCount: 0,
+          fixableWarningCount: 0,
+        },
+        fixedResult: { convergence: "stable" },
+      })
+    ).toBe(false);
+  });
+
+  test("keeps compact fixedResult items with cycle convergence", () => {
+    expect(
+      keepLintItem({
+        path: "cycle.md",
+        diagnostics: [],
+        summary: {
+          errorCount: 0,
+          warningCount: 0,
+          fixableErrorCount: 0,
+          fixableWarningCount: 0,
+        },
+        fixedResult: { convergence: "cycle" },
+      })
+    ).toBe(true);
+  });
 });
