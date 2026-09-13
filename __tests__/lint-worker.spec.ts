@@ -218,7 +218,11 @@ describe("lintWorker executionErrors passthrough", () => {
         result: "# Title\n",
         notAppliedFixes: [],
         convergence: "cycle",
-        metrics: { rounds: 5, wallTime: 1.0, perRound: [0.2, 0.2, 0.2, 0.2, 0.2] },
+        metrics: {
+          rounds: 5,
+          wallTime: 1.0,
+          perRound: [0.2, 0.2, 0.2, 0.2, 0.2],
+        },
       },
       executionErrors: [],
     } as any);

@@ -1,6 +1,11 @@
 import { readFile } from "fs/promises";
 import { fixMarkdown, lintMarkdown } from "@lint-md/core";
-import type { BatchLintItem, CompactFixedResult, LintWorkerOptions } from "../types";
+import type {
+  BatchLintItem,
+  CompactFixedResult,
+  LintWorkerOptions,
+} from "../types";
+import { isFullFixedResult } from "../types";
 import { toBatchLintItem } from "./to-batch-lint-item";
 import { isIncompleteFix } from "./report-incomplete-fixes";
 
@@ -9,7 +14,10 @@ import { isIncompleteFix } from "./report-incomplete-fixes";
 const isCleanFixItem = (item: BatchLintItem): boolean =>
   item.diagnostics.length === 0 &&
   item.fixedResult != null &&
-  (item.fixedResult.notAppliedFixes?.length ?? 0) === 0 &&
+  !(
+    isFullFixedResult(item.fixedResult) &&
+    item.fixedResult.notAppliedFixes?.length > 0
+  ) &&
   !isIncompleteFix(item) &&
   (item.executionErrors?.length ?? 0) === 0;
 

@@ -224,19 +224,22 @@ export const runFileLint = async ({
         return FAILURE_EXIT;
       }
     } else {
-      const fixableResults = actionableResults.filter(
-        ({ fixedResult }) =>
-          fixedResult != null && isFullFixedResult(fixedResult)
-      );
-
-      await runTasksWithLimit(
-        fixableResults.map(
+      const writeTasks = actionableResults
+        .filter(
+          ({ fixedResult }) =>
+            fixedResult != null && isFullFixedResult(fixedResult)
+        )
+        .map(
           ({ path, fixedResult }) =>
             () =>
-              safeWriteFile(path, (fixedResult as { result: string }).result)
-        ),
-        effectiveThreads
-      );
+              safeWriteFile(
+                path,
+                (fixedResult as Extract<typeof fixedResult, { result: string }>)
+                  .result
+              )
+        );
+
+      await runTasksWithLimit(writeTasks, effectiveThreads);
 
       for (const warning of getIncompleteFixWarnings(actionableResults)) {
         console.error(warning);
