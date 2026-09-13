@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.4.0](https://github.com/lint-md/cli/compare/v2.3.1...v2.4.0) (2026-09-13)
+
+### Dependencies
+
+- upgrade `@lint-md/core` from `^2.5.0` to `^2.5.2`
+
+### Performance Improvements
+
+- compare Piscina and direct worker execution in the benchmark
+- measure the built CLI in the benchmark
+
+### Refactoring
+
+- use the options-based `lintMarkdown()` API in the worker
+- sanitize configuration paths in error messages
+- consume canonical diagnostics and summaries from Core
+
 ## [2.3.1](https://github.com/lint-md/cli/compare/v2.3.0...v2.3.1) (2026-09-01)
 
 ### Performance Improvements
