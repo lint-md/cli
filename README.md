@@ -94,6 +94,9 @@ docker run --rm \
 
 在 `auto` 模式下，实际 worker 数不会超过 CPU 并行度、文件数量和上述文件大小上限。显式传入 `--threads N` 会覆盖自动限制，但仍不会超过文件数量。
 
+复杂 Markdown 或低内存 CI 环境建议使用 `--threads 1` 或 `--threads 2`。
+显式提高并发可能增加峰值内存。
+
 ## 配置示例（`.lintmdrc`）
 
 ```json
