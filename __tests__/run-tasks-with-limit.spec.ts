@@ -41,11 +41,15 @@ describe("runTasksWithLimit", () => {
     ).rejects.toBe(failure);
   });
 
-  test("stops scheduling new tasks after the first rejection", async () => {
+  test("waits for running tasks and stops scheduling after a rejection", async () => {
     const failure = new Error("task failed");
     const started: number[] = [];
+    let markFirstFailed!: () => void;
     let markSecondStarted!: () => void;
     let releaseSecond!: () => void;
+    const firstFailed = new Promise<void>((resolve) => {
+      markFirstFailed = resolve;
+    });
     const secondStarted = new Promise<void>((resolve) => {
       markSecondStarted = resolve;
     });
@@ -56,6 +60,7 @@ describe("runTasksWithLimit", () => {
       async () => {
         started.push(0);
         await secondStarted;
+        markFirstFailed();
         throw failure;
       },
       async () => {
@@ -75,11 +80,50 @@ describe("runTasksWithLimit", () => {
     ];
 
     const run = runTasksWithLimit(tasks, 2);
+    let settled = false;
+    void run.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      }
+    );
 
-    await expect(run).rejects.toBe(failure);
-    releaseSecond();
+    await firstFailed;
     await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(settled).toBe(false);
+    expect(started).toEqual([0, 1]);
+
+    releaseSecond();
+    await expect(run).rejects.toBe(failure);
 
     expect(started).toEqual([0, 1]);
+  });
+
+  test("reports the first failure after all running tasks reject", async () => {
+    const firstFailure = new Error("first task failed");
+    const secondFailure = new Error("second task failed");
+    let releaseSecond!: () => void;
+    const secondRelease = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+    const run = runTasksWithLimit(
+      [
+        async () => {
+          throw firstFailure;
+        },
+        async () => {
+          await secondRelease;
+          throw secondFailure;
+        },
+      ],
+      2
+    );
+
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    releaseSecond();
+
+    await expect(run).rejects.toBe(firstFailure);
   });
 });
