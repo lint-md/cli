@@ -42,6 +42,8 @@ export async function safeWriteFile(filePath: string, content: string) {
     }
 
     await handle.truncate(buf.length);
+    // 同步写入的数据和截断后的文件长度，再报告修复完成。
+    // 同步完成前若发生崩溃，文件仍可能只有部分新内容。
     await handle.sync();
   } finally {
     await handle.close();
