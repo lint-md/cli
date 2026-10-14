@@ -256,12 +256,24 @@ describe("runFileLint", () => {
         fixableErrorCount: 0,
         fixableWarningCount: 0,
       },
+      remainingSummary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       fixedResult: { result: "clean", notAppliedFixes: [] },
     };
     const actionableResult: BatchLintItem = {
       path: "actionable.md",
       diagnostics: [],
       summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      remainingSummary: {
         errorCount: 0,
         warningCount: 0,
         fixableErrorCount: 0,
@@ -283,5 +295,96 @@ describe("runFileLint", () => {
     expect(mockSafeWriteFile).toHaveBeenCalledWith("actionable.md", "fixed");
     expect(metrics).toHaveBeenCalledWith(allResults);
     expect(console.log).toHaveBeenCalledWith("fix metrics");
+  });
+
+  test("checks remaining errors from every fix result", async () => {
+    const result: BatchLintItem = {
+      path: "document.md",
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      remainingSummary: {
+        errorCount: 1,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+    };
+    mockBatchLint.mockResolvedValue({
+      allResults: [result],
+      actionableResults: [],
+    });
+
+    const outcome = await runFileLint(makeOptions({ isFixMode: true }));
+
+    expect(outcome).toEqual({ exitCode: 1 });
+    expect(mockSafeWriteFile).not.toHaveBeenCalled();
+  });
+
+  test("fails when a fix result lacks remaining counts", async () => {
+    const result: BatchLintItem = {
+      path: "document.md",
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+    };
+    mockBatchLint.mockResolvedValue({
+      allResults: [result],
+      actionableResults: [],
+    });
+    const stderr = jest.spyOn(console, "error").mockImplementation();
+
+    const outcome = await runFileLint(makeOptions({ isFixMode: true }));
+
+    expect(outcome).toEqual({ exitCode: 1 });
+    expect(stderr).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Core fix result is missing remainingSummary",
+      })
+    );
+  });
+
+  test("fails on rule execution errors in fix mode", async () => {
+    const result: BatchLintItem = {
+      path: "document.md",
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      remainingSummary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      executionErrors: [
+        {
+          ruleName: "broken-rule",
+          message: "rule threw",
+          round: 1,
+          phase: "fix",
+        },
+      ],
+    };
+    mockBatchLint.mockResolvedValue({
+      allResults: [result],
+      actionableResults: [result],
+    });
+    jest.spyOn(console, "error").mockImplementation();
+
+    const outcome = await runFileLint(makeOptions({ isFixMode: true }));
+
+    expect(outcome).toEqual({ exitCode: 1 });
   });
 });

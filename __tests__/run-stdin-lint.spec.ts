@@ -124,7 +124,13 @@ describe("runStdinLint", () => {
         fixableErrorCount: 0,
         fixableWarningCount: 0,
       },
-      fixedResult: null,
+      fixedResult: { result: "# Original\n", notAppliedFixes: [] },
+      remainingSummary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
       executionErrors: [
         {
           ruleName: "broken-rule",
@@ -156,6 +162,7 @@ describe("runStdinLint", () => {
     expect(stderr).toHaveBeenCalledWith(
       "[lint-md] (stdin): broken-rule failed in fix (round 1): rule threw"
     );
+    expect(stderr).toHaveBeenCalledTimes(1);
     expect(stdout.mock.invocationCallOrder[0]).toBeLessThan(
       stderr.mock.invocationCallOrder[0]
     );

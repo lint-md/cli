@@ -83,7 +83,14 @@ export const runStdinLint = ({
           console.error(line);
         }
       }
-      return executionErrorWarnings.length > 0 ? FAILURE_EXIT : SUCCESS_EXIT;
+      return shouldFailLint({
+        errorCount: result.remainingSummary.errorCount,
+        warningCount: result.remainingSummary.warningCount,
+        hasRuleFailures: executionErrorWarnings.length > 0,
+        suppressWarnings,
+      })
+        ? FAILURE_EXIT
+        : SUCCESS_EXIT;
     } catch (error) {
       const formatted = formatCoreError(error);
       console.error(formatted.handled ? formatted.message : error);
@@ -253,7 +260,24 @@ export const runFileLint = async ({
         }
       }
 
-      if (hasRuleFailures) {
+      let remainingErrorCount = 0;
+      let remainingWarningCount = 0;
+      for (const { remainingSummary } of allResults) {
+        if (!remainingSummary) {
+          throw new Error("Core fix result is missing remainingSummary");
+        }
+        remainingErrorCount += remainingSummary.errorCount;
+        remainingWarningCount += remainingSummary.warningCount;
+      }
+
+      if (
+        shouldFailLint({
+          errorCount: remainingErrorCount,
+          warningCount: remainingWarningCount,
+          hasRuleFailures,
+          suppressWarnings,
+        })
+      ) {
         return FAILURE_EXIT;
       }
     }
