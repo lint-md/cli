@@ -55,8 +55,12 @@ describe.each(["file", "stdin"] as const)("--fix exit code with %s", (mode) => {
 
   test("fails when an error remains", () => {
     const result = runFix(UNFIXABLE, 2, true);
+    const source = mode === "stdin" ? "(stdin)" : path.join(tmpDir, "test.md");
 
     expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      `[lint-md] ${source}: Fix completed with 1 error(s) and 0 warning(s) remaining.`
+    );
     if (mode === "stdin") {
       expect(result.stdout).toBe(UNFIXABLE);
     }
@@ -67,8 +71,12 @@ describe.each(["file", "stdin"] as const)("--fix exit code with %s", (mode) => {
     [true, 0],
   ])("uses warning suppression %s for remaining warnings", (suppress, exit) => {
     const result = runFix(UNFIXABLE, 1, suppress);
+    const source = mode === "stdin" ? "(stdin)" : path.join(tmpDir, "test.md");
 
     expect(result.status).toBe(exit);
+    expect(result.stderr).toContain(
+      `[lint-md] ${source}: Fix completed with 0 error(s) and 1 warning(s) remaining.`
+    );
     if (mode === "stdin") {
       expect(result.stdout).toBe(UNFIXABLE);
     }
@@ -79,6 +87,7 @@ describe.each(["file", "stdin"] as const)("--fix exit code with %s", (mode) => {
     const result = runFix(input);
 
     expect(result.status).toBe(0);
+    expect(result.stderr).not.toContain("Fix completed with");
     if (mode === "stdin") {
       expect(result.stdout).not.toContain("Done in");
       expect(result.stdout).not.toBe(input);
