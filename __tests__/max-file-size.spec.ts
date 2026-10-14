@@ -49,6 +49,23 @@ describe("filterFilesByMaxSize (unit)", () => {
     }
   });
 
+  test("keeps a hostile file name on one warning line", () => {
+    const filePath = "report.md\nwarning: forged\u001b[31mred\u001b[0m";
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const kept = filterFilesByMaxSize([{ path: filePath, size: 2048 }], 1024);
+
+      expect(kept).toEqual([]);
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      const warning = errorSpy.mock.calls[0][0];
+      expect(warning).toContain("report.md^Jwarning: forgedred");
+      expect(warning).not.toMatch(/[\n\r\u001b]/);
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
   test("keeps all files when none exceed the limit", async () => {
     const a = path.join(tmpDir, "a.md");
     const b = path.join(tmpDir, "b.md");
