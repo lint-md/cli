@@ -8,6 +8,7 @@ export const toBatchLintItem = (
   path,
   diagnostics: result.diagnostics,
   summary: result.summary,
+  ...(result.fixedResult && { remainingSummary: result.remainingSummary }),
   fixedResult: result.fixedResult,
   executionErrors: result.executionErrors,
 });

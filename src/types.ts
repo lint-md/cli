@@ -26,6 +26,7 @@ export interface BatchLintItem {
   path: string;
   diagnostics: LintDiagnostic[];
   summary: LintSummary;
+  remainingSummary?: LintSummary;
   fixedResult?: FixedResult | null;
   // Per-round, per-phase rule execution errors from @lint-md/core 2.1.5
   // (core #185). CLI surfaces these as stderr warnings and exits 1

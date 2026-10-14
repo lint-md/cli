@@ -1,6 +1,6 @@
 import * as process from "process";
 import { fixMarkdown, lintMarkdown } from "@lint-md/core";
-import type { LintMdRulesConfig } from "@lint-md/core";
+import type { LintMdRulesConfig, LintSummary } from "@lint-md/core";
 import type { ThreadCount } from "../types";
 import { safeWriteFile } from "../utils/safe-write-file";
 import { resolveAdaptiveConcurrency } from "../utils/adaptive-concurrency";
@@ -49,6 +49,19 @@ interface RunFileLintOptions {
   threadCount: ThreadCount;
 }
 
+const reportRemainingFixDiagnostics = (
+  path: string,
+  { errorCount, warningCount }: LintSummary
+): void => {
+  if (errorCount > 0 || warningCount > 0) {
+    console.error(
+      `[lint-md] ${sanitizeTerminalText(
+        path
+      )}: Fix completed with ${errorCount} error(s) and ${warningCount} warning(s) remaining.`
+    );
+  }
+};
+
 export const runStdinLint = ({
   content,
   isDev,
@@ -78,12 +91,20 @@ export const runStdinLint = ({
       for (const warning of executionErrorWarnings) {
         console.error(warning);
       }
+      reportRemainingFixDiagnostics("(stdin)", result.remainingSummary);
       if (isDev) {
         for (const line of getFixDevMetrics([stdinItem])) {
           console.error(line);
         }
       }
-      return executionErrorWarnings.length > 0 ? FAILURE_EXIT : SUCCESS_EXIT;
+      return shouldFailLint({
+        errorCount: result.remainingSummary.errorCount,
+        warningCount: result.remainingSummary.warningCount,
+        hasRuleFailures: executionErrorWarnings.length > 0,
+        suppressWarnings,
+      })
+        ? FAILURE_EXIT
+        : SUCCESS_EXIT;
     } catch (error) {
       const formatted = formatCoreError(error);
       console.error(formatted.handled ? formatted.message : error);
@@ -247,13 +268,31 @@ export const runFileLint = async ({
       }
       const hasRuleFailures = executionErrorWarnings.length > 0;
 
+      let remainingErrorCount = 0;
+      let remainingWarningCount = 0;
+      for (const { path, remainingSummary } of allResults) {
+        if (!remainingSummary) {
+          throw new Error("Core fix result is missing remainingSummary");
+        }
+        remainingErrorCount += remainingSummary.errorCount;
+        remainingWarningCount += remainingSummary.warningCount;
+        reportRemainingFixDiagnostics(path, remainingSummary);
+      }
+
       if (isDev) {
         for (const line of getFixDevMetrics(allResults)) {
           console.log(line);
         }
       }
 
-      if (hasRuleFailures) {
+      if (
+        shouldFailLint({
+          errorCount: remainingErrorCount,
+          warningCount: remainingWarningCount,
+          hasRuleFailures,
+          suppressWarnings,
+        })
+      ) {
         return FAILURE_EXIT;
       }
     }
