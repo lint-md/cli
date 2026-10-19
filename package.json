@@ -73,7 +73,9 @@
     "typescript": "^6.0.3"
   },
   "overrides": {
-    "js-yaml": "^3.15.0"
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.1.0"
+    }
   },
   "license": "MIT",
   "bugs": {
