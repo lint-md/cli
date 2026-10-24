@@ -19,9 +19,10 @@ describe("toBatchLintItem", () => {
       executionErrors: [],
     };
 
-    expect(toBatchLintItem("doc.md", result)).toEqual({
+    expect(toBatchLintItem("doc.md", result, false)).toEqual({
       path: "doc.md",
       diagnostics: [],
+      changed: false,
       summary: {
         errorCount: 0,
         warningCount: 0,
@@ -60,9 +61,10 @@ describe("toBatchLintItem", () => {
       executionErrors: [],
     };
 
-    expect(toBatchLintItem("doc.md", result)).toEqual({
+    expect(toBatchLintItem("doc.md", result, true)).toEqual({
       path: "doc.md",
       diagnostics: [],
+      changed: true,
       summary: {
         errorCount: 0,
         warningCount: 0,
@@ -114,7 +116,9 @@ describe("toBatchLintItem", () => {
       executionErrors: [],
     };
 
-    const summary = summarizeLintResults([toBatchLintItem("doc.md", result)]);
+    const summary = summarizeLintResults([
+      toBatchLintItem("doc.md", result, false),
+    ]);
 
     expect(summary.files[0].messages).toEqual([
       {

@@ -205,6 +205,7 @@ describe("runFileLint", () => {
     const failedResult: BatchLintItem = {
       path: "failed.md",
       diagnostics: [],
+      changed: false,
       summary: {
         errorCount: 0,
         warningCount: 0,
@@ -250,6 +251,7 @@ describe("runFileLint", () => {
     const cleanResult: BatchLintItem = {
       path: "clean.md",
       diagnostics: [],
+      changed: false,
       summary: {
         errorCount: 0,
         warningCount: 0,
@@ -348,6 +350,7 @@ describe("runFileLint", () => {
     const result: BatchLintItem = {
       path: "document.md",
       diagnostics: [],
+      changed: false,
       summary: {
         errorCount: 0,
         warningCount: 0,
@@ -376,6 +379,7 @@ describe("runFileLint", () => {
     const result: BatchLintItem = {
       path: "document.md",
       diagnostics: [],
+      changed: false,
       summary: {
         errorCount: 0,
         warningCount: 0,
@@ -403,6 +407,7 @@ describe("runFileLint", () => {
     const result: BatchLintItem = {
       path: "document.md",
       diagnostics: [],
+      changed: false,
       summary: {
         errorCount: 0,
         warningCount: 0,

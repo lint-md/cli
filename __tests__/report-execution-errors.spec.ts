@@ -11,6 +11,7 @@ const makeItem = (
 ): BatchLintItem => ({
   path,
   diagnostics: [],
+  changed: false,
   summary: {
     errorCount: 0,
     warningCount: 0,

@@ -26,6 +26,7 @@ const makeSummary = (overrides: Partial<LintSummary> = {}): LintSummary => ({
 const makeItem = (overrides: Partial<BatchLintItem> = {}): BatchLintItem => ({
   path: "doc.md",
   diagnostics: [],
+  changed: false,
   summary: makeSummary(),
   ...overrides,
 });

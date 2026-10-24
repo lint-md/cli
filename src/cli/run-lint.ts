@@ -83,7 +83,11 @@ export const runStdinLint = ({
     try {
       const result = fixMarkdown(content, { rules });
       process.stdout.write(result.fixedResult?.result ?? content);
-      const stdinItem = toBatchLintItem("(stdin)", result);
+      const stdinItem = toBatchLintItem(
+        "(stdin)",
+        result,
+        result.fixedResult != null && result.fixedResult.result !== content
+      );
       for (const warning of getIncompleteFixWarnings([stdinItem])) {
         console.error(warning);
       }
@@ -119,7 +123,7 @@ export const runStdinLint = ({
 
   try {
     const result = lintMarkdown(content, { rules });
-    const stdinItem = toBatchLintItem("(stdin)", result);
+    const stdinItem = toBatchLintItem("(stdin)", result, false);
     const summary = summarizeLintResults([stdinItem]);
 
     console.log(formatLintReport(summary));

@@ -20,6 +20,7 @@ const baseItem = (
   return {
     path: "a.md",
     diagnostics: [],
+    changed: false,
     summary: {
       errorCount: 0,
       warningCount: 0,

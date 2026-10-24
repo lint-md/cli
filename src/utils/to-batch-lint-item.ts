@@ -3,12 +3,14 @@ import type { BatchLintItem } from "../types";
 
 export const toBatchLintItem = (
   path: string,
-  result: LintMdResult
+  result: LintMdResult,
+  changed: boolean
 ): BatchLintItem => ({
   path,
   diagnostics: result.diagnostics,
   summary: result.summary,
   ...(result.fixedResult && { remainingSummary: result.remainingSummary }),
   fixedResult: result.fixedResult,
+  changed,
   executionErrors: result.executionErrors,
 });
