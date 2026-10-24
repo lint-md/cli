@@ -118,4 +118,93 @@ describe("lintWorker executionErrors passthrough", () => {
     );
     expect(mockedLintMarkdown).not.toHaveBeenCalled();
   });
+
+  test("marks changed when fix mode changes the content", async () => {
+    const file = path.join(tmpDir, "changed.md");
+    await writeFile(file, "# Old\n", "utf8");
+
+    mockedFixMarkdown.mockReturnValue({
+      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      remainingSummary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: { result: "# New\n", notAppliedFixes: [] },
+      executionErrors: [],
+    } as any);
+
+    const result = await lintWorker({
+      filePath: file,
+      rules: {},
+      isFixMode: true,
+    });
+
+    expect(result.changed).toBe(true);
+  });
+
+  test("does not mark changed when fixed content equals the original", async () => {
+    const file = path.join(tmpDir, "unchanged.md");
+    await writeFile(file, "# Same\n", "utf8");
+
+    mockedFixMarkdown.mockReturnValue({
+      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      remainingSummary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: { result: "# Same\n", notAppliedFixes: [] },
+      executionErrors: [],
+    } as any);
+
+    const result = await lintWorker({
+      filePath: file,
+      rules: {},
+      isFixMode: true,
+    });
+
+    expect(result.changed).toBe(false);
+  });
+
+  test("does not mark changed outside fix mode", async () => {
+    const file = path.join(tmpDir, "lint-only.md");
+    await writeFile(file, "# Lint\n", "utf8");
+
+    mockedLintMarkdown.mockReturnValue({
+      lintResult: [],
+      diagnostics: [],
+      summary: {
+        errorCount: 0,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: null,
+    } as any);
+
+    const result = await lintWorker({
+      filePath: file,
+      rules: {},
+      isFixMode: false,
+    });
+
+    expect(result.changed).toBe(false);
+  });
 });

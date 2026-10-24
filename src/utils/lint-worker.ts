@@ -11,7 +11,17 @@ const lintWorker = async (options: LintWorkerOptions) => {
     ? fixMarkdown(content, { rules })
     : lintMarkdown(content, { rules: rules ?? {} });
 
-  return toBatchLintItem(filePath, result);
+  const item = toBatchLintItem(filePath, result);
+
+  // Core returns fixedResult even when no rule changed the text. Compare with
+  // the content we already read so the main thread writes only real changes.
+  return {
+    ...item,
+    changed:
+      isFixMode &&
+      result.fixedResult != null &&
+      result.fixedResult.result !== content,
+  };
 };
 
 export default lintWorker;

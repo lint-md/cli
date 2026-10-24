@@ -246,7 +246,7 @@ export const runFileLint = async ({
     } else {
       await runTasksWithLimit(
         actionableResults
-          .filter(({ fixedResult }) => fixedResult)
+          .filter(({ changed }) => changed === true)
           .map(
             ({ path, fixedResult }) =>
               () =>

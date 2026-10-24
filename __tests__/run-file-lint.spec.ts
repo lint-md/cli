@@ -280,6 +280,7 @@ describe("runFileLint", () => {
         fixableWarningCount: 0,
       },
       fixedResult: { result: "fixed", notAppliedFixes: [] },
+      changed: true,
     };
     const allResults = [cleanResult, actionableResult];
     const actionableResults = [actionableResult];
@@ -295,6 +296,52 @@ describe("runFileLint", () => {
     expect(mockSafeWriteFile).toHaveBeenCalledWith("actionable.md", "fixed");
     expect(metrics).toHaveBeenCalledWith(allResults);
     expect(console.log).toHaveBeenCalledWith("fix metrics");
+  });
+
+  test("does not write files whose fixed content is unchanged", async () => {
+    const unfixableResult: BatchLintItem = {
+      path: "unfixable.md",
+      diagnostics: [
+        {
+          ruleId: "no-long-code",
+          message: "line is too long",
+          severity: 2,
+          line: 1,
+          column: 1,
+          range: {
+            start: { line: 1, column: 1 },
+            end: { line: 1, column: 2 },
+          },
+        },
+      ],
+      summary: {
+        errorCount: 1,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      remainingSummary: {
+        errorCount: 1,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
+      },
+      fixedResult: { result: "# Unchanged\n", notAppliedFixes: [] },
+      changed: false,
+    };
+    mockBatchLint.mockResolvedValue({
+      allResults: [unfixableResult],
+      actionableResults: [unfixableResult],
+    });
+    const stderr = jest.spyOn(console, "error").mockImplementation();
+
+    const outcome = await runFileLint(makeOptions({ isFixMode: true }));
+
+    expect(mockSafeWriteFile).not.toHaveBeenCalled();
+    expect(stderr).toHaveBeenCalledWith(
+      "[lint-md] unfixable.md: Fix completed with 1 error(s) and 0 warning(s) remaining."
+    );
+    expect(outcome).toEqual({ exitCode: 1 });
   });
 
   test("checks remaining errors from every fix result", async () => {
