@@ -27,6 +27,7 @@ const makeItem = (
   return {
     path: "docs/example.md",
     diagnostics: [],
+    changed: false,
     summary: {
       errorCount: 0,
       warningCount: 0,
