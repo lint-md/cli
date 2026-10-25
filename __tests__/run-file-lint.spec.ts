@@ -114,6 +114,34 @@ describe("runFileLint", () => {
     expect(mockFilterFilesByMaxSize).not.toHaveBeenCalled();
   });
 
+  test("returns success when --fix finds no files", async () => {
+    mockLoadMdFiles.mockResolvedValue([]);
+    jest.spyOn(console, "error").mockImplementation();
+
+    const outcome = await runFileLint(makeOptions({ isFixMode: true }));
+
+    expect(outcome).toEqual({ exitCode: 0 });
+    expect(mockBatchLint).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ["only MDX", ["document.mdx"]],
+    ["mixed Markdown and MDX", ["document.md", "document.mdx"]],
+    ["uppercase MDX extension", ["document.MDX"]],
+  ])("rejects --fix for %s before linting", async (_case, paths) => {
+    mockLoadMdFiles.mockResolvedValue(paths);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    const outcome = await runFileLint(makeOptions({ isFixMode: true }));
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "[lint-md] --fix does not support .mdx files. No files were changed."
+    );
+    expect(outcome).toEqual({ exitCode: 1 });
+    expect(mockBatchLint).not.toHaveBeenCalled();
+    expect(mockSafeWriteFile).not.toHaveBeenCalled();
+  });
+
   test("escapes quotes inside unmatched patterns", async () => {
     mockLoadMdFiles.mockResolvedValue([]);
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
@@ -139,6 +167,23 @@ describe("runFileLint", () => {
     expect(outcome).toEqual({ exitCode: 0 });
     expect(mockResolveAdaptiveConcurrency).not.toHaveBeenCalled();
     expect(mockBatchLint).not.toHaveBeenCalled();
+  });
+
+  test("allows --fix when size filtering removes MDX files", async () => {
+    mockLoadMdFiles.mockResolvedValue(["document.md", "large.mdx"]);
+    const fileStats: FileStat[] = [
+      { path: "document.md", size: 50 },
+      { path: "large.mdx", size: 200 },
+    ];
+    mockStatFiles.mockResolvedValue(fileStats);
+    mockFilterFilesByMaxSize.mockReturnValue([fileStats[0]]);
+
+    const outcome = await runFileLint(
+      makeOptions({ isFixMode: true, maxFileSizeBytes: 100 })
+    );
+
+    expect(outcome).toEqual({ exitCode: 0 });
+    expect(mockBatchLint).toHaveBeenCalledWith(1, ["document.md"], true, {});
   });
 
   test("filters files before concurrency and batch decisions", async () => {

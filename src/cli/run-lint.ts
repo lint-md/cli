@@ -200,6 +200,16 @@ export const runFileLint = async ({
     }
   }
 
+  if (
+    isFixMode &&
+    mdFiles.some((file) => file.toLowerCase().endsWith(".mdx"))
+  ) {
+    console.error(
+      "[lint-md] --fix does not support .mdx files. No files were changed."
+    );
+    return FAILURE_EXIT;
+  }
+
   const concurrencyDecision = resolveAdaptiveConcurrency(
     threadCount,
     mdFiles.length,

@@ -96,3 +96,32 @@ describe.each(["file", "stdin"] as const)("--fix exit code with %s", (mode) => {
     }
   });
 });
+
+test("--fix rejects a mixed Markdown and MDX batch without changing files", () => {
+  const tmpDir = mkdtempSync(path.join(tmpdir(), "lint-md-mixed-mdx-"));
+  const mdPath = path.join(tmpDir, "test.md");
+  const mdxPath = path.join(tmpDir, "test.mdx");
+  const mdContent = readFileSync(FIXABLE, "utf8");
+  const mdxContent = "export const 用户ID = 42\n";
+
+  try {
+    writeFileSync(mdPath, mdContent);
+    writeFileSync(mdxPath, mdxContent);
+    writeFileSync(path.join(tmpDir, ".lintmdrc"), "{}");
+
+    const result = spawnSync(
+      process.execPath,
+      [TSX, CLI, "--fix", path.join(tmpDir, "*"), "--threads", "1"],
+      { cwd: tmpDir, encoding: "utf8" }
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "[lint-md] --fix does not support .mdx files. No files were changed."
+    );
+    expect(readFileSync(mdPath, "utf8")).toBe(mdContent);
+    expect(readFileSync(mdxPath, "utf8")).toBe(mdxContent);
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
