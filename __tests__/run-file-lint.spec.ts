@@ -124,22 +124,17 @@ describe("runFileLint", () => {
     expect(mockBatchLint).not.toHaveBeenCalled();
   });
 
-  test.each([
-    ["only MDX", ["document.mdx"]],
-    ["mixed Markdown and MDX", ["document.md", "document.mdx"]],
-    ["uppercase MDX extension", ["document.MDX"]],
-  ])("rejects --fix for %s before linting", async (_case, paths) => {
-    mockLoadMdFiles.mockResolvedValue(paths);
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+  test("passes mixed Markdown and MDX files to the fix batch", async () => {
+    mockLoadMdFiles.mockResolvedValue(["document.md", "document.mdx"]);
 
-    const outcome = await runFileLint(makeOptions({ isFixMode: true }));
+    await runFileLint(makeOptions({ isFixMode: true }));
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[lint-md] --fix does not support .mdx files. No files were changed."
+    expect(mockBatchLint).toHaveBeenCalledWith(
+      1,
+      ["document.md", "document.mdx"],
+      true,
+      {}
     );
-    expect(outcome).toEqual({ exitCode: 1 });
-    expect(mockBatchLint).not.toHaveBeenCalled();
-    expect(mockSafeWriteFile).not.toHaveBeenCalled();
   });
 
   test("escapes quotes inside unmatched patterns", async () => {

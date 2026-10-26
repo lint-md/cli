@@ -84,6 +84,10 @@ The image runs as a non-root user by default. If the mounted directory has stric
 - `-d, --dev`: enable development debug mode
 - `-v, --version`: print the current version
 
+`--stdin` always parses input as Markdown. Do not use `--stdin --fix` on MDX content. MDX autofix currently supports file-path mode only.
+
+`--fix` supports `.mdx` files. The CLI calls Core `fixMdx()` for `.mdx` and `fixMarkdown()` for Markdown. The CLI uses the MDX Parser to separate Markdown body text from MDX code regions. Built-in rules preserve ESM, JSX attributes, and JavaScript expressions in supported cases. The fix safety of third-party rules depends on the rule implementation. To exclude MDX, set `"extensions": [".md", ".markdown"]`.
+
 Use `--threads 1` or `--threads 2` for complex Markdown or memory-limited CI environments.
 Higher explicit concurrency can increase peak memory.
 

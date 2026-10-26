@@ -89,12 +89,28 @@ try {
   const cleanFile = join(fixtureDirectory, "clean.md");
   const cleanMdxFile = join(fixtureDirectory, "clean.mdx");
   const fixableFile = join(fixtureDirectory, "fixable.md");
+  const fixableMdxFile = join(fixtureDirectory, "fixable.mdx");
+  const configFile = join(fixtureDirectory, ".lintmdrc");
   mkdirSync(fixtureDirectory);
   cpSync(join(projectRoot, "examples", "space-around.md"), fixableFile, {
     recursive: false,
   });
   writeFileSync(cleanFile, cleanMarkdown, "utf8");
   writeFileSync(cleanMdxFile, '# Hello\n\n<Card label="text" />\n', "utf8");
+  writeFileSync(
+    configFile,
+    JSON.stringify({ rules: { "space-around-alphabet": 2 } }),
+    "utf8"
+  );
+  const originalMdxContent = [
+    'export const title = "中文English";',
+    "",
+    '<Card label="中文English">',
+    "  正文English内容。",
+    "</Card>",
+    "",
+  ].join("\n");
+  writeFileSync(fixableMdxFile, originalMdxContent, "utf8");
 
   run(lintMd, [cleanFile]);
   run(lintMd, [cleanMdxFile]);
@@ -103,6 +119,26 @@ try {
   const fixedContent = readFileSync(fixableFile, "utf8");
   assert(fixedContent !== originalFixableContent, "--fix did not update the fixture");
   run(lintMd, [fixableFile]);
+
+  run(lintMd, [fixableMdxFile, "--fix", "--config", configFile]);
+  const fixedMdxContent = readFileSync(fixableMdxFile, "utf8");
+  assert(
+    fixedMdxContent.includes('export const title = "中文English";'),
+    "installed --fix changed an ESM string"
+  );
+  assert(
+    fixedMdxContent.includes('<Card label="中文English">'),
+    "installed --fix changed a JSX attribute"
+  );
+  assert(
+    fixedMdxContent.includes("正文 English 内容。"),
+    "installed --fix did not fix MDX body text"
+  );
+  assert(
+    fixedMdxContent !== originalMdxContent,
+    "installed --fix did not update the MDX fixture"
+  );
+  run(lintMd, [fixableMdxFile, "--config", configFile]);
 } finally {
   rmSync(temporaryDirectory, { recursive: true, force: true });
 }
