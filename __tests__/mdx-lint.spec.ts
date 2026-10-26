@@ -53,24 +53,23 @@ describe("MDX lint", () => {
   });
 
   test.each([".mdx", ".MDX"])(
-    "lints MDX text and skips JSX, ESM, and expressions in %s files",
-    async (extension) => {
+    "lints %s through the CLI and skips JSX, ESM, and expressions",
+    (extension) => {
       const filePath = path.join(tmpDir, `document${extension}`);
       writeFileSync(filePath, MDX, "utf8");
 
-      const result = await lintWorker({
-        filePath,
-        rules: RULES,
-        isFixMode: false,
-      });
+      const result = spawnSync(
+        process.execPath,
+        [CLI, filePath, "--config", configPath],
+        { encoding: "utf8" }
+      );
 
-      expect(result.diagnostics).toHaveLength(2);
-      expect(
-        result.diagnostics.map(({ ruleId, line }) => [ruleId, line])
-      ).toEqual([
-        ["space-around-alphabet", 9],
-        ["space-around-alphabet", 9],
-      ]);
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain(filePath);
+      expect(result.stdout).toContain("9:10");
+      expect(result.stdout).toContain("9:17");
+      expect(result.stdout).toContain("2 problems");
     }
   );
 
@@ -103,25 +102,28 @@ describe("MDX lint", () => {
     expect(readFileSync(filePath, "utf8")).toBe(MDX);
   });
 
-  test("rejects MDX fix requests before changing any file", () => {
-    const markdownPath = path.join(tmpDir, "document.md");
-    const mdxPath = path.join(tmpDir, "document.mdx");
-    const markdown = "正文English内容。\n";
-    writeFileSync(markdownPath, markdown, "utf8");
-    writeFileSync(mdxPath, MDX, "utf8");
+  test.each([".mdx", ".MDX"])(
+    "rejects %s fix requests before changing any file",
+    (extension) => {
+      const markdownPath = path.join(tmpDir, "document.md");
+      const mdxPath = path.join(tmpDir, `document${extension}`);
+      const markdown = "正文English内容。\n";
+      writeFileSync(markdownPath, markdown, "utf8");
+      writeFileSync(mdxPath, MDX, "utf8");
 
-    const result = spawnSync(
-      process.execPath,
-      [CLI, markdownPath, mdxPath, "--fix", "--config", configPath],
-      { encoding: "utf8" }
-    );
+      const result = spawnSync(
+        process.execPath,
+        [CLI, markdownPath, mdxPath, "--fix", "--config", configPath],
+        { encoding: "utf8" }
+      );
 
-    expect(result.error).toBeUndefined();
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain(
-      "--fix does not support .mdx files. No files were changed."
-    );
-    expect(readFileSync(markdownPath, "utf8")).toBe(markdown);
-    expect(readFileSync(mdxPath, "utf8")).toBe(MDX);
-  });
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        "--fix does not support .mdx files. No files were changed."
+      );
+      expect(readFileSync(markdownPath, "utf8")).toBe(markdown);
+      expect(readFileSync(mdxPath, "utf8")).toBe(MDX);
+    }
+  );
 });
