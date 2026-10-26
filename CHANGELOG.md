@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.5.0](https://github.com/lint-md/cli/compare/v2.4.0...v2.5.0) (2026-10-26)
+
+### Features
+
+- lint `.mdx` files through the Core MDX entry ([#209](https://github.com/lint-md/cli/pull/209))
+- fix `.mdx` files with `fixMdx()` ([#210](https://github.com/lint-md/cli/pull/210))
+
+### Bug Fixes
+
+- wait for running tasks after the first failure ([#199](https://github.com/lint-md/cli/pull/199))
+- sanitize large-file warning paths ([#200](https://github.com/lint-md/cli/pull/200))
+- fail on remaining diagnostics after `--fix` ([#202](https://github.com/lint-md/cli/pull/202))
+
+### Performance Improvements
+
+- skip writes when fixed content is unchanged ([#206](https://github.com/lint-md/cli/pull/206))
+
+### Dependencies
+
+- upgrade `@lint-md/core` from `^2.5.2` to `^2.6.0`
+- add `@mdx-js/mdx` for MDX compile tests
+
+### Documentation
+
+- explain file sync durability ([#201](https://github.com/lint-md/cli/pull/201))
+- document MDX lint and safe fix behavior ([#209](https://github.com/lint-md/cli/pull/209), [#210](https://github.com/lint-md/cli/pull/210))
+
+### Tooling
+
+- override `load-nyc-config` to `js-yaml` 4 ([#204](https://github.com/lint-md/cli/pull/204))
+
 ## [2.4.0](https://github.com/lint-md/cli/compare/v2.3.1...v2.4.0) (2026-09-13)
 
 ### Dependencies
