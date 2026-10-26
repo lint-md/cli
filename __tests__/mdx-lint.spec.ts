@@ -218,6 +218,8 @@ describe("MDX lint", () => {
   });
 
   test("stdin without a file extension keeps Markdown behavior", () => {
+    // stdin has no extension. This test locks the documented Markdown-only
+    // behavior, including its risk for MDX content.
     const content =
       'export const title = "中文English";\n\n正文English内容。\n';
 
