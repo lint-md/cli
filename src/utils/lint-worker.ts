@@ -9,16 +9,14 @@ const lintWorker = async (options: LintWorkerOptions) => {
   const { filePath, rules, isFixMode } = options;
   const isMdx = extname(filePath).toLowerCase() === ".mdx";
 
-  if (isMdx && isFixMode) {
-    throw new Error("--fix does not support .mdx files");
-  }
-
   const content = await readFile(filePath, "utf8");
   let result: LintMdResult;
   if (isMdx) {
-    const { lintMdx } =
+    const { fixMdx, lintMdx } =
       require("@lint-md/core/mdx") as typeof import("@lint-md/core/mdx");
-    result = lintMdx(content, { rules: rules ?? {} });
+    result = isFixMode
+      ? fixMdx(content, { rules: rules ?? {} })
+      : lintMdx(content, { rules: rules ?? {} });
   } else {
     result = isFixMode
       ? fixMarkdown(content, { rules })

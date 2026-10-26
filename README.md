@@ -84,7 +84,7 @@ docker run --rm \
 - `-d, --dev`：开发调试模式
 - `-v, --version`：查看版本
 
-`--fix` 不支持 `.mdx` 文件。只要待修复文件中包含 `.mdx`，命令就以退出码 `1` 结束，且不修改任何文件。如需排除 MDX，请在配置中设置 `"extensions": [".md", ".markdown"]`。
+`--fix` 支持 `.mdx` 文件。CLI 对 `.mdx` 调用 Core 的 `fixMdx()`，对普通 Markdown 调用 `fixMarkdown()`。修复只作用于可映射的 Markdown 文本。ESM、JSX 属性与 JavaScript 表达式保持原文。如需排除 MDX，请在配置中设置 `"extensions": [".md", ".markdown"]`。
 
 未指定 `--threads` 时，程序等同于使用 `--threads auto`。`auto` 根据过滤后最大文件的大小设置 worker 上限：
 

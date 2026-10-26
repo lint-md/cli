@@ -97,17 +97,21 @@ describe.each(["file", "stdin"] as const)("--fix exit code with %s", (mode) => {
   });
 });
 
-test("--fix rejects a mixed Markdown and MDX batch without changing files", () => {
+test("--fix repairs a mixed Markdown and MDX batch", () => {
   const tmpDir = mkdtempSync(path.join(tmpdir(), "lint-md-mixed-mdx-"));
   const mdPath = path.join(tmpDir, "test.md");
   const mdxPath = path.join(tmpDir, "test.mdx");
-  const mdContent = readFileSync(FIXABLE, "utf8");
-  const mdxContent = "export const 用户ID = 42\n";
+  const mdContent = "正文English内容。\n";
+  const mdxContent =
+    'export const title = "中文English";\n\n<Card>正文English内容。</Card>\n';
 
   try {
     writeFileSync(mdPath, mdContent);
     writeFileSync(mdxPath, mdxContent);
-    writeFileSync(path.join(tmpDir, ".lintmdrc"), "{}");
+    writeFileSync(
+      path.join(tmpDir, ".lintmdrc"),
+      JSON.stringify({ rules: { "space-around-alphabet": 2 } })
+    );
 
     const result = spawnSync(
       process.execPath,
@@ -115,12 +119,12 @@ test("--fix rejects a mixed Markdown and MDX batch without changing files", () =
       { cwd: tmpDir, encoding: "utf8" }
     );
 
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain(
-      "[lint-md] --fix does not support .mdx files. No files were changed."
+    expect(result.status).toBe(0);
+    expect(result.stderr).not.toContain("does not support .mdx");
+    expect(readFileSync(mdPath, "utf8")).toBe("正文 English 内容。\n");
+    expect(readFileSync(mdxPath, "utf8")).toBe(
+      'export const title = "中文English";\n\n<Card>正文 English 内容。</Card>\n'
     );
-    expect(readFileSync(mdPath, "utf8")).toBe(mdContent);
-    expect(readFileSync(mdxPath, "utf8")).toBe(mdxContent);
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
   }

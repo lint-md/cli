@@ -84,6 +84,8 @@ The image runs as a non-root user by default. If the mounted directory has stric
 - `-d, --dev`: enable development debug mode
 - `-v, --version`: print the current version
 
+`--fix` supports `.mdx` files. The CLI calls Core `fixMdx()` for `.mdx` and `fixMarkdown()` for Markdown. Fixes apply only to mapped Markdown text. ESM, JSX attributes, and JavaScript expressions keep their original text. To exclude MDX, set `"extensions": [".md", ".markdown"]`.
+
 Use `--threads 1` or `--threads 2` for complex Markdown or memory-limited CI environments.
 Higher explicit concurrency can increase peak memory.
 
