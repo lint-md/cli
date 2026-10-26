@@ -87,14 +87,17 @@ try {
 
   const fixtureDirectory = join(temporaryDirectory, "fixtures");
   const cleanFile = join(fixtureDirectory, "clean.md");
+  const cleanMdxFile = join(fixtureDirectory, "clean.mdx");
   const fixableFile = join(fixtureDirectory, "fixable.md");
   mkdirSync(fixtureDirectory);
   cpSync(join(projectRoot, "examples", "space-around.md"), fixableFile, {
     recursive: false,
   });
   writeFileSync(cleanFile, cleanMarkdown, "utf8");
+  writeFileSync(cleanMdxFile, '# Hello\n\n<Card label="text" />\n', "utf8");
 
   run(lintMd, [cleanFile]);
+  run(lintMd, [cleanMdxFile]);
   const originalFixableContent = readFileSync(fixableFile, "utf8");
   run(lintMd, [fixableFile, "--fix"]);
   const fixedContent = readFileSync(fixableFile, "utf8");

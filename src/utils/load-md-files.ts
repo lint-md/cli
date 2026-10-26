@@ -25,7 +25,13 @@ export const loadMdFiles = async (
   for (const entry of entries) {
     if (entry.isSymbolicLink()) continue;
     const fullPath = entry.fullpath();
-    if (extensions.some((ext) => fullPath.endsWith(ext))) files.add(fullPath);
+    if (
+      extensions.some((ext) =>
+        fullPath.toLowerCase().endsWith(ext.toLowerCase())
+      )
+    ) {
+      files.add(fullPath);
+    }
   }
 
   // Sort so lint report order stays stable across OS, filesystem, and
