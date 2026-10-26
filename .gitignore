@@ -11,7 +11,6 @@ coverage
 # lock files
 yarn.lock
 pnpm-lock.yaml
-package-lock.json
 
 # build files
 esm
