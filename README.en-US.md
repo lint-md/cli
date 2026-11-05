@@ -77,7 +77,7 @@ The image runs as a non-root user by default. If the mounted directory has stric
 
 - `-c, --config <configure-file>`: use a configuration file, defaults to `./.lintmdrc`
 - `-f, --fix`: automatically fix fixable issues
-- `-t, --threads [thread-count]`: set the worker count; the default `auto` mode uses conservative file-size limits
+- `-t, --threads <thread-count>`: set a positive worker count or `auto`; omitting this option uses `auto`
 - `-s, --suppress-warnings`: ignore warnings when deciding the exit code, which helps with gradual CI adoption
 - `-i, --stdin`: read Markdown content from standard input
 - `--max-file-size <size>`: skip Markdown files larger than `<size>` (e.g. `5mb`, `500kb`, `1gb`), with a warning to stderr
@@ -89,6 +89,10 @@ The image runs as a non-root user by default. If the mounted directory has stric
 `--fix` supports `.mdx` files. The CLI calls Core `fixMdx()` for `.mdx` and `fixMarkdown()` for Markdown. The CLI uses the MDX Parser to separate Markdown body text from MDX code regions. Built-in rules preserve ESM, JSX attributes, and JavaScript expressions in supported cases. The fix safety of third-party rules depends on the rule implementation. To exclude MDX, set `"extensions": [".md", ".markdown"]`.
 
 Use `--threads 1` or `--threads 2` for complex Markdown or memory-limited CI environments.
+For example, `lint-md a.md` uses `auto`. Use `lint-md a.md --threads=4` to set four workers.
+Use `lint-md a.md --threads=auto` to select `auto` explicitly.
+The short option also accepts `lint-md -t 4 a.md` and `lint-md -t auto a.md`.
+Do not put a file path immediately after `-t`.
 Higher explicit concurrency can increase peak memory.
 
 ## Configuration Example (`.lintmdrc`)

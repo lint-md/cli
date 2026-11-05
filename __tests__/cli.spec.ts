@@ -101,6 +101,81 @@ describe("cli tests", () => {
     expect(process.exitCode).toBe(1);
   });
 
+  test.each([
+    [["a.md"], "auto"],
+    [["-t", "4", "a.md"], 4],
+    [["-t", "auto", "a.md"], "auto"],
+    [["a.md", "--threads=4"], 4],
+    [["a.md", "--threads=auto"], "auto"],
+  ] as const)("passes %p with %p threads", async (args, threadCount) => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint: jest.fn(),
+    }));
+    const { main } = require("../src/lint-md");
+
+    await main(["node", "lint-md", ...args]);
+
+    expect(runFileLint).toHaveBeenCalledWith(
+      expect.objectContaining({ files: ["a.md"], threadCount })
+    );
+  });
+
+  test.each(["a.md", "README"])(
+    "rejects a file path consumed by -t: %s",
+    async (filePath) => {
+      const runFileLint = jest.fn();
+      jest.doMock("../src/cli/run-lint", () => ({
+        runFileLint,
+        runStdinLint: jest.fn(),
+      }));
+      const { main } = require("../src/lint-md");
+
+      await expect(
+        main(["node", "lint-md", "-t", filePath])
+      ).rejects.toMatchObject({
+        code: "INVALID_THREADS",
+        message: expect.stringContaining(`Received "${filePath}"`),
+      });
+      expect(runFileLint).not.toHaveBeenCalled();
+    }
+  );
+
+  test("rejects the first file when -t precedes two file paths", async () => {
+    const runFileLint = jest.fn();
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint: jest.fn(),
+    }));
+    const { main } = require("../src/lint-md");
+
+    await expect(
+      main(["node", "lint-md", "-t", "a.md", "b.md"])
+    ).rejects.toMatchObject({
+      code: "INVALID_THREADS",
+      message: expect.stringContaining('Received "a.md"'),
+    });
+    expect(runFileLint).not.toHaveBeenCalled();
+  });
+
+  test("rejects zero threads before file lint", async () => {
+    const runFileLint = jest.fn();
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint: jest.fn(),
+    }));
+    const { main } = require("../src/lint-md");
+
+    await expect(
+      main(["node", "lint-md", "-t", "0", "a.md"])
+    ).rejects.toMatchObject({
+      code: "INVALID_THREADS",
+      message: "[lint-md] --threads must be a positive integer.",
+    });
+    expect(runFileLint).not.toHaveBeenCalled();
+  });
+
   test("runCli handles rejected actions", async () => {
     const error = new Error("load failed");
     const loadMdFiles = jest.fn(() => Promise.reject(error));

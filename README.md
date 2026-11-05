@@ -77,7 +77,7 @@ docker run --rm \
 
 - `-c, --config <configure-file>`：指定配置文件（默认 `./.lintmdrc`）
 - `-f, --fix`：自动修复可修复问题
-- `-t, --threads [thread-count]`：设置并发线程数；默认 `auto` 按文件大小使用保守上限，传数字可显式覆盖自动限制
+- `-t, --threads <thread-count>`：设置并发线程数；传入正整数或 `auto`。省略此选项时默认使用 `auto`
 - `-s, --suppress-warnings`：忽略 warning 对退出码的影响（便于 CI 渐进接入）
 - `-i, --stdin`：从标准输入读取 Markdown 内容
 - `--max-file-size <size>`：跳过超过指定大小的 Markdown 文件（如 `5mb`、`500kb`、`1gb`），并向 stderr 输出警告
@@ -89,6 +89,9 @@ docker run --rm \
 `--fix` 支持 `.mdx` 文件。CLI 对 `.mdx` 调用 Core 的 `fixMdx()`，对普通 Markdown 调用 `fixMarkdown()`。CLI 使用 MDX Parser 区分 Markdown 正文与 MDX 代码区域。内置规则在已支持的场景下保留 ESM、JSX 属性和 JavaScript 表达式；第三方规则的修复安全性取决于规则自身实现。如需排除 MDX，请在配置中设置 `"extensions": [".md", ".markdown"]`。
 
 未指定 `--threads` 时，程序等同于使用 `--threads auto`。`auto` 根据过滤后最大文件的大小设置 worker 上限：
+
+例如：`lint-md a.md` 使用默认 `auto`。`lint-md a.md --threads=4` 使用 4 个线程。`lint-md a.md --threads=auto` 显式使用 `auto`。
+短选项也接受 `lint-md -t 4 a.md` 和 `lint-md -t auto a.md`。不要将文件路径紧跟在 `-t` 后面。
 
 | 过滤后最大文件大小 | worker 上限 |
 | --- | ---: |
