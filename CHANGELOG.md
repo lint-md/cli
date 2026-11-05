@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.5.1](https://github.com/lint-md/cli/compare/v2.5.0...v2.5.1) (2026-11-05)
+
+### Bug Fixes
+
+- report file paths passed after `-t` as invalid thread values ([#215](https://github.com/lint-md/cli/pull/215))
+
+### Dependencies
+
+- upgrade `glob` to `^14.0.3` to fix [GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) ([#213](https://github.com/lint-md/cli/pull/213))
+- use the fixed `minimatch` range through `glob` for [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) ([#213](https://github.com/lint-md/cli/pull/213))
+- declare Node.js 20 as the minimum supported version ([#213](https://github.com/lint-md/cli/pull/213))
+
+### Documentation
+
+- state that `excludeFiles` replaces the default list ([#217](https://github.com/lint-md/cli/pull/217))
+
+### CI/CD
+
+- audit production dependencies during CI ([#213](https://github.com/lint-md/cli/pull/213))
+
 ## [2.5.0](https://github.com/lint-md/cli/compare/v2.4.0...v2.5.0) (2026-10-26)
 
 ### Features
