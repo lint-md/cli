@@ -261,7 +261,7 @@ describe("configuration validation", () => {
     });
   });
 
-  test("accepts a well-shaped configuration and keeps defaults for absent fields", () => {
+  test("replaces default excludeFiles and keeps defaults for absent fields", () => {
     const configPath = path.join(tmpDir, ".lintmdrc");
     writeFileSync(
       configPath,
@@ -274,6 +274,13 @@ describe("configuration validation", () => {
       extensions: [".md"],
       rules: {},
     });
+  });
+
+  test("an empty excludeFiles array removes all default exclusions", () => {
+    const configPath = path.join(tmpDir, ".lintmdrc");
+    writeFileSync(configPath, JSON.stringify({ excludeFiles: [] }), "utf8");
+
+    expect(getLintConfig(configPath).excludeFiles).toEqual([]);
   });
 
   test("uses auto when threads are not specified", () => {
