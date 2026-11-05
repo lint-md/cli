@@ -99,13 +99,21 @@ Higher explicit concurrency can increase peak memory.
 
 ```json
 {
-  "excludeFiles": ["**/node_modules/**", "**/.git/**"],
+  "excludeFiles": [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/dist/**"
+  ],
   "extensions": [".md", ".markdown", ".mdx"],
   "rules": {
     "no-empty-code": true
   }
 }
 ```
+
+`excludeFiles` replaces the full default list. It does not merge with the defaults.
+Include `**/node_modules/**` and `**/.git/**` to keep the default exclusions.
+An empty array `[]` removes all default exclusions.
 
 ### Configuration Fields
 

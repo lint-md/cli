@@ -108,13 +108,21 @@ docker run --rm \
 
 ```json
 {
-  "excludeFiles": ["**/node_modules/**", "**/.git/**"],
+  "excludeFiles": [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/dist/**"
+  ],
   "extensions": [".md", ".markdown", ".mdx"],
   "rules": {
     "no-empty-code": true
   }
 }
 ```
+
+`excludeFiles` 是完整替换列表。它不会与默认值合并。
+如需保留默认排除项，请在列表中写出 `**/node_modules/**` 和 `**/.git/**`。
+设置为空数组 `[]` 会取消所有默认排除项。
 
 ### 配置项说明
 
