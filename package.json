@@ -1,6 +1,9 @@
 {
   "name": "@lint-md/cli",
   "version": "2.5.0",
+  "engines": {
+    "node": ">=20"
+  },
   "description": "CLI tool to lint your markdown file for Chinese.",
   "bin": {
     "lint-md": "lib/src/lint-md.js"
@@ -57,7 +60,7 @@
     "@lint-md/core": "^2.6.0",
     "chalk": "^4",
     "commander": "^9.4.1",
-    "glob": "^13.0.6",
+    "glob": "^14.0.3",
     "piscina": "^5.1.4",
     "strip-ansi": "^6.0.1",
     "text-table": "^0.2.0"
