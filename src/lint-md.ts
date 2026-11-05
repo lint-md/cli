@@ -116,17 +116,18 @@ export const createProgram = (): Command => {
         program.help();
       }
 
-      // Commander can consume a file path as the value of -t. Report this
-      // before the no-input help path so the file does not disappear.
+      // Commander can consume a file path as the value of -t.
+      // Report nonnumeric values before the no-input help path.
       if (
         typeof threads === "string" &&
-        (/[\\/]/.test(threads) || /\.(?:md|markdown|mdx)$/i.test(threads))
+        threads !== "auto" &&
+        !Number.isFinite(Number(threads))
       ) {
         throw new CliError(
           "INVALID_THREADS",
-          `[lint-md] ${JSON.stringify(
+          `[lint-md] --threads must be a positive integer or auto. Received ${JSON.stringify(
             sanitizeTerminalText(threads)
-          )} looks like a file path after --threads. Use the file path without -t, or set --threads=auto or --threads=N.`
+          )}. If this is a file path, omit -t. Use --threads=auto or --threads=N.`
         );
       }
 

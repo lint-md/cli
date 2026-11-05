@@ -122,7 +122,27 @@ describe("cli tests", () => {
     );
   });
 
-  test("rejects a file path consumed by -t", async () => {
+  test.each(["a.md", "README"])(
+    "rejects a file path consumed by -t: %s",
+    async (filePath) => {
+      const runFileLint = jest.fn();
+      jest.doMock("../src/cli/run-lint", () => ({
+        runFileLint,
+        runStdinLint: jest.fn(),
+      }));
+      const { main } = require("../src/lint-md");
+
+      await expect(
+        main(["node", "lint-md", "-t", filePath])
+      ).rejects.toMatchObject({
+        code: "INVALID_THREADS",
+        message: expect.stringContaining(`Received "${filePath}"`),
+      });
+      expect(runFileLint).not.toHaveBeenCalled();
+    }
+  );
+
+  test("rejects the first file when -t precedes two file paths", async () => {
     const runFileLint = jest.fn();
     jest.doMock("../src/cli/run-lint", () => ({
       runFileLint,
@@ -130,12 +150,12 @@ describe("cli tests", () => {
     }));
     const { main } = require("../src/lint-md");
 
-    await expect(main(["node", "lint-md", "-t", "a.md"])).rejects.toMatchObject(
-      {
-        code: "INVALID_THREADS",
-        message: expect.stringContaining('"a.md" looks like a file path'),
-      }
-    );
+    await expect(
+      main(["node", "lint-md", "-t", "a.md", "b.md"])
+    ).rejects.toMatchObject({
+      code: "INVALID_THREADS",
+      message: expect.stringContaining('Received "a.md"'),
+    });
     expect(runFileLint).not.toHaveBeenCalled();
   });
 
