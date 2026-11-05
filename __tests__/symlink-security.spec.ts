@@ -63,6 +63,18 @@ describe("symlink security", () => {
     // This test documents the current loadMdFiles behavior.
   });
 
+  test("loadMdFiles does not recurse through symlinked directories", async () => {
+    const realDir = path.join(tmpDir, "real");
+    const nestedDir = path.join(realDir, "nested");
+    fs.mkdirSync(nestedDir, { recursive: true });
+    fs.writeFileSync(path.join(nestedDir, "a.md"), "# a");
+    fs.symlinkSync(realDir, path.join(tmpDir, "link"), "dir");
+
+    const result = await loadMdFiles([path.join(tmpDir, "**", "*.md")], []);
+
+    expect(result).toEqual([path.join(nestedDir, "a.md")]);
+  });
+
   test("loadMdFiles deduplicates overlapping patterns", async () => {
     const filePath = path.join(tmpDir, "dup.md");
     fs.writeFileSync(filePath, "# dup");
@@ -117,6 +129,19 @@ describe("symlink security", () => {
 
     expect(result).toContain(path.join(tmpDir, "a.md"));
     expect(result).not.toContain(path.join(tmpDir, "b.txt"));
+  });
+
+  test("loadMdFiles excludes directories and ignored files", async () => {
+    const includedFile = path.join(tmpDir, "included.md");
+    const ignoredFile = path.join(tmpDir, "ignored.md");
+    const directory = path.join(tmpDir, "directory.md");
+    fs.writeFileSync(includedFile, "# included");
+    fs.writeFileSync(ignoredFile, "# ignored");
+    fs.mkdirSync(directory);
+
+    const result = await loadMdFiles([path.join(tmpDir, "*")], [ignoredFile]);
+
+    expect(result).toEqual([includedFile]);
   });
 
   test("safeWriteFile rejects symlink", async () => {
