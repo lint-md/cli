@@ -16,13 +16,14 @@ import {
   getThreadCount,
 } from "./utils/configure";
 import type { ThreadCount } from "./types";
+import { sanitizeTerminalText } from "./utils/sanitize-terminal";
 
 interface CLIOptions {
   fix?: boolean;
   dev?: boolean;
   config?: string;
   suppressWarnings: boolean;
-  threads?: string | boolean;
+  threads?: string;
   stdin?: boolean;
   maxFileSize?: string;
 }
@@ -45,7 +46,7 @@ export const createProgram = (): Command => {
     .option("-f, --fix", "fix the errors automatically（开启修复模式）")
     .option("-d, --dev", "open dev mode（开启开发者模式）")
     .option(
-      "-t, --threads [thread-count]",
+      "-t, --threads <thread-count>",
       'Worker threads, or "auto" for conservative file-size limits. Default: auto.（执行 Lint / Fix 的线程数。默认 auto；传数字可显式覆盖自动限制）'
     )
     .option(
@@ -75,13 +76,6 @@ export const createProgram = (): Command => {
       const startTime = Date.now();
       const isFixMode = Boolean(fix);
       const isDev = Boolean(dev);
-
-      // No input at all: show help before touching config, threads, or
-      // stdin. A broken .lintmdrc must not turn bare "lint-md" into a
-      // config error.
-      if (!files.length && !stdin) {
-        program.help();
-      }
 
       // Fail before touching stdin or the file list so neither input mode
       // starts on a command that mixes both.
@@ -117,13 +111,37 @@ export const createProgram = (): Command => {
         );
       }
 
+      // Bare invocation shows help before reading config or thread settings.
+      if (!files.length && !stdin && threads === undefined) {
+        program.help();
+      }
+
+      // Commander can consume a file path as the value of -t. Report this
+      // before the no-input help path so the file does not disappear.
+      if (
+        typeof threads === "string" &&
+        (/[\\/]/.test(threads) || /\.(?:md|markdown|mdx)$/i.test(threads))
+      ) {
+        throw new CliError(
+          "INVALID_THREADS",
+          `[lint-md] ${JSON.stringify(
+            sanitizeTerminalText(threads)
+          )} looks like a file path after --threads. Use the file path without -t, or set --threads=auto or --threads=N.`
+        );
+      }
+
+      const threadCount: ThreadCount = getThreadCount(threads);
+
+      // A valid thread setting without a file still needs input.
+      if (!files.length && !stdin) {
+        program.help();
+      }
+
       if (isDev) {
         console.log(`dev -- version: ${version}, ${new Date().toString()}`);
       }
 
       const { rules, excludeFiles, extensions } = getLintConfig(config);
-
-      const threadCount: ThreadCount = getThreadCount(threads);
 
       const maxFileSizeBytes = getMaxFileSizeOption(maxFileSize);
 

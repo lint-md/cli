@@ -101,6 +101,61 @@ describe("cli tests", () => {
     expect(process.exitCode).toBe(1);
   });
 
+  test.each([
+    [["a.md"], "auto"],
+    [["-t", "4", "a.md"], 4],
+    [["-t", "auto", "a.md"], "auto"],
+    [["a.md", "--threads=4"], 4],
+    [["a.md", "--threads=auto"], "auto"],
+  ] as const)("passes %p with %p threads", async (args, threadCount) => {
+    const runFileLint = jest.fn().mockResolvedValue({ exitCode: 0 });
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint: jest.fn(),
+    }));
+    const { main } = require("../src/lint-md");
+
+    await main(["node", "lint-md", ...args]);
+
+    expect(runFileLint).toHaveBeenCalledWith(
+      expect.objectContaining({ files: ["a.md"], threadCount })
+    );
+  });
+
+  test("rejects a file path consumed by -t", async () => {
+    const runFileLint = jest.fn();
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint: jest.fn(),
+    }));
+    const { main } = require("../src/lint-md");
+
+    await expect(main(["node", "lint-md", "-t", "a.md"])).rejects.toMatchObject(
+      {
+        code: "INVALID_THREADS",
+        message: expect.stringContaining('"a.md" looks like a file path'),
+      }
+    );
+    expect(runFileLint).not.toHaveBeenCalled();
+  });
+
+  test("rejects zero threads before file lint", async () => {
+    const runFileLint = jest.fn();
+    jest.doMock("../src/cli/run-lint", () => ({
+      runFileLint,
+      runStdinLint: jest.fn(),
+    }));
+    const { main } = require("../src/lint-md");
+
+    await expect(
+      main(["node", "lint-md", "-t", "0", "a.md"])
+    ).rejects.toMatchObject({
+      code: "INVALID_THREADS",
+      message: "[lint-md] --threads must be a positive integer.",
+    });
+    expect(runFileLint).not.toHaveBeenCalled();
+  });
+
   test("runCli handles rejected actions", async () => {
     const error = new Error("load failed");
     const loadMdFiles = jest.fn(() => Promise.reject(error));
